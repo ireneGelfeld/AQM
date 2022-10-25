@@ -69,7 +69,7 @@ db=db.drop(columns=[0])
 # Add traces, one for each slider step
 for value in db.index:
     fig2.add_trace(
-        go.Scatter(y=list(db.loc[value,:]),line_color=Bar2Clr[value] ,line=dict(dash='dash'), 
+        go.Scatter(y=list((db.loc[value,:]-1)*3.14*80000),line_color=Bar2Clr[value] ,line=dict(dash='dash'), 
                     name=value+'_Before'))
 # fig.add_trace(
 #     go.Scatter(y=list(db[ColorForDisplay]),line_color=ColorForDisplay , line=dict(dash='dash'),
@@ -83,7 +83,7 @@ for step in  np.arange(3, MaxWaveWindow+3, 2):
                 visible=False,
                 line=dict(color=Bar2Clr[value], width=2),
                 name="Window Size = " + str(step),
-                y=savgol_filter(list(db.loc[value,:]), step, 1)))
+                y=savgol_filter(list((db.loc[value,:]-1)*3.14*80000), step, 1)))
 
 
 

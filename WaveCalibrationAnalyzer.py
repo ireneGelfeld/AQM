@@ -35,11 +35,12 @@ from plotly.offline import download_plotlyjs, init_notebook_mode,  plot
 from plotly.subplots import make_subplots
 
 
-class CalcWave:
-    def  __init__(self, pthF,side,Panel): 
+class CalcWaveFromRawData:
+    def  __init__(self, pthF,side,Panel,ColorForDisplay): 
         self.pthF = pthF;
         self.side = side;
         self.Panel= Panel;
+        self.ColorForDisplay=ColorForDisplay;
         
 
     
@@ -48,26 +49,48 @@ class CalcWave:
 
         return  RawData;
     
+    def FilterRawData(self):
+        RawData= self.LoadRawData();
+        
+        DataSec=RawData[RawData['Overall Status']=='Success']
+
+        DataSecPrintDirc=DataSec[DataSec['Direction Type ']=='Print Direction']
+        
+        DataSecPrintDircPanel=DataSecPrintDirc[DataSecPrintDirc['Panel Id']==Panel]
+        
+        DataSecPrintDircPanelColor=DataSecPrintDircPanel[DataSecPrintDircPanel[' Seperation']==self.ColorForDisplay].reset_index(drop=True)
+        
+        col=list(DataSecPrintDircPanelColor.columns)
+        
+        cutCols=col[12:396]
+        
+        DataSecPrintDircPanelColorCUT=DataSecPrintDircPanelColor[cutCols];
+        
+        return DataSecPrintDircPanelColorCUT,cutCols;
     
-    def CreatBeforeAfterDFforSpecificPanel(self,Colors,RawData,ColorDic,BeforAfterCorrection):
-        BeforAfterCorrByColor=pd.DataFrame();          
-        for i,clr in enumerate(Colors):
-            BeforAfterCorr=RawData[RawData[3] == BeforAfterCorrection][RawData[2] == self.Panel][RawData[1]== i+1].reset_index(drop=True);
-            D = BeforAfterCorr.iloc[0,4:].reset_index(drop=True);
-            BeforAfterCorrByColor=pd.concat([BeforAfterCorrByColor,D.rename(ColorDic[i+1])],axis=1)
-        return BeforAfterCorrByColor;
     
-    def OrgnazeDataByColorAndCorrectionState(self):
-         RawData= self.LoadRawData();
-         Colors=RawData.iloc[:,1].unique().tolist()
-         ColorDic={1:'Cyan',2:'Magenta',3:'Yellow',4:'Black',5:'Orange',7:'Green',6:'Blue'}
-         BarDic={4:'Cyan',6:'Magenta',8:'Yellow',2:'Black',7:'Orange',5:'Green',3:'Blue'}
-         
-         BeforCorrByColor =  self.CreatBeforeAfterDFforSpecificPanel(Colors,RawData,ColorDic,' Before')
-         AfterCorrByColor =  self.CreatBeforeAfterDFforSpecificPanel(Colors,RawData,ColorDic,' After')
-         CorrectionCorrByColor =  self.CreatBeforeAfterDFforSpecificPanel(Colors,RawData,ColorDic,'Correction')
-         
-         return ColorDic,BarDic,BeforCorrByColor,AfterCorrByColor,CorrectionCorrByColor;
+    def ArrangeRawDataForAnalize(self):
+       
+        DataSecPrintDircPanelColorCUT,cutCols=self.FilterRawData();
+        WaveRaw=pd.DataFrame();
+
+        for i in range(len(DataSecPrintDircPanelColorCUT[cutCols[0]])):
+            l=list(DataSecPrintDircPanelColorCUT.loc[i,:])
+            tmpDF=pd.DataFrame();
+            while (1):
+                tmp=next((j for j, x in enumerate(l) if not isinstance(x, float)), 'DONE');
+                if  tmp == 'DONE':
+                    break;
+                else:
+                   if  l[tmp].replace('.', '', 1).isdigit():
+                       l[tmp]=float(l[tmp]);
+                   else: 
+                       if l[tmp] == 'NotFound':
+                           break;
+            if not tmp == 'DONE':
+               WaveRaw=pd.concat([WaveRaw,pd.DataFrame(l[0:tmp-1])],axis=1).rename(columns={0:i+1}) 
+        return  WaveRaw;      
+            
 
 #################################################################################
 #################################################################################
@@ -84,41 +107,19 @@ f=pthF.split('/')[len(pthF.split('/'))-1]
 DirectorypathF=pthF.replace(f,'');
 os.chdir(DirectorypathF)
 
-
-RawData=pd.read_csv(r'D:\waveCodeExample\QCS WaveCalibration_350 Archive 16-08-2022 14-31-59\Front\RawResults\WavePrintDirection.csv');
-
-
-
 side='Front';
-RawData,Hder=CalcWave(pthF+'/',side,Panel)
-l=list(RawData.columns)
 
-RawDataSec=RawData[RawData['Overall Status']=='Success']
 
-RawDataSecPrintDirc=RawDataSec[RawDataSec['Direction Type ']=='Print Direction']
+WaveRaw= CalcWaveFromRawData(pthF+'/',side,Panel,ColorForDisplay).ArrangeRawDataForAnalize();
 
-RawDataSecPrintDircP=RawDataSecPrintDirc[RawDataSecPrintDirc['Panel Id']==Panel]
 
-RawDataSecPrintDircPclr=RawDataSecPrintDircP[RawDataSecPrintDircP[' Seperation']==ColorForDisplay].reset_index(drop=True)
-
-col=list(RawDataSecPrintDircPclr.columns)
-
-cutCols=col[12:396]
-
-RawDataSecPrintDircPclrCUT=RawDataSecPrintDircPclr[cutCols]
-
-WaveRaw=DataFrame();
-
-for i in range(len(RawDataSecPrintDircPclrCUT[cutCols[0]])):
-    l=list(RawDataSecPrintDircPclrCUT.loc[i,:])
-    next((j for j, x in enumerate(l) if not isinstance(x, float)), 'DONE')
-    if 
+          
+     
     
             
     
 
 
-l=list(db.loc[1,:])
 #########################################
 #########################################
 #########################################

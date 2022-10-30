@@ -54,7 +54,7 @@ RawDataDancer=pd.read_csv(pthF,header = None);
 
 
 
-RawDataDancer['DayTime'] = pd.to_datetime(RawDataDancer[2])
+RawDataDancer['DayTime'] = pd.to_datetime(RawDataDancer[2],dayfirst=True)
 
 DateDuc={}
 

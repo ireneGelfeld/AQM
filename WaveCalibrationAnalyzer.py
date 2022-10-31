@@ -10,8 +10,8 @@ get_ipython().magic('reset -sf')
 #####################################Params #############################################################
 #########################################################################################################
 Panel = 6;
-ColorForDisplay = 'Cyan'
-startCycle =1
+# ColorForDisplay = 'Cyan'
+CycleNumber =4
 
 #########################################################################################################
 #########################################################################################################
@@ -47,6 +47,16 @@ class CalcWaveFromRawData:
         RawData=pd.read_csv(self.pthF+self.side+'/'+'RawResults/WavePrintDirection.csv');
 
         return  RawData;
+    
+    def getColors(self):
+        RawData= self.LoadRawData();
+        ColorList=RawData.iloc[:,7].unique().tolist();
+        return ColorList
+    
+    def getNumberOfFlats(self):
+        RawData= self.LoadRawData();
+        FlatList=RawData.iloc[:,1].unique().tolist();
+        return FlatList
     
     def FilterRawData(self):
         RawData= self.LoadRawData();
@@ -108,13 +118,18 @@ os.chdir(DirectorypathF)
 
 side='Front';
 
+ColorList= CalcWaveFromRawData(pthF+'/',side,Panel,ColorForDisplay).getColors();
 
-WaveRaw= CalcWaveFromRawData(pthF+'/',side,Panel,ColorForDisplay).ArrangeRawDataForAnalize();
+# FlatList= CalcWaveFromRawData(pthF+'/',side,Panel,ColorForDisplay).getNumberOfFlats();
+
+
+# WaveRaw= CalcWaveFromRawData(pthF+'/',side,Panel,ColorForDisplay).ArrangeRawDataForAnalize();
 
 
           
      
-    
+# RawData=pd.read_csv(r'D:\waveCodeExample\wave\QCS WaveCalibration_500 Archive 18-09-2022 14-15-38 (1)\Front\RawResults\WavePrintDirection.csv');
+# c=list(RawData.columns)    
             
     
 
@@ -128,29 +143,72 @@ fig0 = go.Figure()
 
 # db=ImagePlacement_Rightpp
 # db=ImagePlacement_pp
-db=WaveRaw
+for ColorForDisplay in ColorList:
+    db=CalcWaveFromRawData(pthF+'/',side,Panel,ColorForDisplay).ArrangeRawDataForAnalize();
+    
+    
+    col=list(db.columns)
+    
+    rnge=range(len(col))
+    
+    for i in rnge:
+    # for i in rnge:
+        fig0.add_trace(
+        go.Scatter(y=list(db[i+1]),line_color= ColorForDisplay,
+                    name='Cycle '+str(i+1)+' '+'Panel '+str(Panel)+' ' +ColorForDisplay))
 
 
-col=list(db.columns)
 
-rnge=range(startCycle,len(col))
-
-for i in rnge:
-# for i in rnge:
-    fig0.add_trace(
-    go.Scatter(y=list(db[i]),line_color= ColorForDisplay,
-                name='Wave Raw Data cycle '+str(i)))
-
-
-
-
-fig0.update_layout(title=f+' Wave After Correction')
+fig0.update_layout(
+    hoverlabel=dict(
+        namelength=-1
+    )
+)
+fig0.update_layout(title=f+' WAVE RAW DATA')
 
 now = datetime.now()
 
 
 dt_string = now.strftime("%d_%m_%Y_%H_%M_%S")
-plot(fig0,filename=f+" WaveResult_"+ dt_string +".html") 
+plot(fig0,filename=f+" WaveResult_RawDataPerPanel"+ dt_string +".html") 
+
+
+#########################################
+#########################################
+#########################################
+fig1 = go.Figure()
+
+# rnge=[3,6,7]
+
+# db=ImagePlacement_Rightpp
+# db=ImagePlacement_pp
+for Panel in range(1,12):
+    # print(Panel)
+    for ColorForDisplay in ColorList:
+        db=CalcWaveFromRawData(pthF+'/',side,Panel,ColorForDisplay).ArrangeRawDataForAnalize();
+        
+        
+        col=list(db.columns)
+        
+        # rnge=range(len(col))
+        
+        # for i in rnge:
+        # for i in rnge:
+        fig1.add_trace(
+        go.Scatter(y=list(db[CycleNumber]),line_color= ColorForDisplay,
+                    name='Cycle '+str(CycleNumber)+' '+'Panel '+str(Panel)+' ' +ColorForDisplay))
 
 
 
+fig1.update_layout(
+    hoverlabel=dict(
+        namelength=-1
+    )
+)
+fig1.update_layout(title=f+' WAVE RAW DATA PER CYCLE')
+
+now = datetime.now()
+
+
+dt_string = now.strftime("%d_%m_%Y_%H_%M_%S")
+plot(fig1,filename=f+" WaveResult_RawDataPerCycle"+ dt_string +".html") 

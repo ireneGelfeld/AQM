@@ -12,7 +12,7 @@ Created on Wed Jun 16 16:30:46 2021
 # pio.renderers.default='browser'
 ##############################################################################
 #DistBetweenSets =  126357; 
-GlobalScale = 0.9976 # Drop3 simplex = 0.9976, Duplex = 0.9984 ,,,, Drop5 Simplex = 0.9953, Duplex = 0.9945 
+GlobalScale = 0.9945 # Drop3 simplex = 0.9976, Duplex = 0.9984 ,,,, Drop5 Simplex = 0.9953, Duplex = 0.9945 
 PanelLengthInMM = 650;
 JobLength = 0;
 ##############################################################################

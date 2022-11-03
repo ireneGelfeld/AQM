@@ -147,40 +147,41 @@ fig00 = make_subplots(rows=3, cols=1,subplot_titles=("LeftSide","Middle", "Right
 # db=ImagePlacement_Rightpp
 # db=ImagePlacement_pp
 # for ColorForDisplay in ColorList:
-db=CalcWaveFromRawData(pthF+'/',side,Panel,ColorForDisplay).ArrangeRawDataForAnalize();
-
-
-col=list(db.columns)
-
-rnge=range(len(col))
-
-for i in rnge:
-# for i in rnge:
-    # if SideOffset=='LeftSide':
-    #     offSet=db[i+1][0];
-    # else:
-    #     if SideOffset=='RightSide':    
-    #         offSet=db[i+1][length(len(db[i+1]))]
-    #     else:
-    #         if  SideOffset=='Middle':
-    #             offSet=np.min(db[i+1][int(len(db[i+1])/2)-50:int(len(db[i+1])/2)+50])
-    #         else:
-    #             offSet=0;
-    offSet=db[i+1][0];
-    fig00.add_trace(
-    go.Scatter(y=list(db[i+1]-offSet),line_color= ColorForDisplay,
-                name='Cycle '+str(i+1)+' '+'Panel '+str(Panel)+' ' +ColorForDisplay),row=1, col=1)
+for ColorForDisplay in ColorList:    
+    db=CalcWaveFromRawData(pthF+'/',side,Panel,ColorForDisplay).ArrangeRawDataForAnalize();
     
     
-    offSet=np.min(db[i+1][int(len(db[i+1])/2)-50:int(len(db[i+1])/2)+50])
-    fig00.add_trace(
-    go.Scatter(y=list(db[i+1]-offSet),line_color= ColorForDisplay,
-                name='Cycle '+str(i+1)+' '+'Panel '+str(Panel)+' ' +ColorForDisplay),row=2, col=1)
+    col=list(db.columns)
     
-    offSet=db[i+1][(len(db[i+1]))-1]  
-    fig00.add_trace(
-    go.Scatter(y=list(db[i+1]-offSet),line_color= ColorForDisplay,
-                name='Cycle '+str(i+1)+' '+'Panel '+str(Panel)+' ' +ColorForDisplay),row=3, col=1)
+    rnge=range(len(col))
+    
+    for i in rnge:
+    # for i in rnge:
+        # if SideOffset=='LeftSide':
+        #     offSet=db[i+1][0];
+        # else:
+        #     if SideOffset=='RightSide':    
+        #         offSet=db[i+1][length(len(db[i+1]))]
+        #     else:
+        #         if  SideOffset=='Middle':
+        #             offSet=np.min(db[i+1][int(len(db[i+1])/2)-50:int(len(db[i+1])/2)+50])
+        #         else:
+        #             offSet=0;
+        offSet=db[i+1][0];
+        fig00.add_trace(
+        go.Scatter(y=list(db[i+1]-offSet),line_color= ColorForDisplay,
+                    name='Cycle '+str(i+1)+' '+'Panel '+str(Panel)+' ' +ColorForDisplay),row=1, col=1)
+        
+        
+        offSet=np.min(db[i+1][int(len(db[i+1])/2)-50:int(len(db[i+1])/2)+50])
+        fig00.add_trace(
+        go.Scatter(y=list(db[i+1]-offSet),line_color= ColorForDisplay,
+                    name='Cycle '+str(i+1)+' '+'Panel '+str(Panel)+' ' +ColorForDisplay),row=2, col=1)
+        
+        offSet=db[i+1][(len(db[i+1]))-1]  
+        fig00.add_trace(
+        go.Scatter(y=list(db[i+1]-offSet),line_color= ColorForDisplay,
+                    name='Cycle '+str(i+1)+' '+'Panel '+str(Panel)+' ' +ColorForDisplay),row=3, col=1)
 
 
 
@@ -207,61 +208,62 @@ fig01 = go.Figure()
 # db=ImagePlacement_Rightpp
 # db=ImagePlacement_pp
 # for ColorForDisplay in ColorList:
-db=CalcWaveFromRawData(pthF+'/',side,Panel,ColorForDisplay).ArrangeRawDataForAnalize();
-
-
-col=list(db.columns)
-
-rnge=range(len(col))
-middledb=pd.DataFrame()
-Rightdb=pd.DataFrame()
-Leftdb=pd.DataFrame()
-
-middleSTD=[]
-RightSTD=[]
-LeftSTD=[]
-for i in rnge:
-# for i in rnge:
-    # if SideOffset=='LeftSide':
-    #     offSet=db[i+1][0];
-    # else:
-    #     if SideOffset=='RightSide':    
-    #         offSet=db[i+1][length(len(db[i+1]))]
-    #     else:
-    #         if  SideOffset=='Middle':
-    #             offSet=np.min(db[i+1][int(len(db[i+1])/2)-50:int(len(db[i+1])/2)+50])
-    #         else:
-    #             offSet=0;
+for ColorForDisplay in ColorList:
+    db=CalcWaveFromRawData(pthF+'/',side,Panel,ColorForDisplay).ArrangeRawDataForAnalize();
     
-    offSet1=db[i+1][0];
     
-    Leftdb=pd.concat([Leftdb,db[i+1]-offSet1],axis=1);
+    col=list(db.columns)
     
-    offSet2=np.min(db[i+1][int(len(db[i+1])/2)-50:int(len(db[i+1])/2)+50])
-    middledb=pd.concat([middledb,db[i+1]-offSet2],axis=1);
+    rnge=range(len(col))
+    middledb=pd.DataFrame()
+    Rightdb=pd.DataFrame()
+    Leftdb=pd.DataFrame()
     
-    offSet3=db[i+1][(len(db[i+1]))-1] 
-    Rightdb=pd.concat([Rightdb,db[i+1]-offSet3],axis=1);
-
-
-for i in Leftdb.index:
-    LeftSTD.append(np.std(Leftdb.loc[i,:]))
-    middleSTD.append(np.std(middledb.loc[i,:]))
-    RightSTD.append(np.std(Rightdb.loc[i,:]))
-   
-
-fig01.add_trace(
-go.Scatter(y=LeftSTD,
-            name='Panel '+str(Panel)+' ' +ColorForDisplay+' LeftSide'))
-
-
-fig01.add_trace(
-go.Scatter(y=middleSTD,
-            name='Panel '+str(Panel)+' ' +ColorForDisplay+' Middle'))
-
-fig01.add_trace(
-go.Scatter(y=RightSTD,
-            name='Panel '+str(Panel)+' ' +ColorForDisplay+' RightSide'))
+    middleSTD=[]
+    RightSTD=[]
+    LeftSTD=[]
+    for i in rnge:
+    # for i in rnge:
+        # if SideOffset=='LeftSide':
+        #     offSet=db[i+1][0];
+        # else:
+        #     if SideOffset=='RightSide':    
+        #         offSet=db[i+1][length(len(db[i+1]))]
+        #     else:
+        #         if  SideOffset=='Middle':
+        #             offSet=np.min(db[i+1][int(len(db[i+1])/2)-50:int(len(db[i+1])/2)+50])
+        #         else:
+        #             offSet=0;
+        
+        offSet1=db[i+1][0];
+        
+        Leftdb=pd.concat([Leftdb,db[i+1]-offSet1],axis=1);
+        
+        offSet2=np.min(db[i+1][int(len(db[i+1])/2)-50:int(len(db[i+1])/2)+50])
+        middledb=pd.concat([middledb,db[i+1]-offSet2],axis=1);
+        
+        offSet3=db[i+1][(len(db[i+1]))-1] 
+        Rightdb=pd.concat([Rightdb,db[i+1]-offSet3],axis=1);
+    
+    
+    for i in Leftdb.index:
+        LeftSTD.append(np.std(Leftdb.loc[i,:]))
+        middleSTD.append(np.std(middledb.loc[i,:]))
+        RightSTD.append(np.std(Rightdb.loc[i,:]))
+       
+    
+    fig01.add_trace(
+    go.Scatter(y=LeftSTD,line_color= ColorForDisplay,
+                name='Panel '+str(Panel)+' ' +ColorForDisplay+' LeftSide'))
+    
+    
+    fig01.add_trace(
+    go.Scatter(y=middleSTD,line_color= ColorForDisplay,
+                name='Panel '+str(Panel)+' ' +ColorForDisplay+' Middle'))
+    
+    fig01.add_trace(
+    go.Scatter(y=RightSTD,line_color= ColorForDisplay,
+                name='Panel '+str(Panel)+' ' +ColorForDisplay+' RightSide'))
 
 
 

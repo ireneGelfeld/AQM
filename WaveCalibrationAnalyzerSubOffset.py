@@ -15,6 +15,7 @@ CycleNumber =4
 LeftSide=1;
 Middle=1;
 RightSide=1;
+CIScurve=1;
 
 
 #########################################################################################################
@@ -104,6 +105,45 @@ class CalcWaveFromRawData:
                WaveRaw=pd.concat([WaveRaw,pd.DataFrame(l[0:tmp-1])],axis=1).rename(columns={0:i+1}) 
         return  WaveRaw;      
             
+class CIScurveFromRawData:
+    def  __init__(self, pthF): 
+        self.pthF = pthF;
+ 
+
+    
+    def LoadRawData(self):
+        lines=[];
+        LogFile= self.pthF+'Data/JobData.csv';
+        with open(LogFile, mode='r') as f:
+           while 1:
+               line = f.readline()
+               if len(line) >1:   
+                  lines.append(line)
+               else:
+                  if len(line)==0:   
+                      break;
+        return  lines;
+    
+    def GetCIScurve(self):
+        jobData=self.LoadRawData()
+        sub='CisCurvatureDataBasedOnWaveFormat=';
+        res = list(filter(lambda x: sub in x, jobData));
+        cis=[]
+        if len(res)>0:
+            for rs in res:
+                if len(rs)> 1000:
+                    tmp=rs.split(',')
+                    tmp.pop(0);
+                    for c in tmp:
+                        if c.replace('.', '', 1).isdigit():
+                            cis.append(float(c))
+        if len(cis)<1:
+            print(self.pthF+' Has No CIS curve information')
+        return cis;    
+            
+                    
+                
+
 
 #################################################################################
 #################################################################################
@@ -126,6 +166,7 @@ ColorList= CalcWaveFromRawData(pthF+'/',side,Panel,ColorForDisplay).getColors();
 
 # FlatList= CalcWaveFromRawData(pthF+'/',side,Panel,ColorForDisplay).getNumberOfFlats();
 
+cis=CIScurveFromRawData(pthF+'/').GetCIScurve()
 
 # WaveRaw= CalcWaveFromRawData(pthF+'/',side,Panel,ColorForDisplay).ArrangeRawDataForAnalize();
 
@@ -380,14 +421,14 @@ fig01.update_layout(
         namelength=-1
     )
 )
-fig01.update_layout(title=f+'STD Side Offset WAVE RAW DATA-'+side )
+fig01.update_layout(title=f+' STD Side Offset WAVE RAW DATA-'+side )
 
 now = datetime.now()
 
 
 dt_string = now.strftime("%d_%m_%Y_%H_%M_%S")
 # plot(fig00)
-plot(fig01,filename=f+"STD SideOffset_ WaveResult_RawDataPerPanel "+side+".html") 
+plot(fig01,filename=f+" STD SideOffset_ WaveResult_RawDataPerPanel "+side+".html") 
 
 ################# Back  ########################
 try:
@@ -648,170 +689,35 @@ except:
 #########################################
 #########################################
 #########################################
-fig11 = go.Figure()
-side='Front';
-# rnge=[3,6,7]
-
-# db=ImagePlacement_Rightpp
-# db=ImagePlacement_pp
-# for ColorForDisplay in ColorList:
-for ColorForDisplay in ColorList:
-
+#########################################
+#########################################
+#########################################
+######CIS############
+if CIScurve:
+    try:
+        fig012 = go.Figure()
     
-    # rnge=range(len(col))
-    middledb=pd.DataFrame()
-    Rightdb=pd.DataFrame()
-    Leftdb=pd.DataFrame()
-    
-    middleSTD=[]
-    RightSTD=[]
-    LeftSTD=[]
-    
-    for Panel in range(1,12):
-        db=CalcWaveFromRawData(pthF+'/',side,Panel,ColorForDisplay).ArrangeRawDataForAnalize();   
-        col=list(db.columns)
-    # for i in rnge:
-        # if SideOffset=='LeftSide':
-        #     offSet=db[i+1][0];
-        # else:
-        #     if SideOffset=='RightSide':    
-        #         offSet=db[i+1][length(len(db[i+1]))]
-        #     else:
-        #         if  SideOffset=='Middle':
-        #             offSet=np.min(db[i+1][int(len(db[i+1])/2)-50:int(len(db[i+1])/2)+50])
-        #         else:
-        #             offSet=0;
-        
-        offSet1=db[CycleNumber][0];
-        
-        Leftdb=pd.concat([Leftdb,db[CycleNumber]-offSet1],axis=1);
-        
-        offSet2=np.min(db[CycleNumber][int(len(db[CycleNumber])/2)-50:int(len(db[CycleNumber])/2)+50])
-        middledb=pd.concat([middledb,db[CycleNumber]-offSet2],axis=1);
-        
-        offSet3=db[CycleNumber][(len(db[CycleNumber]))-1] 
-        Rightdb=pd.concat([Rightdb,db[CycleNumber]-offSet3],axis=1);
+                
+        fig012.add_trace(
+        go.Scatter(y=cis,
+                    name='CIS curve'))
+                
+      
     
     
-        for i in Leftdb.index:
-            LeftSTD.append(np.std(Leftdb.loc[i,:]))
-            middleSTD.append(np.std(middledb.loc[i,:]))
-            RightSTD.append(np.std(Rightdb.loc[i,:]))
-           
-        
-        fig11.add_trace(
-        go.Scatter(y=LeftSTD,line_color= ColorForDisplay,
-                    name='Panel '+str(Panel)+' ' +ColorForDisplay+' LeftSide'))
-        
-        
-        fig11.add_trace(
-        go.Scatter(y=middleSTD,line_color= ColorForDisplay,
-                    name='Panel '+str(Panel)+' ' +ColorForDisplay+' Middle'))
-        
-        fig11.add_trace(
-        go.Scatter(y=RightSTD,line_color= ColorForDisplay,
-                    name='Panel '+str(Panel)+' ' +ColorForDisplay+' RightSide'))
-
-
-
-fig11.update_layout(
-    hoverlabel=dict(
-        namelength=-1
-    )
-)
-fig11.update_layout(title=f+'STD Side Offset WAVE RAW DATA-'+side+' Cycle ='+str(CycleNumber) )
-
-now = datetime.now()
-
-
-dt_string = now.strftime("%d_%m_%Y_%H_%M_%S")
-# plot(fig00)
-plot(fig11,filename=f+"STD SideOffset_ WaveResult_RawDataPerPanel "+side+".html") 
-
-################# Back  ########################
-try:
-    fig011 = go.Figure()
-    side='Back';
-# rnge=[3,6,7]
-
-# db=ImagePlacement_Rightpp
-# db=ImagePlacement_pp
-# for ColorForDisplay in ColorList:
-    for ColorForDisplay in ColorList:
-
-    
-    # rnge=range(len(col))
-        middledb=pd.DataFrame()
-        Rightdb=pd.DataFrame()
-        Leftdb=pd.DataFrame()
-        
-        middleSTD=[]
-        RightSTD=[]
-        LeftSTD=[]
-        
-        for Panel in range(1,12):
-            db=CalcWaveFromRawData(pthF+'/',side,Panel,ColorForDisplay).ArrangeRawDataForAnalize();   
-            col=list(db.columns)
-        # for i in rnge:
-            # if SideOffset=='LeftSide':
-            #     offSet=db[i+1][0];
-            # else:
-            #     if SideOffset=='RightSide':    
-            #         offSet=db[i+1][length(len(db[i+1]))]
-            #     else:
-            #         if  SideOffset=='Middle':
-            #             offSet=np.min(db[i+1][int(len(db[i+1])/2)-50:int(len(db[i+1])/2)+50])
-            #         else:
-            #             offSet=0;
-            
-            offSet1=db[CycleNumber][0];
-            
-            Leftdb=pd.concat([Leftdb,db[CycleNumber]-offSet1],axis=1);
-            
-            offSet2=np.min(db[CycleNumber][int(len(db[CycleNumber])/2)-50:int(len(db[CycleNumber])/2)+50])
-            middledb=pd.concat([middledb,db[CycleNumber]-offSet2],axis=1);
-            
-            offSet3=db[CycleNumber][(len(db[CycleNumber]))-1] 
-            Rightdb=pd.concat([Rightdb,db[CycleNumber]-offSet3],axis=1);
-        
-        
-            for i in Leftdb.index:
-                LeftSTD.append(np.std(Leftdb.loc[i,:]))
-                middleSTD.append(np.std(middledb.loc[i,:]))
-                RightSTD.append(np.std(Rightdb.loc[i,:]))
-               
-            
-            fig011.add_trace(
-            go.Scatter(y=LeftSTD,line_color= ColorForDisplay,
-                        name='Panel '+str(Panel)+' ' +ColorForDisplay+' LeftSide'))
-            
-            
-            fig011.add_trace(
-            go.Scatter(y=middleSTD,line_color= ColorForDisplay,
-                        name='Panel '+str(Panel)+' ' +ColorForDisplay+' Middle'))
-            
-            fig011.add_trace(
-            go.Scatter(y=RightSTD,line_color= ColorForDisplay,
-                        name='Panel '+str(Panel)+' ' +ColorForDisplay+' RightSide'))
-
-
-
-    fig011.update_layout(
-        hoverlabel=dict(
-            namelength=-1
+        fig012.update_layout(
+            hoverlabel=dict(
+                namelength=-1
+            )
         )
-    )
-    fig011.update_layout(title=f+'STD Side Offset WAVE RAW DATA-'+side+' Cycle ='+str(CycleNumber) )
+        fig012.update_layout(title=f+'CIS curve' )
+        
+        now = datetime.now()
+        
+        
+        dt_string = now.strftime("%d_%m_%Y_%H_%M_%S")
+        # plot(fig00)
+        plot(fig012,filename=f+"CIScurve.html") 
     
-    now = datetime.now()
-    
-    
-    dt_string = now.strftime("%d_%m_%Y_%H_%M_%S")
-    # plot(fig00)
-    plot(fig011,filename=f+"STD SideOffset_ WaveResult_RawDataPerPanel "+side+".html") 
-
-except:
-    1    
-#########################################
-#########################################
-#########################################
+    except:
+        1    

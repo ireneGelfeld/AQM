@@ -128,18 +128,23 @@ class CIScurveFromRawData:
         jobData=self.LoadRawData()
         sub='CisCurvatureDataBasedOnWaveFormat=';
         res = list(filter(lambda x: sub in x, jobData));
-        cis=[]
+        cisFRONT=[]
+        cisBACK=[]
+
         if len(res)>0:
-            for rs in res:
+            for i,rs in enumerate(res):
                 if len(rs)> 1000:
                     tmp=rs.split(',')
                     tmp.pop(0);
                     for c in tmp:
                         if c.replace('.', '', 1).isdigit():
-                            cis.append(float(c))
-        if len(cis)<1:
-            print(self.pthF+' Has No CIS curve information')
-        return cis;    
+                            if i==0:
+                                cisFRONT.append(float(c))
+                            else:
+                                cisBACK.append(float(c))
+
+        
+        return cisBACK,cisFRONT;    
             
                     
                 
@@ -166,7 +171,7 @@ ColorList= CalcWaveFromRawData(pthF+'/',side,Panel,ColorForDisplay).getColors();
 
 # FlatList= CalcWaveFromRawData(pthF+'/',side,Panel,ColorForDisplay).getNumberOfFlats();
 
-cis=CIScurveFromRawData(pthF+'/').GetCIScurve()
+cisBACK,cisFRONT=CIScurveFromRawData(pthF+'/').GetCIScurve()
 
 # WaveRaw= CalcWaveFromRawData(pthF+'/',side,Panel,ColorForDisplay).ArrangeRawDataForAnalize();
 
@@ -699,8 +704,8 @@ if CIScurve:
     
                 
         fig012.add_trace(
-        go.Scatter(y=cis,
-                    name='CIS curve'))
+        go.Scatter(y=cisFRONT,
+                    name='CIS FRONT curve'))
                 
       
     
@@ -710,22 +715,54 @@ if CIScurve:
                 namelength=-1
             )
         )
-        fig012.update_layout(title=f+'CIS curve' )
+        fig012.update_layout(title=f+'CIS curve FRONT' )
         
         now = datetime.now()
         
         
         dt_string = now.strftime("%d_%m_%Y_%H_%M_%S")
         # plot(fig00)
-        plot(fig012,filename=f+"CIScurve.html") 
+        plot(fig012,filename=f+"CIScurveFRONT.html") 
     
     except:
      1
-    if len(cis)<1:
+    if len(cisFRONT)<1:
         print('************************************************************************************')
-        print(f+' Has No CIS curve information')
+        print(f+' Has No CIS FRONT curve information')
         print('************************************************************************************')
+      
+    ##### BACK
+    try:
+        fig013 = go.Figure()
+    
+                
+        fig013.add_trace(
+        go.Scatter(y=cisBACK,
+                    name='CIS BACK curve'))
+                
+      
+    
+    
+        fig013.update_layout(
+            hoverlabel=dict(
+                namelength=-1
+            )
+        )
+        fig013.update_layout(title=f+'CIS curve BACK' )
         
+        now = datetime.now()
+        
+        
+        dt_string = now.strftime("%d_%m_%Y_%H_%M_%S")
+        # plot(fig00)
+        plot(fig013,filename=f+"CIScurveBACK.html") 
+    
+    except:
+     1
+    if len(cisBACK)<1:
+        print('************************************************************************************')
+        print(f+' Has No CIS BACK curve information')
+        print('************************************************************************************')    
 
         
 

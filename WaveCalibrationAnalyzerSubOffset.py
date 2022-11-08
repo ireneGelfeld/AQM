@@ -124,7 +124,7 @@ class CIScurveFromRawData:
                       break;
         return  lines;
     
-    def GetCIScurve(self):
+    def GetCIScurveOldVersion(self):
         jobData=self.LoadRawData()
         sub='CisCurvatureDataBasedOnWaveFormat=';
         res = list(filter(lambda x: sub in x, jobData));
@@ -142,6 +142,31 @@ class CIScurveFromRawData:
                                 cisFRONT.append(float(c))
                             else:
                                 cisBACK.append(float(c))
+
+        
+        return cisBACK,cisFRONT;    
+    
+    def GetCIScurveNewVersion(self):
+        jobData=self.LoadRawData()
+        sub='ShouldUseCISCurvaturePerPixel=Value:True';
+        res = list(filter(lambda x: sub in x, jobData));
+        cisFRONT=[]
+        cisBACK=[]
+        
+        if len(res)>0:
+            sub='CISTilt=Value';
+            res = list(filter(lambda x: sub in x, jobData));
+            for i,rs in enumerate(res):
+                ind=jobData.index(rs)
+                if len(jobData[ind+1])> 1000:
+                    tmp=jobData[ind+1].split(',')
+                    tmp.pop(0);
+                    for c in tmp:
+                        if c.replace('.', '', 1).isdigit():
+                            if i==0:
+                                cisFRONT.append(float(c))
+                            else:
+                                cisBACK.append(float(c))    
 
         
         return cisBACK,cisFRONT;    
@@ -171,13 +196,16 @@ ColorList= CalcWaveFromRawData(pthF+'/',side,Panel,ColorForDisplay).getColors();
 
 # FlatList= CalcWaveFromRawData(pthF+'/',side,Panel,ColorForDisplay).getNumberOfFlats();
 
-cisBACK,cisFRONT=CIScurveFromRawData(pthF+'/').GetCIScurve()
+cisBACK,cisFRONT=CIScurveFromRawData(pthF+'/').GetCIScurveOldVersion()
+
+if len(cisFRONT) == 0:
+    cisBACK,cisFRONT=CIScurveFromRawData(pthF+'/').GetCIScurveNewVersion()
+
 
 # WaveRaw= CalcWaveFromRawData(pthF+'/',side,Panel,ColorForDisplay).ArrangeRawDataForAnalize();
 
 
-          
-     
+ 
 # RawData=pd.read_csv(r'D:\waveCodeExample\wave\QCS WaveCalibration_500 Archive 18-09-2022 14-15-38 (1)\Front\RawResults\WavePrintDirection.csv');
 # c=list(RawData.columns)    
             

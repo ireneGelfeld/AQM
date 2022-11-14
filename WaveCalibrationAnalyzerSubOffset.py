@@ -13,12 +13,14 @@ Panel = 11;
 ColorForDisplay = 'Cyan'
 CycleNumber =4
 StartCycle=3
+StartCycle4Avr = 2;
 MainColor = "Black"
 LeftSide=1;
 Middle=1;
 RightSide=1;
 CIScurve=1;
 registrationBetweenWavePrints=0;
+presentAllColors=0
 MaxWaveWindow=51;
 #########################################################################################################
 #########################################################################################################
@@ -252,8 +254,10 @@ if registrationBetweenWavePrints:
     DFdicPerClr =  CalcRegistrationFromWaveData(pthF+'/',side,Panel,ColorList,MainColor,StartCycle).DeltaForCycleAndColor()    
 
 WaveRawDataDic={};
-for ColorForDisplay in ColorList:    
-    WaveRawDataDic[ColorForDisplay]=CalcWaveFromRawData(pthF+'/',side,Panel,ColorForDisplay).ArrangeRawDataForAnalize();
+for ColorForDisplay in ColorList:  
+    tmp=CalcWaveFromRawData(pthF+'/',side,Panel,ColorForDisplay).ArrangeRawDataForAnalize();
+    tmp=pd.concat([tmp,tmp.loc[:,StartCycle4Avr:].mean(axis=1)],axis=1).rename(columns={0:'Mean'})
+    WaveRawDataDic[ColorForDisplay]=tmp;
 
 
 
@@ -265,6 +269,24 @@ for ColorForDisplay in ColorList:
         tmp=pd.concat([tmp,pd.Series(savgol_filter(WaveRawDataDic[ColorForDisplay][col], MaxWaveWindow, 1))],axis=1)
         tmp=tmp.rename(columns={0:col})
     WaveDataWithMaxFilterDic[ColorForDisplay]=tmp
+
+### Calc PH location
+
+PHloc=[]
+PHloc.append(187)
+numForward=187
+numBack=187
+
+for i in range(len(tmp['Mean'])):
+    numForward=numForward+16;
+    numBack=numBack-16;
+    if numBack>0:
+        PHloc.append(numBack);
+    if numForward<len(tmp['Mean']):
+        PHloc.append(numForward);
+
+PHloc.sort()
+
 #########################################
 #########################################
 #########################################
@@ -282,7 +304,9 @@ side='Front';
 for ColorForDisplay in ColorList:    
     db=CalcWaveFromRawData(pthF+'/',side,Panel,ColorForDisplay).ArrangeRawDataForAnalize();
     
-    
+    if ColorForDisplay=='Yellow':
+        ColorForDisplay='gold'; 
+        
     col=list(db.columns)
     
     rnge=range(len(col))
@@ -365,7 +389,9 @@ try:
     for ColorForDisplay in ColorList:    
         db=CalcWaveFromRawData(pthF+'/','Back',Panel,ColorForDisplay).ArrangeRawDataForAnalize();
         
-        
+        if ColorForDisplay=='Yellow':
+            ColorForDisplay='gold';
+            
         col=list(db.columns)
         
         rnge=range(len(col))
@@ -445,7 +471,9 @@ side='Front';
 # for ColorForDisplay in ColorList:
 for ColorForDisplay in ColorList:
     db=CalcWaveFromRawData(pthF+'/',side,Panel,ColorForDisplay).ArrangeRawDataForAnalize();
-    
+
+    if ColorForDisplay=='Yellow':
+        ColorForDisplay='gold';    
     
     col=list(db.columns)
     
@@ -530,7 +558,9 @@ try:
     for ColorForDisplay in ColorList:
         db=CalcWaveFromRawData(pthF+'/',side,Panel,ColorForDisplay).ArrangeRawDataForAnalize();
         
-        
+        if ColorForDisplay=='Yellow':
+            ColorForDisplay='gold';
+            
         col=list(db.columns)
         
         rnge=range(len(col))
@@ -628,6 +658,9 @@ for Panel in  range(1,12):
         
         rnge=range(len(col))
         
+        if ColorForDisplay=='Yellow':
+            ColorForDisplay='gold';
+        
         # for i in rnge:
         # for i in rnge:
             # if SideOffset=='LeftSide':
@@ -724,6 +757,10 @@ try:
                 #             offSet=np.min(db[i+1][int(len(db[i+1])/2)-50:int(len(db[i+1])/2)+50])
                 #         else:
                 #             offSet=0;
+    
+            if ColorForDisplay=='Yellow':
+                ColorForDisplay='gold';    
+                
             offSet=db[CycleNumber][0];
             fig110.add_trace(
             go.Scatter(y=list(db[CycleNumber]-offSet),line_color= ColorForDisplay,
@@ -886,23 +923,67 @@ if registrationBetweenWavePrints:
  ##################################################################################################       
  ##################################################################################################       
  ##################################################################################################          
+if presentAllColors:
+    for clr in ColorList:
+        figPH = make_subplots(specs=[[{"secondary_y": True}]])
+        for col in WaveRawDataDic[clr].columns:
+            
+            figPH.add_trace(
+            go.Scatter(y=WaveRawDataDic[clr][col],line_color= clr,
+                        name='WaveData Raw '+str(col)+' color '+clr), secondary_y=False)
+            
+            figPH.add_trace(
+            go.Scatter(y=WaveDataWithMaxFilterDic[clr][col],line_color= clr,
+                        name='WaveData with Filter '+str(col)+' color '+clr), secondary_y=False)
+            
+            figPH.add_trace(
+            go.Scatter(y=WaveRawDataDic[clr][col]-WaveDataWithMaxFilterDic[clr][col],line_color= clr,
+                        name='Fiter - Raw '+str(col)+' color '+clr), secondary_y=True)
+        
+        
+        figPH.update_layout(
+                hoverlabel=dict(
+                    namelength=-1
+                )
+            )
+        figPH.update_layout(title=f+'Wave Data - Filtered color '+clr+' Max Filter = '+ str(MaxWaveWindow))
+        
+        now = datetime.now()
+        
+        
+        dt_string = now.strftime("%d_%m_%Y_%H_%M_%S")
+        # plot(fig00)
+        plot(figPH,filename=f+'Wave Data - Filtered color '+clr+' Max Filter_'+ str(MaxWaveWindow)+".html") 
+ 
+##################################################################################################       
+ ##################################################################################################       
+ ##################################################################################################       
+ ##################################################################################################          
 
 for clr in ColorList:
     figPH = make_subplots(specs=[[{"secondary_y": True}]])
-    for col in WaveRawDataDic[clr].columns:
-        
-        figPH.add_trace(
-        go.Scatter(y=WaveRawDataDic[clr][col],line_color= clr,
-                    name='WaveData Raw '+str(col)+' color '+clr), secondary_y=False)
-        
-        figPH.add_trace(
-        go.Scatter(y=WaveDataWithMaxFilterDic[clr][col],line_color= clr,
-                    name='WaveData with Filter '+str(col)+' color '+clr), secondary_y=False)
-        
-        figPH.add_trace(
-        go.Scatter(y=WaveRawDataDic[clr][col]-WaveDataWithMaxFilterDic[clr][col],line_color= clr,
-                    name='Fiter - Raw '+str(col)+' color '+clr), secondary_y=True)
+    col='Mean';
+     
+    lineColor=clr;
     
+    if lineColor=='Yellow':
+        lineColor='gold';
+    
+    figPH.add_trace(
+    go.Scatter(y=WaveRawDataDic[clr][col],line_color= lineColor,
+                name='WaveData Raw '+str(col)+' color '+clr), secondary_y=False)
+    
+    figPH.add_trace(
+    go.Scatter(y=WaveDataWithMaxFilterDic[clr][col],line_color= lineColor,
+                name='WaveData with Filter '+str(col)+' color '+clr), secondary_y=False)
+    
+    figPH.add_trace(
+    go.Scatter(y=WaveRawDataDic[clr][col]-WaveDataWithMaxFilterDic[clr][col],line_color= lineColor,
+                name='Fiter - Raw '+str(col)+' color '+clr), secondary_y=True)
+    
+    
+    for PHlocMem in PHloc:
+        figPH.add_vline(x=PHlocMem, line_width=2, line_dash="dash", line_color="green")
     
     figPH.update_layout(
             hoverlabel=dict(
@@ -919,6 +1000,8 @@ for clr in ColorList:
     plot(figPH,filename=f+'Wave Data - Filtered color '+clr+' Max Filter_'+ str(MaxWaveWindow)+".html") 
  
  
+ 
+  
  
  
  

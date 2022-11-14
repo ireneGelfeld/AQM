@@ -960,10 +960,10 @@ if presentAllColors:
  ##################################################################################################       
  ##################################################################################################          
 
-for clr in ColorList:
-    figPH = make_subplots(specs=[[{"secondary_y": True}]])
-    col='Mean';
-     
+
+figPH = make_subplots(specs=[[{"secondary_y": True}]])
+col='Mean';
+for clr in ColorList:     
     lineColor=clr;
     
     if lineColor=='Yellow':
@@ -997,7 +997,7 @@ for clr in ColorList:
     
     dt_string = now.strftime("%d_%m_%Y_%H_%M_%S")
     # plot(fig00)
-    plot(figPH,filename=f+'Wave Data - Filtered color '+clr+' Max Filter_'+ str(MaxWaveWindow)+".html") 
+plot(figPH,filename=f+'Wave Data - Filtered color '+clr+' Max Filter_'+ str(MaxWaveWindow)+".html") 
  
  
  

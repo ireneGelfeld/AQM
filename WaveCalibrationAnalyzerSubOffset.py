@@ -12,12 +12,14 @@ get_ipython().magic('reset -sf')
 Panel = 11;
 ColorForDisplay = 'Cyan'
 CycleNumber =4
+StartCycle=3
+MainColor = "Black"
 LeftSide=1;
 Middle=1;
 RightSide=1;
 CIScurve=1;
-
-
+registrationBetweenWavePrints=0;
+MaxWaveWindow=51;
 #########################################################################################################
 #########################################################################################################
 import os
@@ -31,6 +33,7 @@ import glob
 from zipfile import ZipFile 
 from pathlib import Path
 from collections import OrderedDict
+from scipy.signal import savgol_filter
 
 # Load the Pandas libraries with alias 'pd' 
 import pandas as pd 
@@ -104,7 +107,49 @@ class CalcWaveFromRawData:
             if not tmp == 'DONE':
                WaveRaw=pd.concat([WaveRaw,pd.DataFrame(l[0:tmp-1])],axis=1).rename(columns={0:i+1}) 
         return  WaveRaw;      
-            
+
+
+class CalcRegistrationFromWaveData:
+    def  __init__(self, pthF,side,Panel,ColorList,MainColor,StartCycle): 
+        self.pthF = pthF;
+        self.side = side;
+        self.Panel= Panel;
+        self.ColorList=ColorList;
+        self.MainColor=MainColor;
+        self.StartCycle=StartCycle;
+        
+
+   
+    
+    def DeltaForCycleAndColor(self):
+        
+        DeltaPerCycleFromRef=pd.DataFrame();
+        DeltaPerCycle=pd.DataFrame();
+        
+        mainColorRef=CalcWaveFromRawData(self.pthF+'/',self.side,self.Panel,self.MainColor).ArrangeRawDataForAnalize();
+        DFdicPerClr={}
+        for clr in self.ColorList:
+            if clr == self.MainColor:
+                continue;
+            DeltaPerCycleFromRef=pd.DataFrame();
+            DeltaPerCycle=pd.DataFrame();    
+            ColorWavePerCycle=CalcWaveFromRawData(self.pthF+'/',self.side,self.Panel,clr).ArrangeRawDataForAnalize();
+            DeltaPerCycleFromRef= mainColorRef.loc[:,self.StartCycle:]-ColorWavePerCycle.loc[:,self.StartCycle:];
+            for col in DeltaPerCycleFromRef.loc[:,StartCycle:].columns:
+                DeltaPerCycle=pd.concat([DeltaPerCycle,DeltaPerCycleFromRef[col]-DeltaPerCycleFromRef[self.StartCycle]],axis=1);
+                DeltaPerCycle=DeltaPerCycle.rename(columns={0:col})
+                DFdicPerClr[clr]=  DeltaPerCycle;       
+                    
+       
+        
+        return DFdicPerClr;
+    
+    
+
+
+
+
+           
 class CIScurveFromRawData:
     def  __init__(self, pthF): 
         self.pthF = pthF;
@@ -172,6 +217,7 @@ class CIScurveFromRawData:
         return cisBACK,cisFRONT;    
             
                     
+
                 
 
 
@@ -202,16 +248,23 @@ if len(cisFRONT) == 0:
     cisBACK,cisFRONT=CIScurveFromRawData(pthF+'/').GetCIScurveNewVersion()
 
 
-# WaveRaw= CalcWaveFromRawData(pthF+'/',side,Panel,ColorForDisplay).ArrangeRawDataForAnalize();
+if registrationBetweenWavePrints:
+    DFdicPerClr =  CalcRegistrationFromWaveData(pthF+'/',side,Panel,ColorList,MainColor,StartCycle).DeltaForCycleAndColor()    
+
+WaveRawDataDic={};
+for ColorForDisplay in ColorList:    
+    WaveRawDataDic[ColorForDisplay]=CalcWaveFromRawData(pthF+'/',side,Panel,ColorForDisplay).ArrangeRawDataForAnalize();
 
 
- 
-# RawData=pd.read_csv(r'D:\waveCodeExample\wave\QCS WaveCalibration_500 Archive 18-09-2022 14-15-38 (1)\Front\RawResults\WavePrintDirection.csv');
-# c=list(RawData.columns)    
-            
-    
 
+WaveDataWithMaxFilterDic={};
 
+for ColorForDisplay in ColorList: 
+    tmp=pd.DataFrame();
+    for col in WaveRawDataDic[ColorForDisplay].columns:
+        tmp=pd.concat([tmp,pd.Series(savgol_filter(WaveRawDataDic[ColorForDisplay][col], MaxWaveWindow, 1))],axis=1)
+        tmp=tmp.rename(columns={0:col})
+    WaveDataWithMaxFilterDic[ColorForDisplay]=tmp
 #########################################
 #########################################
 #########################################
@@ -428,7 +481,9 @@ for ColorForDisplay in ColorList:
         Rightdb=pd.concat([Rightdb,db[i+1]-offSet3],axis=1);
     
     
-    for i in Leftdb.index:
+    for j,i in enumerate(Leftdb.index):
+        if j == 0:
+            continue;
         LeftSTD.append(np.std(Leftdb.loc[i,:]))
         middleSTD.append(np.std(middledb.loc[i,:]))
         RightSTD.append(np.std(Rightdb.loc[i,:]))
@@ -510,7 +565,9 @@ try:
             Rightdb=pd.concat([Rightdb,db[i+1]-offSet3],axis=1);
         
         
-        for i in Leftdb.index:
+        for j,i in enumerate(Leftdb.index):
+            if j == 0:
+                continue;
             LeftSTD.append(np.std(Leftdb.loc[i,:]))
             middleSTD.append(np.std(middledb.loc[i,:]))
             RightSTD.append(np.std(Rightdb.loc[i,:]))
@@ -792,6 +849,79 @@ if CIScurve:
         print(f+' Has No CIS BACK curve information')
         print('************************************************************************************')    
 
+ ##################################################################################################       
+ ##################################################################################################       
+ ##################################################################################################       
+ ##################################################################################################       
+if registrationBetweenWavePrints:
+    for clr in ColorList:
+        if clr == MainColor:
+            continue;
+        figClr = go.Figure()
         
+        
+        
+        for col in DFdicPerClr[clr].columns:
+            
+            figClr.add_trace(
+            go.Scatter(y=DFdicPerClr[clr][col],line_color= clr,
+                        name='Registration for cycle '+str(col)+' color '+clr))
+    
+    
+        figClr.update_layout(
+                hoverlabel=dict(
+                    namelength=-1
+                )
+            )
+        figClr.update_layout(title=f+'Registration for '+clr )
+        
+        now = datetime.now()
+        
+        
+        dt_string = now.strftime("%d_%m_%Y_%H_%M_%S")
+        # plot(fig00)
+        plot(figClr,filename=f+'Registration for '+clr+".html") 
+        
+##################################################################################################       
+ ##################################################################################################       
+ ##################################################################################################       
+ ##################################################################################################          
 
-
+for clr in ColorList:
+    figPH = make_subplots(specs=[[{"secondary_y": True}]])
+    for col in WaveRawDataDic[clr].columns:
+        
+        figPH.add_trace(
+        go.Scatter(y=WaveRawDataDic[clr][col],line_color= clr,
+                    name='WaveData Raw '+str(col)+' color '+clr), secondary_y=False)
+        
+        figPH.add_trace(
+        go.Scatter(y=WaveDataWithMaxFilterDic[clr][col],line_color= clr,
+                    name='WaveData with Filter '+str(col)+' color '+clr), secondary_y=False)
+        
+        figPH.add_trace(
+        go.Scatter(y=WaveRawDataDic[clr][col]-WaveDataWithMaxFilterDic[clr][col],line_color= clr,
+                    name='Fiter - Raw '+str(col)+' color '+clr), secondary_y=True)
+    
+    
+    figPH.update_layout(
+            hoverlabel=dict(
+                namelength=-1
+            )
+        )
+    figPH.update_layout(title=f+'Wave Data - Filtered color '+clr+' Max Filter = '+ str(MaxWaveWindow))
+    
+    now = datetime.now()
+    
+    
+    dt_string = now.strftime("%d_%m_%Y_%H_%M_%S")
+    # plot(fig00)
+    plot(figPH,filename=f+'Wave Data - Filtered color '+clr+' Max Filter_'+ str(MaxWaveWindow)+".html") 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 

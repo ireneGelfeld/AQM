@@ -23,7 +23,7 @@ StatisticsCalcStartPage = 50;
 
 ######## Plot Selection
 
-Plot_correction = 0;
+Plot_correction = 1;
 Plot_Image_Placment = 1;
 Plot_RegForAllColors_Left = 1;
 Plot_RegForAllColors_Right = 1;

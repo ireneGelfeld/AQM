@@ -84,13 +84,14 @@ class CalcWaveFromRawData:
         cutCols=col[12:396]
         
         DataSecPrintDircPanelColorCUT=DataSecPrintDircPanelColor[cutCols];
+        LocatorIndex= DataSec['Locator Index'][0];
         
-        return DataSecPrintDircPanelColorCUT,cutCols;
+        return LocatorIndex,DataSecPrintDircPanelColorCUT,cutCols;
     
     
     def ArrangeRawDataForAnalize(self):
        
-        DataSecPrintDircPanelColorCUT,cutCols=self.FilterRawData();
+        LocatorIndex,DataSecPrintDircPanelColorCUT,cutCols=self.FilterRawData();
         WaveRaw=pd.DataFrame();
 
         for i in range(len(DataSecPrintDircPanelColorCUT[cutCols[0]])):
@@ -108,7 +109,11 @@ class CalcWaveFromRawData:
                            break;
             if not tmp == 'DONE':
                WaveRaw=pd.concat([WaveRaw,pd.DataFrame(l[0:tmp-1])],axis=1).rename(columns={0:i+1}) 
-        return  WaveRaw;      
+        return  WaveRaw;  
+
+    def GetLocatorIndex(self):
+        LocatorIndex,DataSecPrintDircPanelColorCUT,cutCols=self.FilterRawData();
+        return LocatorIndex;
 
 
 class CalcRegistrationFromWaveData:
@@ -243,6 +248,7 @@ side='Front';
 
 ColorList= CalcWaveFromRawData(pthF+'/',side,Panel,ColorForDisplay).getColors();
 
+LocatorIndexFront= CalcWaveFromRawData(pthF+'/',side,Panel,ColorForDisplay).GetLocatorIndex();
 # FlatList= CalcWaveFromRawData(pthF+'/',side,Panel,ColorForDisplay).getNumberOfFlats();
 
 cisBACK,cisFRONT=CIScurveFromRawData(pthF+'/').GetCIScurveOldVersion()
@@ -280,9 +286,9 @@ for ColorForDisplay in ColorList:
 ### Calc PH location
 
 PHloc=[]
-PHloc.append(187)
-numForward=187
-numBack=187
+PHloc.append(LocatorIndexFront)
+numForward=LocatorIndexFront
+numBack=LocatorIndexFront
 
 for i in range(len(tmp['Mean'])):
     numForward=numForward+16;
@@ -997,7 +1003,7 @@ for clr in ColorList:
                 namelength=-1
             )
         )
-    figPH.update_layout(title=f+'Wave Data - Filtered color '+clr+' Max Filter = '+ str(MaxWaveWindow))
+    figPH.update_layout(title=f+'Wave Data - Filtered color '+clr+' Max Filter = '+ str(MaxWaveWindow)+' LocatorIndexFront = '+str(LocatorIndexFront))
     
     now = datetime.now()
     

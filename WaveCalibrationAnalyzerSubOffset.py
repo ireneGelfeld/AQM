@@ -101,7 +101,7 @@ class CalcWaveFromRawData:
                 if  tmp == 'DONE':
                     break;
                 else:
-                   if  l[tmp].replace('.', '', 1).isdigit():
+                   if  l[tmp].replace('.', '', 1).replace('-', '').isdigit():
                        l[tmp]=float(l[tmp]);
                    else: 
                        if l[tmp] == 'NotFound':
@@ -184,7 +184,7 @@ class CIScurveFromRawData:
                     tmp=rs.split(',')
                     tmp.pop(0);
                     for c in tmp:
-                        if c.replace('.', '', 1).isdigit():
+                        if c.replace('.', '', 1).replace('-', '').isdigit():
                             if i==0:
                                 cisFRONT.append(float(c))
                             else:
@@ -207,13 +207,14 @@ class CIScurveFromRawData:
                 ind=jobData.index(rs)
                 if len(jobData[ind+1])> 1000:
                     tmp=jobData[ind+1].split(',')
-                    tmp.pop(0);
-                    for c in tmp:
-                        if c.replace('.', '', 1).isdigit():
+                    # tmp=list(map(float, jobData[ind+1].split(',')))
+                    for j,c in enumerate(tmp):                            
+                        if c.replace('.', '', 1).replace('-', '').isdigit():
                             if i==0:
                                 cisFRONT.append(float(c))
                             else:
-                                cisBACK.append(float(c))    
+                                cisBACK.append(float(c)) 
+                     
 
         
         return cisBACK,cisFRONT;    
@@ -248,7 +249,8 @@ cisBACK,cisFRONT=CIScurveFromRawData(pthF+'/').GetCIScurveOldVersion()
 
 if len(cisFRONT) == 0:
     cisBACK,cisFRONT=CIScurveFromRawData(pthF+'/').GetCIScurveNewVersion()
-
+    
+    
 
 if registrationBetweenWavePrints:
     DFdicPerClr =  CalcRegistrationFromWaveData(pthF+'/',side,Panel,ColorList,MainColor,StartCycle).DeltaForCycleAndColor()    
@@ -269,6 +271,11 @@ for ColorForDisplay in ColorList:
         tmp=pd.concat([tmp,pd.Series(savgol_filter(WaveRawDataDic[ColorForDisplay][col], MaxWaveWindow, 1))],axis=1)
         tmp=tmp.rename(columns={0:col})
     WaveDataWithMaxFilterDic[ColorForDisplay]=tmp
+
+
+
+
+
 
 ### Calc PH location
 

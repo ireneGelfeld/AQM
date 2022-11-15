@@ -286,9 +286,9 @@ for ColorForDisplay in ColorList:
 ### Calc PH location
 
 PHloc=[]
-PHloc.append(LocatorIndexFront)
-numForward=LocatorIndexFront
-numBack=LocatorIndexFront
+PHloc.append(LocatorIndexFront-1)
+numForward=LocatorIndexFront-1
+numBack=LocatorIndexFront-1
 
 for i in range(len(tmp['Mean'])):
     numForward=numForward+16;

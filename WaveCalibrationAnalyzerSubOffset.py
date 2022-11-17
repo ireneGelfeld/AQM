@@ -19,6 +19,10 @@ LeftSide=1;
 Middle=1;
 RightSide=1;
 CIScurve=1;
+
+DisplayOffSet=1;
+DisplayTilt=1;
+
 registrationBetweenWavePrints=0;
 presentAllColors=0
 MaxWaveWindow=51;
@@ -299,6 +303,44 @@ for i in range(len(tmp['Mean'])):
         PHloc.append(numForward);
 
 PHloc.sort()
+
+
+
+col='Mean'
+
+PHoffSet={}
+PHtilt={}
+
+for ColorForDisplay in ColorList: 
+    y=WaveRawDataDic[ColorForDisplay][col]-WaveDataWithMaxFilterDic[ColorForDisplay][col];
+    t=list(y);
+    tlt=t.copy();
+    for i in range(1,len(PHloc)):
+        for j in range(PHloc[i-1],PHloc[i]):
+            t[j]=np.mean(y[PHloc[i-1]+2:PHloc[i]-2])
+            tlt[PHloc[i-1]+2:PHloc[i]-2]=savgol_filter(y[PHloc[i-1]+2:PHloc[i]-2], 11, 1)
+            
+    PHoffSet[ColorForDisplay]=t
+    PHtilt[ColorForDisplay]=tlt
+        
+
+
+# y=WaveRawDataDic[clr][col]-WaveDataWithMaxFilterDic[clr][col];
+# t=list(y);
+# tlt=t.copy();
+# for i in range(1,len(PHloc)):
+#     for j in range(PHloc[i-1],PHloc[i]):
+#         t[j]=np.mean(y[PHloc[i-1]+2:PHloc[i]-2])
+#         tlt[PHloc[i-1]+2:PHloc[i]-2]=savgol_filter(y[PHloc[i-1]+2:PHloc[i]-2], 11, 1)
+
+
+# plt.figure();
+# plt.plot(t)
+# plt.show()
+
+# plt.figure();
+# plt.plot(tlt)
+# plt.show()
 
 #########################################
 #########################################
@@ -997,6 +1039,18 @@ for clr in ColorList:
     
     for PHlocMem in PHloc:
         figPH.add_vline(x=PHlocMem, line_width=2, line_dash="dash", line_color="green")
+    
+    
+    if DisplayOffSet:
+        figPH.add_trace(
+        go.Scatter(y=PHoffSet[clr],line_color= lineColor,
+                    name='Average(Fiter - Raw) '+str(col)+' color '+clr), secondary_y=True)
+    
+    if DisplayTilt:
+        figPH.add_trace(
+        go.Scatter(y=PHtilt[clr],line_color= lineColor,
+                    name='Tilt(Fiter - Raw) '+str(col)+' color '+clr), secondary_y=True)
+    
     
     figPH.update_layout(
             hoverlabel=dict(

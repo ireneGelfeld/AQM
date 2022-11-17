@@ -11,8 +11,8 @@ get_ipython().magic('reset -sf')
 #########################################################################################################
 Panel = 6;
 ColorForDisplay = 'Cyan'
-CycleNumber =4
-StartCycle=3
+CycleNumber =3
+StartCycle=2
 StartCycle4Avr = 2;
 MainColor = "Black"
 LeftSide=1;
@@ -20,7 +20,7 @@ Middle=1;
 RightSide=1;
 CIScurve=1;
 registrationBetweenWavePrints=0;
-presentAllColors=0
+presentAllColors=0;
 MaxWaveWindow=51;
 #########################################################################################################
 #########################################################################################################

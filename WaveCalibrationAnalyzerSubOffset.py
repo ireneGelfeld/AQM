@@ -319,12 +319,23 @@ for ColorForDisplay in ColorList:
     for i in range(1,len(PHloc)):
         for j in range(PHloc[i-1],PHloc[i]):
             t[j]=np.mean(y[PHloc[i-1]+2:PHloc[i]-2])
-            tlt[PHloc[i-1]+2:PHloc[i]-2]=savgol_filter(y[PHloc[i-1]+2:PHloc[i]-2], 11, 1)
+            z=np.polyfit(list(y[PHloc[i-1]+2:PHloc[i]-2].index), list(y[PHloc[i-1]+2:PHloc[i]-2]), 1)
+            tlt[PHloc[i-1]+2:PHloc[i]-2]=list(z[0]*(y[PHloc[i-1]+2:PHloc[i]-2].index)+z[1])
             
     PHoffSet[ColorForDisplay]=t
     PHtilt[ColorForDisplay]=tlt
-        
 
+
+
+# x=range(12)  
+# y1=y[PHloc[i-1]+2:PHloc[i]-2]      
+# z = np.polyfit(x, y1, 3)
+
+# yy=z[0]*x+z[1]
+# plt.figure();
+# plt.plot(x,y1)
+# plt.plot(x,yy)
+# plt.show()
 
 # y=WaveRawDataDic[clr][col]-WaveDataWithMaxFilterDic[clr][col];
 # t=list(y);
@@ -1049,7 +1060,7 @@ for clr in ColorList:
     
     if DisplayTilt:
         figPH.add_trace(
-        go.Scatter(y=PHtilt[clr],line_color= lineColor,
+        go.Scatter(y=PHtilt[clr],line_color= lineColor,line=dict(dash='dot'),
                     name='Tilt(Fiter - Raw) '+str(col)+' color '+clr), secondary_y=True)
     
     

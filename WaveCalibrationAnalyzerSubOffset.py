@@ -23,10 +23,11 @@ CIScurve=1;
 DisplayOffSet=1;
 DisplayTilt=1;
 
-registrationBetweenWavePrints=0;
-presentAllColors=0;
+registrationBetweenWavePrints=1;
+presentAllColors=1;
 MaxWaveWindow=51;
 #########################################################################################################
+
 #########################################################################################################
 import os
 

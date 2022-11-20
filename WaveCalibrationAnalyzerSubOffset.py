@@ -16,7 +16,8 @@ CycleNumber =3
 StartCycle4Avr = 2;
 PHpoitToIgnor=2;
 MaxWaveWindow=51;
-
+ColorLevels= 5;
+DivideByNum= 20;
 
 Panel = 6;
 ColorForDisplay = 'Cyan'
@@ -47,7 +48,7 @@ from zipfile import ZipFile
 from pathlib import Path
 from collections import OrderedDict
 from scipy.signal import savgol_filter
-
+from plotly.colors import n_colors
 # Load the Pandas libraries with alias 'pd' 
 import pandas as pd 
 import plotly.graph_objects as go
@@ -1252,5 +1253,44 @@ try:
 except:
     1
  
+#### FRONT -BACK delta
  
+
+try:
+    ListofListDelta=[]    
+    header=[]
+    fillcolorList=[]  
+    backGroundCLR='rgb(200, 200, 200)'
+    colors = n_colors(backGroundCLR, 'rgb(200, 0, 0)', ColorLevels, colortype='rgb')
+
+    for col in ColorList:
+        header.append(col+'Delta(Front-Back) Offset')
+    for col in ColorList:
+        ListofListDelta.append(list(np.asarray(PHoffsetPerHFRONT[col])-np.asarray(PHoffsetPerHBACK[col])))
+        
+    for i in range(len(ListofListDelta)):
+        # x2 = 30 * np.ones(len(ListofListDelta[i]))
+        fillcolorList.append(np.array(colors)[(abs(np.asarray(ListofListDelta[i]))/DivideByNum).astype(int)])
+    
+    
+        
+    figTableDelta = go.Figure(data=[go.Table(header=dict(values=['PH#']+header),
+                 cells=dict(values=[PHname]+ListofListDelta,fill_color=[backGroundCLR]+fillcolorList))
+                     ])
+    figTableDelta.update_layout(title=f+'Delta Offset Table (FRONT - BACK) Max Filter = '+ str(MaxWaveWindow)+' LocatorIndexFront = '+str(LocatorIndex))
+
+
+    plot(figTableDelta,filename=f+" Delta Offset Table.html") 
+except:
+    1
+
+# cells=dict(
+#     values=[a, b, c],
+#     line_color=[np.array(colors)[a],np.array(colors)[b], np.array(colors)[c]],
+#     fill_color=[np.array(colors)[a],np.array(colors)[b], np.array(colors)[c]],
+#     align='center', font=dict(color='white', size=11)
+#     ))
+
+
+
  

@@ -22,10 +22,10 @@ Panel = 6;
 ColorForDisplay = 'Cyan'
 MainColor = "Black"
 
-LeftSide=1;
-Middle=1;
-RightSide=1;
-CIScurve=1;
+LeftSide=0;
+Middle=0;
+RightSide=0;
+CIScurve=0;
 DisplayOffSet=1;
 DisplayTilt=1;
 registrationBetweenWavePrints=0;
@@ -292,6 +292,8 @@ def CalcMeanAndTilt(WaveRawDataDic,WaveDataWithMaxFilterDic,PHloc):
         tlt=t.copy();
         PHoffsetPerHList=[]
         PHtiltPerHList=[]
+        # x=[]
+        # tlt1=[]
         for i in range(len(PHloc)+1):
         # for i in range(9):
 
@@ -307,23 +309,18 @@ def CalcMeanAndTilt(WaveRawDataDic,WaveDataWithMaxFilterDic,PHloc):
                     # break;
 
                 else:
-                    if ( i>0) and  (i< len(PHloc)):
-                       PHrangeForCalc=slice(PHloc[i-1]+PHpoitToIgnor,PHloc[i]-PHpoitToIgnor);
-                       indexSlice=slice(PHloc[i-1],PHloc[i])
-
-                       PHrange=abs(PHloc[i]-PHloc[i-1]); 
-                    # else:
-                    #    break;
-                   
-            # PHrangeForCalc=range(PHloc[i-1]+PHpoitToIgnor,PHloc[i]-PHpoitToIgnor);
-            # PHrange=abs(PHloc[i]-PHloc[i-1]);
-            # print('i='+str(i)+' len ='+str(len(t)))
+                
+                    PHrangeForCalc=slice(PHloc[i-1]+PHpoitToIgnor,PHloc[i]-PHpoitToIgnor+1);
+                    indexSlice=slice(PHloc[i-1],PHloc[i])
+                    PHrange=abs(PHloc[i]-PHloc[i-1]); 
+     
             PHoffsetPerHList.append(int(np.mean(y[PHrangeForCalc])))
             z=np.polyfit(list(y[PHrangeForCalc].index), list(y[PHrangeForCalc]), 1)
-            tlt[indexSlice]=list(z[0]*(y[PHrangeForCalc].index)+z[1])
+            tlt[PHrangeForCalc]=list(z[0]*(y[PHrangeForCalc].index)+z[1])
             t[indexSlice]=[np.mean(y[PHrangeForCalc])]*PHrange;
-            # print('i='+str(i)+' len ='+str(len(t)))
             PHtiltPerHList.append(int(z[0]))
+            # x=x+list(y[PHrangeForCalc].index)
+            # tlt1=tlt1+tlt[PHrangeForCalc]
     
                 
         PHoffSet[ColorForDisplay]=t
@@ -334,8 +331,16 @@ def CalcMeanAndTilt(WaveRawDataDic,WaveDataWithMaxFilterDic,PHloc):
         
     return PHoffSet,PHtilt,PHoffsetPerH,PHtiltPerH                    
 
-                
+# plt.figure()
+# plt.plot(y)
+# plt.plot(tlt)
+# plt.plot(x,tlt1,'o')
 
+
+                
+# WaveRawDataDic=WaveRawDataDicFRONT;
+# WaveDataWithMaxFilterDic=WaveDataWithMaxFilterDicFRONT;
+# PHloc=PHlocFRONT;
 
 #################################################################################
 #################################################################################

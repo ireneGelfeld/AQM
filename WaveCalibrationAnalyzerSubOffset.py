@@ -12,15 +12,11 @@ get_ipython().magic('reset -sf')
 global StartCycle,StartCycle4Avr,PHpoitToIgnor,MaxWaveWindow
 
 StartCycle=3
-Panel = 6;
-ColorForDisplay = 'Cyan'
 CycleNumber =3
-StartCycle=2
 StartCycle4Avr = 2;
 PHpoitToIgnor=2;
 MaxWaveWindow=51;
 
-CycleNumber =4
 
 Panel = 6;
 ColorForDisplay = 'Cyan'
@@ -35,9 +31,7 @@ DisplayTilt=1;
 registrationBetweenWavePrints=0;
 presentAllColors=0
 
-registrationBetweenWavePrints=1;
-presentAllColors=1;
-MaxWaveWindow=51;
+
 #########################################################################################################
 
 #########################################################################################################

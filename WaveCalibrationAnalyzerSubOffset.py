@@ -1053,37 +1053,39 @@ if CIScurve:
  ##################################################################################################       
  ##################################################################################################       
  ##################################################################################################       
-if registrationBetweenWavePrints:
-    
-    figClr = go.Figure()
+try:
+    if registrationBetweenWavePrints:
         
-        
-    for clr in ColorList:
-        if clr == MainColor:
-            continue;
-        
-        for col in range(rgistBtwPntStartCycle,rgistBtwPntEndCycle+1):        
-        # for col in DFdicPerClr[clr].columns:
+        figClr = go.Figure()
             
-            figClr.add_trace(
-            go.Scatter(y=DFdicPerClr[clr][col],line_color= clr,
-                        name='Registration for cycle '+str(col)+' color '+clr))
-    
-    
-        figClr.update_layout(
-                hoverlabel=dict(
-                    namelength=-1
+            
+        for clr in ColorList:
+            if clr == MainColor:
+                continue;
+            
+            for col in range(rgistBtwPntStartCycle,rgistBtwPntEndCycle+1):        
+            # for col in DFdicPerClr[clr].columns:
+                
+                figClr.add_trace(
+                go.Scatter(y=DFdicPerClr[clr][col],line_color= clr,
+                            name='Registration for cycle '+str(col)+' color '+clr))
+        
+        
+            figClr.update_layout(
+                    hoverlabel=dict(
+                        namelength=-1
+                    )
                 )
-            )
-        figClr.update_layout(title='Registration for Cycle Start ='+str(rgistBtwPntStartCycle)+' Cycle End='+str(rgistBtwPntEndCycle)+' ---> '+f)
+            figClr.update_layout(title='Registration for Cycle Start ='+str(rgistBtwPntStartCycle)+' Cycle End='+str(rgistBtwPntEndCycle)+' ---> '+f)
+            
+        now = datetime.now()
         
-    now = datetime.now()
-    
-    
-    dt_string = now.strftime("%d_%m_%Y_%H_%M_%S")
-        # plot(fig00)
-    plot(figClr,filename=f+'Registration for cycle '+str(rgistBtwPntStartCycle)+'_'+str(rgistBtwPntEndCycle)+".html") 
         
+        dt_string = now.strftime("%d_%m_%Y_%H_%M_%S")
+            # plot(fig00)
+        plot(figClr,filename=f+'Registration for cycle '+str(rgistBtwPntStartCycle)+'_'+str(rgistBtwPntEndCycle)+".html") 
+except:
+    1       
 ##################################################################################################       
  ##################################################################################################       
  ##################################################################################################       

@@ -12,6 +12,9 @@ get_ipython().magic('reset -sf')
 global StartCycle,StartCycle4Avr,PHpoitToIgnor,MaxWaveWindow
 
 StartCycle=3
+rgistBtwPntStartCycle=4
+rgistBtwPntEndCycle=5
+
 CycleNumber =3
 StartCycle4Avr = 2;
 PHpoitToIgnor=2;
@@ -19,17 +22,19 @@ MaxWaveWindow=51;
 ColorLevels= 5;
 DivideByNum= 20;
 
+
+
 Panel = 6;
 ColorForDisplay = 'Cyan'
 MainColor = "Black"
 
-LeftSide=0;
-Middle=0;
-RightSide=0;
-CIScurve=0;
+LeftSide=1;
+Middle=1;
+RightSide=1;
+CIScurve=1;
 DisplayOffSet=1;
 DisplayTilt=1;
-registrationBetweenWavePrints=0;
+registrationBetweenWavePrints=1;
 presentAllColors=0
 
 
@@ -502,9 +507,9 @@ if LeftSide+Middle+RightSide:
             namelength=-1
         )
     )
-    fig00.update_layout(title=f+' Left Side Offset WAVE RAW DATA '+side)
-    fig001.update_layout(title=f+'Middle Side Offset WAVE RAW DATA '+side)
-    fig002.update_layout(title=f+'Right Side Offset WAVE RAW DATA '+side)
+    fig00.update_layout(title=side+'- Left Side Offset WAVE RAW DATA --->'+f)
+    fig001.update_layout(title=side+'- Middle Side Offset WAVE RAW DATA --->'+f)
+    fig002.update_layout(title=side+'- Right Side Offset WAVE RAW DATA --->'+f)
     
     now = datetime.now()
     
@@ -512,11 +517,11 @@ if LeftSide+Middle+RightSide:
     dt_string = now.strftime("%d_%m_%Y_%H_%M_%S")
     # plot(fig00)
     if LeftSide:
-        plot(fig00,filename=f+" Left Side WaveResult_RawDataPerPanel "+side+".html") 
+        plot(fig00,filename=f+" Left Side WaveResult_RawDataPerCycle "+side+".html") 
     if Middle:    
-        plot(fig001,filename=f+" Middle Side WaveResult_RawDataPerPanel "+side+".html") 
+        plot(fig001,filename=f+" Middle Side WaveResult_RawDataPerCycle "+side+".html") 
     if RightSide:
-        plot(fig002,filename=f+" Right Side WaveResult_RawDataPerPanel "+side+".html") 
+        plot(fig002,filename=f+" Right Side WaveResult_RawDataPerCycle "+side+".html") 
     
     
     ########## BACK ########
@@ -587,9 +592,11 @@ if LeftSide+Middle+RightSide:
                 namelength=-1
             )
         )
-        fig000.update_layout(title=f+' Left Side Offset WAVE RAW DATA-Back')
-        fig011.update_layout(title=f+'Middle Side Offset WAVE RAW DATA-Back')
-        fig022.update_layout(title=f+'Right Side Offset WAVE RAW DATA-Back')
+        
+        fig000.update_layout(title=side+'- Left Side Offset WAVE RAW DATA --->'+f)
+        fig011.update_layout(title=side+'- Middle Side Offset WAVE RAW DATA --->'+f)
+        fig022.update_layout(title=side+'- Right Side Offset WAVE RAW DATA --->'+f)
+    
         
         now = datetime.now()
         
@@ -597,11 +604,11 @@ if LeftSide+Middle+RightSide:
         dt_string = now.strftime("%d_%m_%Y_%H_%M_%S")
         
         if LeftSide:
-            plot(fig000,filename=f+" Left Side WaveResult_RawDataPerPanel-Back.html") 
+            plot(fig000,filename=f+' Left Side WaveResult_RawDataPerCycle'+side+".html") 
         if Middle:
-            plot(fig011,filename=f+" Middle Side WaveResult_RawDataPerPanel-Back.html") 
+            plot(fig011,filename=f+' Middle Side WaveResult_RawDataPerCycle'+side+".html") 
         if RightSide:
-            plot(fig022,filename=f+" Right Side WaveResult_RawDataPerPanel-Back.html") 
+            plot(fig022,filename=f+' Right Side WaveResult_RawDataPerCycle'+side+".html") 
     except:
         1    
     
@@ -686,7 +693,7 @@ if LeftSide+Middle+RightSide:
             namelength=-1
         )
     )
-    fig01.update_layout(title=f+' STD Side Offset WAVE RAW DATA-'+side )
+    fig01.update_layout(title=side+'- <b>STD </b> Side Offset WAVE RAW DATA --->'+f )
     
     now = datetime.now()
     
@@ -694,7 +701,7 @@ if LeftSide+Middle+RightSide:
     dt_string = now.strftime("%d_%m_%Y_%H_%M_%S")
     if LeftSide or Middle or RightSide:
     # plot(fig00)
-        plot(fig01,filename=f+" STD SideOffset_ WaveResult_RawDataPerPanel "+side+".html") 
+        plot(fig01,filename=f+" STD SideOffset_ WaveResult_RawDataPerColor "+side+".html") 
     
     ################# Back  ########################
     try:
@@ -773,7 +780,7 @@ if LeftSide+Middle+RightSide:
                 namelength=-1
             )
         )
-        fig010.update_layout(title=f+'STD Side Offset WAVE RAW DATA-'+side)
+        fig010.update_layout(title=side+'- <b>STD </b> Side Offset WAVE RAW DATA --->'+f)
         
         now = datetime.now()
         
@@ -782,7 +789,7 @@ if LeftSide+Middle+RightSide:
         # plot(fig00)
         if LeftSide or Middle or RightSide:
     
-            plot(fig010,filename=f+"STD SideOffset_ WaveResult_RawDataPerPanel "+side+".html") 
+            plot(fig010,filename=f+"STD SideOffset_ WaveResult_RawDataPerColor "+side+".html") 
     except:
         1    
 #########################################
@@ -860,9 +867,9 @@ if LeftSide+Middle+RightSide:
             namelength=-1
         )
     )
-    fig100.update_layout(title=f+' Left Side Offset WAVE RAW DATA '+side)
-    fig101.update_layout(title=f+'Middle Side Offset WAVE RAW DATA '+side)
-    fig102.update_layout(title=f+'Right Side Offset WAVE RAW DATA '+side)
+    fig100.update_layout(title=side+'- Left Side Offset WAVE RAW DATA (For one Cycle)--->'+f)
+    fig101.update_layout(title=side+'- Middle Offset WAVE RAW DATA (For one Cycle)--->'+f)
+    fig102.update_layout(title=side+'- Right Side Offset WAVE RAW DATA (For one Cycle)--->'+f)
     
     now = datetime.now()
     
@@ -948,9 +955,11 @@ if LeftSide+Middle+RightSide:
                 namelength=-1
             )
         )
-        fig110.update_layout(title=f+' Left Side Offset WAVE RAW DATA '+side)
-        fig111.update_layout(title=f+'Middle Side Offset WAVE RAW DATA '+side)
-        fig112.update_layout(title=f+'Right Side Offset WAVE RAW DATA '+side)
+        fig110.update_layout(title=side+'- Left Side Offset WAVE RAW DATA (For one Cycle)--->'+f)
+        fig111.update_layout(title=side+'- Middle Offset WAVE RAW DATA (For one Cycle)--->'+f)
+        fig112.update_layout(title=side+'- Right Side Offset WAVE RAW DATA (For one Cycle)--->'+f)
+        
+ 
         
         now = datetime.now()
         
@@ -991,7 +1000,7 @@ if CIScurve:
                 namelength=-1
             )
         )
-        fig012.update_layout(title=f+'CIS curve FRONT' )
+        fig012.update_layout(title='FRONT CIS curve --->'+f )
         
         now = datetime.now()
         
@@ -1024,7 +1033,7 @@ if CIScurve:
                 namelength=-1
             )
         )
-        fig013.update_layout(title=f+'CIS curve BACK' )
+        fig013.update_layout(title='BACK CIS curve --->'+f)
         
         now = datetime.now()
         
@@ -1045,14 +1054,16 @@ if CIScurve:
  ##################################################################################################       
  ##################################################################################################       
 if registrationBetweenWavePrints:
+    
+    figClr = go.Figure()
+        
+        
     for clr in ColorList:
         if clr == MainColor:
             continue;
-        figClr = go.Figure()
         
-        
-        
-        for col in DFdicPerClr[clr].columns:
+        for col in range(rgistBtwPntStartCycle,rgistBtwPntEndCycle+1):        
+        # for col in DFdicPerClr[clr].columns:
             
             figClr.add_trace(
             go.Scatter(y=DFdicPerClr[clr][col],line_color= clr,
@@ -1064,14 +1075,14 @@ if registrationBetweenWavePrints:
                     namelength=-1
                 )
             )
-        figClr.update_layout(title=f+'Registration for '+clr )
+        figClr.update_layout(title='Registration for Cycle Start ='+str(rgistBtwPntStartCycle)+' Cycle End='+str(rgistBtwPntEndCycle)+' ---> '+f)
         
-        now = datetime.now()
-        
-        
-        dt_string = now.strftime("%d_%m_%Y_%H_%M_%S")
+    now = datetime.now()
+    
+    
+    dt_string = now.strftime("%d_%m_%Y_%H_%M_%S")
         # plot(fig00)
-        plot(figClr,filename=f+'Registration for '+clr+".html") 
+    plot(figClr,filename=f+'Registration for cycle '+str(rgistBtwPntStartCycle)+'_'+str(rgistBtwPntEndCycle)+".html") 
         
 ##################################################################################################       
  ##################################################################################################       
@@ -1117,8 +1128,10 @@ if presentAllColors:
 
 figPH = make_subplots(specs=[[{"secondary_y": True}]])
 col='Mean';
+side='Front'
 for clr in ColorList:     
     lineColor=clr;
+  
     
     if lineColor=='Yellow':
         lineColor='gold';
@@ -1156,19 +1169,20 @@ for clr in ColorList:
                 namelength=-1
             )
         )
-    figPH.update_layout(title=f+'FRONT Wave Data - Filtered color '+clr+' Max Filter = '+ str(MaxWaveWindow)+' LocatorIndexFront = '+str(LocatorIndex))
+    figPH.update_layout(title=side+' Wave Data S.Golay = '+ str(MaxWaveWindow)+'---> '+f)
     
     now = datetime.now()
     
     
     dt_string = now.strftime("%d_%m_%Y_%H_%M_%S")
     # plot(fig00)
-plot(figPH,filename=f+'FRONT Wave Data - Filtered color '+clr+' Max Filter_'+ str(MaxWaveWindow)+".html") 
+plot(figPH,filename=f+' '+side+' Wave Data S.Golay _'+ str(MaxWaveWindow)+".html") 
  
 ## Back ##
 try:
     figPHBACK = make_subplots(specs=[[{"secondary_y": True}]])
     col='Mean';
+    side='Back'
     for clr in ColorList:     
         lineColor=clr;
         
@@ -1208,14 +1222,14 @@ try:
                     namelength=-1
                 )
             )
-        figPHBACK.update_layout(title=f+' BACK Wave Data - Filtered color '+clr+' Max Filter = '+ str(MaxWaveWindow)+' LocatorIndex = '+str(LocatorIndex))
+        figPHBACK.update_layout(title=side+' Wave Data S.Golay = '+ str(MaxWaveWindow)+'---> '+f)
         
         now = datetime.now()
         
         
         dt_string = now.strftime("%d_%m_%Y_%H_%M_%S")
         # plot(fig00)
-    plot(figPHBACK,filename=f+'BACK Wave Data - Filtered color '+clr+' Max Filter_'+ str(MaxWaveWindow)+".html") 
+    plot(figPHBACK,filename=f+' '+side+' Wave Data S.Golay _'+ str(MaxWaveWindow)+".html") 
 except:
     1    
  
@@ -1229,7 +1243,7 @@ PHname=[]
 header=[]
 ListofListFRONT=[]
 ListofListBACK=[]
-
+side='Front'
 for i in range(24):
     PHname.append('PH NUMBER# '+str(i))
 
@@ -1243,20 +1257,22 @@ figTableFRONT = go.Figure(data=[go.Table(header=dict(values=['PH#']+header),
                  cells=dict(values=[PHname]+ListofListFRONT))
                      ])
 
-figTableFRONT.update_layout(title=f+' Offset Table FRONT Max Filter = '+ str(MaxWaveWindow)+' LocatorIndex = '+str(LocatorIndex))
+figTableFRONT.update_layout(title=side+' offset table S.Golay = '+ str(MaxWaveWindow)+'---> '+f)
 
 plot(figTableFRONT,filename=f+" Offset Table FRONT.html") 
 
 ####BACK
  
 try:
+    side='Back'
+
     for col in ColorList:
         ListofListBACK.append(PHoffsetPerHBACK[col])
         
     figTableBACK = go.Figure(data=[go.Table(header=dict(values=['PH#']+header),
                  cells=dict(values=[PHname]+ListofListBACK))
                      ])
-    figTableBACK.update_layout(title=f+' Offset Table BACK Max Filter = '+ str(MaxWaveWindow)+' LocatorIndex = '+str(LocatorIndex))
+    figTableBACK.update_layout(title=side+' offset table S.Golay = '+ str(MaxWaveWindow)+'---> '+f)
 
 
     plot(figTableBACK,filename=f+" Offset Table BACK.html") 
@@ -1287,7 +1303,7 @@ try:
     figTableDelta = go.Figure(data=[go.Table(header=dict(values=['PH#']+header),
                  cells=dict(values=[PHname]+ListofListDelta,fill_color=[backGroundCLR]+fillcolorList))
                      ])
-    figTableDelta.update_layout(title=f+'Delta Offset Table (FRONT - BACK) Max Filter = '+ str(MaxWaveWindow)+' LocatorIndex = '+str(LocatorIndex))
+    figTableDelta.update_layout(title='Delta offset table S.Golay = '+ str(MaxWaveWindow)+'---> '+f)
 
 
     plot(figTableDelta,filename=f+" Delta Offset Table.html") 
@@ -1317,10 +1333,10 @@ try:
     figTableDelta = go.Figure(data=[go.Table(header=dict(values=['PH#']+header),
                  cells=dict(values=[PHname]+ListofListAverage))
                      ])
-    figTableDelta.update_layout(title=f+'Average Offset Table (FRONT & BACK) Max Filter = '+ str(MaxWaveWindow)+' LocatorIndex = '+str(LocatorIndex))
+    figTableDelta.update_layout(title='Correction table S.Golay = '+ str(MaxWaveWindow)+'---> '+f)
 
 
-    plot(figTableDelta,filename=f+" Average Offset Table.html") 
+    plot(figTableDelta,filename=f+" Correction Table.html") 
 except:
     1
 

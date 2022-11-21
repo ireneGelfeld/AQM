@@ -434,95 +434,12 @@ except:
 #########################################
 #########################################
 #########################################
-fig00 = go.Figure()
-fig001 = go.Figure()
-fig002 = go.Figure()
-side='Front';
-# fig00 = make_subplots(rows=3, cols=1,subplot_titles=("LeftSide","Middle", "RightSide"), vertical_spacing=0.1, shared_xaxes=True)
+if LeftSide+Middle+RightSide:
 
-# rnge=[3,6,7]
-
-# db=ImagePlacement_Rightpp
-# db=ImagePlacement_pp
-# for ColorForDisplay in ColorList:
-for ColorForDisplay in ColorList:    
-    db=CalcWaveFromRawData(pthF+'/',side,Panel).ArrangeRawDataForAnalize(ColorForDisplay);
-    
-    if ColorForDisplay=='Yellow':
-        ColorForDisplay='gold'; 
-        
-    col=list(db.columns)
-    
-    rnge=range(len(col))
-    
-    for i in rnge:
-    # for i in rnge:
-        # if SideOffset=='LeftSide':
-        #     offSet=db[i+1][0];
-        # else:
-        #     if SideOffset=='RightSide':    
-        #         offSet=db[i+1][length(len(db[i+1]))]
-        #     else:
-        #         if  SideOffset=='Middle':
-        #             offSet=np.min(db[i+1][int(len(db[i+1])/2)-50:int(len(db[i+1])/2)+50])
-        #         else:
-        #             offSet=0;
-        offSet=db[i+1][0];
-        fig00.add_trace(
-        go.Scatter(y=list(db[i+1]-offSet),line_color= ColorForDisplay,
-                    name='Cycle '+str(i+1)+' '+'Panel '+str(Panel)+' ' +ColorForDisplay))
-        
-        
-        offSet=np.min(db[i+1][int(len(db[i+1])/2)-50:int(len(db[i+1])/2)+50])
-        fig001.add_trace(
-        go.Scatter(y=list(db[i+1]-offSet),line_color= ColorForDisplay,
-                    name='Cycle '+str(i+1)+' '+'Panel '+str(Panel)+' ' +ColorForDisplay))
-        
-        offSet=db[i+1][(len(db[i+1]))-1]  
-        fig002.add_trace(
-        go.Scatter(y=list(db[i+1]-offSet),line_color= ColorForDisplay,
-                    name='Cycle '+str(i+1)+' '+'Panel '+str(Panel)+' ' +ColorForDisplay))
-
-
-
-fig00.update_layout(
-    hoverlabel=dict(
-        namelength=-1
-    )
-)
-fig001.update_layout(
-    hoverlabel=dict(
-        namelength=-1
-    )
-)
-fig002.update_layout(
-    hoverlabel=dict(
-        namelength=-1
-    )
-)
-fig00.update_layout(title=f+' Left Side Offset WAVE RAW DATA '+side)
-fig001.update_layout(title=f+'Middle Side Offset WAVE RAW DATA '+side)
-fig002.update_layout(title=f+'Right Side Offset WAVE RAW DATA '+side)
-
-now = datetime.now()
-
-
-dt_string = now.strftime("%d_%m_%Y_%H_%M_%S")
-# plot(fig00)
-if LeftSide:
-    plot(fig00,filename=f+" Left Side WaveResult_RawDataPerPanel "+side+".html") 
-if Middle:    
-    plot(fig001,filename=f+" Middle Side WaveResult_RawDataPerPanel "+side+".html") 
-if RightSide:
-    plot(fig002,filename=f+" Right Side WaveResult_RawDataPerPanel "+side+".html") 
-
-
-########## BACK ########
-try:
-    fig000 = go.Figure()
-    fig011 = go.Figure()
-    fig022 = go.Figure()
-    
+    fig00 = go.Figure()
+    fig001 = go.Figure()
+    fig002 = go.Figure()
+    side='Front';
     # fig00 = make_subplots(rows=3, cols=1,subplot_titles=("LeftSide","Middle", "RightSide"), vertical_spacing=0.1, shared_xaxes=True)
     
     # rnge=[3,6,7]
@@ -531,10 +448,10 @@ try:
     # db=ImagePlacement_pp
     # for ColorForDisplay in ColorList:
     for ColorForDisplay in ColorList:    
-        db=CalcWaveFromRawData(pthF+'/','Back',Panel).ArrangeRawDataForAnalize(ColorForDisplay);
+        db=CalcWaveFromRawData(pthF+'/',side,Panel).ArrangeRawDataForAnalize(ColorForDisplay);
         
         if ColorForDisplay=='Yellow':
-            ColorForDisplay='gold';
+            ColorForDisplay='gold'; 
             
         col=list(db.columns)
         
@@ -553,158 +470,160 @@ try:
             #         else:
             #             offSet=0;
             offSet=db[i+1][0];
-            fig000.add_trace(
+            fig00.add_trace(
             go.Scatter(y=list(db[i+1]-offSet),line_color= ColorForDisplay,
                         name='Cycle '+str(i+1)+' '+'Panel '+str(Panel)+' ' +ColorForDisplay))
             
             
             offSet=np.min(db[i+1][int(len(db[i+1])/2)-50:int(len(db[i+1])/2)+50])
-            fig011.add_trace(
+            fig001.add_trace(
             go.Scatter(y=list(db[i+1]-offSet),line_color= ColorForDisplay,
                         name='Cycle '+str(i+1)+' '+'Panel '+str(Panel)+' ' +ColorForDisplay))
             
             offSet=db[i+1][(len(db[i+1]))-1]  
-            fig022.add_trace(
+            fig002.add_trace(
             go.Scatter(y=list(db[i+1]-offSet),line_color= ColorForDisplay,
                         name='Cycle '+str(i+1)+' '+'Panel '+str(Panel)+' ' +ColorForDisplay))
     
     
     
-    fig000.update_layout(
+    fig00.update_layout(
         hoverlabel=dict(
             namelength=-1
         )
     )
-    fig011.update_layout(
+    fig001.update_layout(
         hoverlabel=dict(
             namelength=-1
         )
     )
-    fig022.update_layout(
+    fig002.update_layout(
         hoverlabel=dict(
             namelength=-1
         )
     )
-    fig000.update_layout(title=f+' Left Side Offset WAVE RAW DATA-Back')
-    fig011.update_layout(title=f+'Middle Side Offset WAVE RAW DATA-Back')
-    fig022.update_layout(title=f+'Right Side Offset WAVE RAW DATA-Back')
+    fig00.update_layout(title=f+' Left Side Offset WAVE RAW DATA '+side)
+    fig001.update_layout(title=f+'Middle Side Offset WAVE RAW DATA '+side)
+    fig002.update_layout(title=f+'Right Side Offset WAVE RAW DATA '+side)
     
     now = datetime.now()
     
     
     dt_string = now.strftime("%d_%m_%Y_%H_%M_%S")
-    
+    # plot(fig00)
     if LeftSide:
-        plot(fig000,filename=f+" Left Side WaveResult_RawDataPerPanel-Back.html") 
-    if Middle:
-        plot(fig011,filename=f+" Middle Side WaveResult_RawDataPerPanel-Back.html") 
+        plot(fig00,filename=f+" Left Side WaveResult_RawDataPerPanel "+side+".html") 
+    if Middle:    
+        plot(fig001,filename=f+" Middle Side WaveResult_RawDataPerPanel "+side+".html") 
     if RightSide:
-        plot(fig022,filename=f+" Right Side WaveResult_RawDataPerPanel-Back.html") 
-except:
-    1    
+        plot(fig002,filename=f+" Right Side WaveResult_RawDataPerPanel "+side+".html") 
+    
+    
+    ########## BACK ########
+    try:
+        fig000 = go.Figure()
+        fig011 = go.Figure()
+        fig022 = go.Figure()
+        
+        # fig00 = make_subplots(rows=3, cols=1,subplot_titles=("LeftSide","Middle", "RightSide"), vertical_spacing=0.1, shared_xaxes=True)
+        
+        # rnge=[3,6,7]
+        
+        # db=ImagePlacement_Rightpp
+        # db=ImagePlacement_pp
+        # for ColorForDisplay in ColorList:
+        for ColorForDisplay in ColorList:    
+            db=CalcWaveFromRawData(pthF+'/','Back',Panel).ArrangeRawDataForAnalize(ColorForDisplay);
+            
+            if ColorForDisplay=='Yellow':
+                ColorForDisplay='gold';
+                
+            col=list(db.columns)
+            
+            rnge=range(len(col))
+            
+            for i in rnge:
+            # for i in rnge:
+                # if SideOffset=='LeftSide':
+                #     offSet=db[i+1][0];
+                # else:
+                #     if SideOffset=='RightSide':    
+                #         offSet=db[i+1][length(len(db[i+1]))]
+                #     else:
+                #         if  SideOffset=='Middle':
+                #             offSet=np.min(db[i+1][int(len(db[i+1])/2)-50:int(len(db[i+1])/2)+50])
+                #         else:
+                #             offSet=0;
+                offSet=db[i+1][0];
+                fig000.add_trace(
+                go.Scatter(y=list(db[i+1]-offSet),line_color= ColorForDisplay,
+                            name='Cycle '+str(i+1)+' '+'Panel '+str(Panel)+' ' +ColorForDisplay))
+                
+                
+                offSet=np.min(db[i+1][int(len(db[i+1])/2)-50:int(len(db[i+1])/2)+50])
+                fig011.add_trace(
+                go.Scatter(y=list(db[i+1]-offSet),line_color= ColorForDisplay,
+                            name='Cycle '+str(i+1)+' '+'Panel '+str(Panel)+' ' +ColorForDisplay))
+                
+                offSet=db[i+1][(len(db[i+1]))-1]  
+                fig022.add_trace(
+                go.Scatter(y=list(db[i+1]-offSet),line_color= ColorForDisplay,
+                            name='Cycle '+str(i+1)+' '+'Panel '+str(Panel)+' ' +ColorForDisplay))
+        
+        
+        
+        fig000.update_layout(
+            hoverlabel=dict(
+                namelength=-1
+            )
+        )
+        fig011.update_layout(
+            hoverlabel=dict(
+                namelength=-1
+            )
+        )
+        fig022.update_layout(
+            hoverlabel=dict(
+                namelength=-1
+            )
+        )
+        fig000.update_layout(title=f+' Left Side Offset WAVE RAW DATA-Back')
+        fig011.update_layout(title=f+'Middle Side Offset WAVE RAW DATA-Back')
+        fig022.update_layout(title=f+'Right Side Offset WAVE RAW DATA-Back')
+        
+        now = datetime.now()
+        
+        
+        dt_string = now.strftime("%d_%m_%Y_%H_%M_%S")
+        
+        if LeftSide:
+            plot(fig000,filename=f+" Left Side WaveResult_RawDataPerPanel-Back.html") 
+        if Middle:
+            plot(fig011,filename=f+" Middle Side WaveResult_RawDataPerPanel-Back.html") 
+        if RightSide:
+            plot(fig022,filename=f+" Right Side WaveResult_RawDataPerPanel-Back.html") 
+    except:
+        1    
     
 #########################################
 #########################################
 #########################################
-fig01 = go.Figure()
-side='Front';
-# rnge=[3,6,7]
 
-# db=ImagePlacement_Rightpp
-# db=ImagePlacement_pp
-# for ColorForDisplay in ColorList:
-for ColorForDisplay in ColorList:
-    db=CalcWaveFromRawData(pthF+'/',side,Panel).ArrangeRawDataForAnalize(ColorForDisplay);
+if LeftSide+Middle+RightSide:
 
-    if ColorForDisplay=='Yellow':
-        ColorForDisplay='gold';    
+    fig01 = go.Figure()
+    side='Front';
+    # rnge=[3,6,7]
     
-    col=list(db.columns)
-    
-    rnge=range(len(col))
-    middledb=pd.DataFrame()
-    Rightdb=pd.DataFrame()
-    Leftdb=pd.DataFrame()
-    
-    middleSTD=[]
-    RightSTD=[]
-    LeftSTD=[]
-    for i in rnge:
-    # for i in rnge:
-        # if SideOffset=='LeftSide':
-        #     offSet=db[i+1][0];
-        # else:
-        #     if SideOffset=='RightSide':    
-        #         offSet=db[i+1][length(len(db[i+1]))]
-        #     else:
-        #         if  SideOffset=='Middle':
-        #             offSet=np.min(db[i+1][int(len(db[i+1])/2)-50:int(len(db[i+1])/2)+50])
-        #         else:
-        #             offSet=0;
-        
-        offSet1=db[i+1][0];
-        
-        Leftdb=pd.concat([Leftdb,db[i+1]-offSet1],axis=1);
-        
-        offSet2=np.min(db[i+1][int(len(db[i+1])/2)-50:int(len(db[i+1])/2)+50])
-        middledb=pd.concat([middledb,db[i+1]-offSet2],axis=1);
-        
-        offSet3=db[i+1][(len(db[i+1]))-1] 
-        Rightdb=pd.concat([Rightdb,db[i+1]-offSet3],axis=1);
-    
-    
-    for j,i in enumerate(Leftdb.index):
-        if j == 0:
-            continue;
-        LeftSTD.append(np.std(Leftdb.loc[i,:]))
-        middleSTD.append(np.std(middledb.loc[i,:]))
-        RightSTD.append(np.std(Rightdb.loc[i,:]))
-       
-    
-    fig01.add_trace(
-    go.Scatter(y=LeftSTD,line_color= ColorForDisplay,
-                name='Panel '+str(Panel)+' ' +ColorForDisplay+' LeftSide'))
-    
-    
-    fig01.add_trace(
-    go.Scatter(y=middleSTD,line_color= ColorForDisplay,
-                name='Panel '+str(Panel)+' ' +ColorForDisplay+' Middle'))
-    
-    fig01.add_trace(
-    go.Scatter(y=RightSTD,line_color= ColorForDisplay,
-                name='Panel '+str(Panel)+' ' +ColorForDisplay+' RightSide'))
-
-
-
-fig01.update_layout(
-    hoverlabel=dict(
-        namelength=-1
-    )
-)
-fig01.update_layout(title=f+' STD Side Offset WAVE RAW DATA-'+side )
-
-now = datetime.now()
-
-
-dt_string = now.strftime("%d_%m_%Y_%H_%M_%S")
-# plot(fig00)
-plot(fig01,filename=f+" STD SideOffset_ WaveResult_RawDataPerPanel "+side+".html") 
-
-################# Back  ########################
-try:
-    fig010 = go.Figure()
-    side='Back';
-# rnge=[3,6,7]
-
-# db=ImagePlacement_Rightpp
-# db=ImagePlacement_pp
-# for ColorForDisplay in ColorList:
+    # db=ImagePlacement_Rightpp
+    # db=ImagePlacement_pp
+    # for ColorForDisplay in ColorList:
     for ColorForDisplay in ColorList:
         db=CalcWaveFromRawData(pthF+'/',side,Panel).ArrangeRawDataForAnalize(ColorForDisplay);
-        
+    
         if ColorForDisplay=='Yellow':
-            ColorForDisplay='gold';
-            
+            ColorForDisplay='gold';    
+        
         col=list(db.columns)
         
         rnge=range(len(col))
@@ -747,132 +666,136 @@ try:
             RightSTD.append(np.std(Rightdb.loc[i,:]))
            
         
-        fig010.add_trace(
+        fig01.add_trace(
         go.Scatter(y=LeftSTD,line_color= ColorForDisplay,
                     name='Panel '+str(Panel)+' ' +ColorForDisplay+' LeftSide'))
         
         
-        fig010.add_trace(
+        fig01.add_trace(
         go.Scatter(y=middleSTD,line_color= ColorForDisplay,
                     name='Panel '+str(Panel)+' ' +ColorForDisplay+' Middle'))
         
-        fig010.add_trace(
+        fig01.add_trace(
         go.Scatter(y=RightSTD,line_color= ColorForDisplay,
                     name='Panel '+str(Panel)+' ' +ColorForDisplay+' RightSide'))
     
     
     
-    fig010.update_layout(
+    fig01.update_layout(
         hoverlabel=dict(
             namelength=-1
         )
     )
-    fig010.update_layout(title=f+'STD Side Offset WAVE RAW DATA-'+side)
+    fig01.update_layout(title=f+' STD Side Offset WAVE RAW DATA-'+side )
     
     now = datetime.now()
     
     
     dt_string = now.strftime("%d_%m_%Y_%H_%M_%S")
+    if LeftSide or Middle or RightSide:
     # plot(fig00)
-    plot(fig010,filename=f+"STD SideOffset_ WaveResult_RawDataPerPanel "+side+".html") 
-except:
-    1    
+        plot(fig01,filename=f+" STD SideOffset_ WaveResult_RawDataPerPanel "+side+".html") 
+    
+    ################# Back  ########################
+    try:
+        fig010 = go.Figure()
+        side='Back';
+    # rnge=[3,6,7]
+    
+    # db=ImagePlacement_Rightpp
+    # db=ImagePlacement_pp
+    # for ColorForDisplay in ColorList:
+        for ColorForDisplay in ColorList:
+            db=CalcWaveFromRawData(pthF+'/',side,Panel).ArrangeRawDataForAnalize(ColorForDisplay);
+            
+            if ColorForDisplay=='Yellow':
+                ColorForDisplay='gold';
+                
+            col=list(db.columns)
+            
+            rnge=range(len(col))
+            middledb=pd.DataFrame()
+            Rightdb=pd.DataFrame()
+            Leftdb=pd.DataFrame()
+            
+            middleSTD=[]
+            RightSTD=[]
+            LeftSTD=[]
+            for i in rnge:
+            # for i in rnge:
+                # if SideOffset=='LeftSide':
+                #     offSet=db[i+1][0];
+                # else:
+                #     if SideOffset=='RightSide':    
+                #         offSet=db[i+1][length(len(db[i+1]))]
+                #     else:
+                #         if  SideOffset=='Middle':
+                #             offSet=np.min(db[i+1][int(len(db[i+1])/2)-50:int(len(db[i+1])/2)+50])
+                #         else:
+                #             offSet=0;
+                
+                offSet1=db[i+1][0];
+                
+                Leftdb=pd.concat([Leftdb,db[i+1]-offSet1],axis=1);
+                
+                offSet2=np.min(db[i+1][int(len(db[i+1])/2)-50:int(len(db[i+1])/2)+50])
+                middledb=pd.concat([middledb,db[i+1]-offSet2],axis=1);
+                
+                offSet3=db[i+1][(len(db[i+1]))-1] 
+                Rightdb=pd.concat([Rightdb,db[i+1]-offSet3],axis=1);
+            
+            
+            for j,i in enumerate(Leftdb.index):
+                if j == 0:
+                    continue;
+                LeftSTD.append(np.std(Leftdb.loc[i,:]))
+                middleSTD.append(np.std(middledb.loc[i,:]))
+                RightSTD.append(np.std(Rightdb.loc[i,:]))
+               
+            
+            fig010.add_trace(
+            go.Scatter(y=LeftSTD,line_color= ColorForDisplay,
+                        name='Panel '+str(Panel)+' ' +ColorForDisplay+' LeftSide'))
+            
+            
+            fig010.add_trace(
+            go.Scatter(y=middleSTD,line_color= ColorForDisplay,
+                        name='Panel '+str(Panel)+' ' +ColorForDisplay+' Middle'))
+            
+            fig010.add_trace(
+            go.Scatter(y=RightSTD,line_color= ColorForDisplay,
+                        name='Panel '+str(Panel)+' ' +ColorForDisplay+' RightSide'))
+        
+        
+        
+        fig010.update_layout(
+            hoverlabel=dict(
+                namelength=-1
+            )
+        )
+        fig010.update_layout(title=f+'STD Side Offset WAVE RAW DATA-'+side)
+        
+        now = datetime.now()
+        
+        
+        dt_string = now.strftime("%d_%m_%Y_%H_%M_%S")
+        # plot(fig00)
+        if LeftSide or Middle or RightSide:
+    
+            plot(fig010,filename=f+"STD SideOffset_ WaveResult_RawDataPerPanel "+side+".html") 
+    except:
+        1    
 #########################################
 #########################################
 #########################################
 
 #################PANEL##################
-fig100 = go.Figure()
-fig101 = go.Figure()
-fig102 = go.Figure()
-side='Front';
-# fig00 = make_subplots(rows=3, cols=1,subplot_titles=("LeftSide","Middle", "RightSide"), vertical_spacing=0.1, shared_xaxes=True)
+if LeftSide+Middle+RightSide:
 
-# rnge=[3,6,7]
-
-# db=ImagePlacement_Rightpp
-# db=ImagePlacement_pp
-# for ColorForDisplay in ColorList:
-for Panel in  range(1,12):  
-    for ColorForDisplay in ColorList:
-        db=CalcWaveFromRawData(pthF+'/',side,Panel).ArrangeRawDataForAnalize(ColorForDisplay);
-        
-        
-        col=list(db.columns)
-        
-        rnge=range(len(col))
-        
-        if ColorForDisplay=='Yellow':
-            ColorForDisplay='gold';
-        
-        # for i in rnge:
-        # for i in rnge:
-            # if SideOffset=='LeftSide':
-            #     offSet=db[i+1][0];
-            # else:
-            #     if SideOffset=='RightSide':    
-            #         offSet=db[i+1][length(len(db[i+1]))]
-            #     else:
-            #         if  SideOffset=='Middle':
-            #             offSet=np.min(db[i+1][int(len(db[i+1])/2)-50:int(len(db[i+1])/2)+50])
-            #         else:
-            #             offSet=0;
-        offSet=db[CycleNumber][0];
-        fig100.add_trace(
-        go.Scatter(y=list(db[CycleNumber]-offSet),line_color= ColorForDisplay,
-                    name='Cycle '+str(CycleNumber)+' '+'Panel '+str(Panel)+' ' +ColorForDisplay))
-        
-        
-        offSet=np.min(db[CycleNumber][int(len(db[CycleNumber])/2)-50:int(len(db[CycleNumber])/2)+50])
-        fig101.add_trace(
-        go.Scatter(y=list(db[CycleNumber]-offSet),line_color= ColorForDisplay,
-                    name='Cycle '+str(CycleNumber)+' '+'Panel '+str(Panel)+' ' +ColorForDisplay))
-        
-        offSet=db[CycleNumber][(len(db[CycleNumber]))-1]  
-        fig102.add_trace(
-        go.Scatter(y=list(db[CycleNumber]-offSet),line_color= ColorForDisplay,
-                    name='Cycle '+str(CycleNumber)+' '+'Panel '+str(Panel)+' ' +ColorForDisplay))
-
-
-
-fig100.update_layout(
-    hoverlabel=dict(
-        namelength=-1
-    )
-)
-fig101.update_layout(
-    hoverlabel=dict(
-        namelength=-1
-    )
-)
-fig102.update_layout(
-    hoverlabel=dict(
-        namelength=-1
-    )
-)
-fig100.update_layout(title=f+' Left Side Offset WAVE RAW DATA '+side)
-fig101.update_layout(title=f+'Middle Side Offset WAVE RAW DATA '+side)
-fig102.update_layout(title=f+'Right Side Offset WAVE RAW DATA '+side)
-
-now = datetime.now()
-
-
-dt_string = now.strftime("%d_%m_%Y_%H_%M_%S")
-# plot(fig00)
-if LeftSide:
-    plot(fig100,filename=f+" Left Side WaveResult_RawDataPerPanel "+side+".html") 
-if Middle:    
-    plot(fig101,filename=f+" Middle Side WaveResult_RawDataPerPanel "+side+".html") 
-if RightSide:
-    plot(fig102,filename=f+" Right Side WaveResult_RawDataPerPanel "+side+".html") 
-
-
-########## BACK ########
-try:
-    fig110 = go.Figure()
-    fig111 = go.Figure()
-    fig122 = go.Figure()
-    side = 'Back'
+    fig100 = go.Figure()
+    fig101 = go.Figure()
+    fig102 = go.Figure()
+    side='Front';
     # fig00 = make_subplots(rows=3, cols=1,subplot_titles=("LeftSide","Middle", "RightSide"), vertical_spacing=0.1, shared_xaxes=True)
     
     # rnge=[3,6,7]
@@ -889,6 +812,9 @@ try:
             
             rnge=range(len(col))
             
+            if ColorForDisplay=='Yellow':
+                ColorForDisplay='gold';
+            
             # for i in rnge:
             # for i in rnge:
                 # if SideOffset=='LeftSide':
@@ -901,46 +827,42 @@ try:
                 #             offSet=np.min(db[i+1][int(len(db[i+1])/2)-50:int(len(db[i+1])/2)+50])
                 #         else:
                 #             offSet=0;
-    
-            if ColorForDisplay=='Yellow':
-                ColorForDisplay='gold';    
-                
             offSet=db[CycleNumber][0];
-            fig110.add_trace(
+            fig100.add_trace(
             go.Scatter(y=list(db[CycleNumber]-offSet),line_color= ColorForDisplay,
                         name='Cycle '+str(CycleNumber)+' '+'Panel '+str(Panel)+' ' +ColorForDisplay))
             
             
             offSet=np.min(db[CycleNumber][int(len(db[CycleNumber])/2)-50:int(len(db[CycleNumber])/2)+50])
-            fig111.add_trace(
+            fig101.add_trace(
             go.Scatter(y=list(db[CycleNumber]-offSet),line_color= ColorForDisplay,
                         name='Cycle '+str(CycleNumber)+' '+'Panel '+str(Panel)+' ' +ColorForDisplay))
             
             offSet=db[CycleNumber][(len(db[CycleNumber]))-1]  
-            fig112.add_trace(
+            fig102.add_trace(
             go.Scatter(y=list(db[CycleNumber]-offSet),line_color= ColorForDisplay,
                         name='Cycle '+str(CycleNumber)+' '+'Panel '+str(Panel)+' ' +ColorForDisplay))
-
-
-
-    fig110.update_layout(
+    
+    
+    
+    fig100.update_layout(
         hoverlabel=dict(
             namelength=-1
         )
     )
-    fig111.update_layout(
+    fig101.update_layout(
         hoverlabel=dict(
             namelength=-1
         )
     )
-    fig112.update_layout(
+    fig102.update_layout(
         hoverlabel=dict(
             namelength=-1
         )
     )
-    fig110.update_layout(title=f+' Left Side Offset WAVE RAW DATA '+side)
-    fig111.update_layout(title=f+'Middle Side Offset WAVE RAW DATA '+side)
-    fig112.update_layout(title=f+'Right Side Offset WAVE RAW DATA '+side)
+    fig100.update_layout(title=f+' Left Side Offset WAVE RAW DATA '+side)
+    fig101.update_layout(title=f+'Middle Side Offset WAVE RAW DATA '+side)
+    fig102.update_layout(title=f+'Right Side Offset WAVE RAW DATA '+side)
     
     now = datetime.now()
     
@@ -948,14 +870,102 @@ try:
     dt_string = now.strftime("%d_%m_%Y_%H_%M_%S")
     # plot(fig00)
     if LeftSide:
-        plot(fig110,filename=f+" Left Side WaveResult_RawDataPerPanel "+side+".html") 
+        plot(fig100,filename=f+" Left Side WaveResult_RawDataPerPanel "+side+".html") 
     if Middle:    
-        plot(fig111,filename=f+" Middle Side WaveResult_RawDataPerPanel "+side+".html") 
+        plot(fig101,filename=f+" Middle Side WaveResult_RawDataPerPanel "+side+".html") 
     if RightSide:
-        plot(fig112,filename=f+" Right Side WaveResult_RawDataPerPanel "+side+".html") 
- 
-except:
-    1    
+        plot(fig102,filename=f+" Right Side WaveResult_RawDataPerPanel "+side+".html") 
+    
+    
+    ########## BACK ########
+    try:
+        fig110 = go.Figure()
+        fig111 = go.Figure()
+        fig122 = go.Figure()
+        side = 'Back'
+        # fig00 = make_subplots(rows=3, cols=1,subplot_titles=("LeftSide","Middle", "RightSide"), vertical_spacing=0.1, shared_xaxes=True)
+        
+        # rnge=[3,6,7]
+        
+        # db=ImagePlacement_Rightpp
+        # db=ImagePlacement_pp
+        # for ColorForDisplay in ColorList:
+        for Panel in  range(1,12):  
+            for ColorForDisplay in ColorList:
+                db=CalcWaveFromRawData(pthF+'/',side,Panel).ArrangeRawDataForAnalize(ColorForDisplay);
+                
+                
+                col=list(db.columns)
+                
+                rnge=range(len(col))
+                
+                # for i in rnge:
+                # for i in rnge:
+                    # if SideOffset=='LeftSide':
+                    #     offSet=db[i+1][0];
+                    # else:
+                    #     if SideOffset=='RightSide':    
+                    #         offSet=db[i+1][length(len(db[i+1]))]
+                    #     else:
+                    #         if  SideOffset=='Middle':
+                    #             offSet=np.min(db[i+1][int(len(db[i+1])/2)-50:int(len(db[i+1])/2)+50])
+                    #         else:
+                    #             offSet=0;
+        
+                if ColorForDisplay=='Yellow':
+                    ColorForDisplay='gold';    
+                    
+                offSet=db[CycleNumber][0];
+                fig110.add_trace(
+                go.Scatter(y=list(db[CycleNumber]-offSet),line_color= ColorForDisplay,
+                            name='Cycle '+str(CycleNumber)+' '+'Panel '+str(Panel)+' ' +ColorForDisplay))
+                
+                
+                offSet=np.min(db[CycleNumber][int(len(db[CycleNumber])/2)-50:int(len(db[CycleNumber])/2)+50])
+                fig111.add_trace(
+                go.Scatter(y=list(db[CycleNumber]-offSet),line_color= ColorForDisplay,
+                            name='Cycle '+str(CycleNumber)+' '+'Panel '+str(Panel)+' ' +ColorForDisplay))
+                
+                offSet=db[CycleNumber][(len(db[CycleNumber]))-1]  
+                fig112.add_trace(
+                go.Scatter(y=list(db[CycleNumber]-offSet),line_color= ColorForDisplay,
+                            name='Cycle '+str(CycleNumber)+' '+'Panel '+str(Panel)+' ' +ColorForDisplay))
+    
+    
+    
+        fig110.update_layout(
+            hoverlabel=dict(
+                namelength=-1
+            )
+        )
+        fig111.update_layout(
+            hoverlabel=dict(
+                namelength=-1
+            )
+        )
+        fig112.update_layout(
+            hoverlabel=dict(
+                namelength=-1
+            )
+        )
+        fig110.update_layout(title=f+' Left Side Offset WAVE RAW DATA '+side)
+        fig111.update_layout(title=f+'Middle Side Offset WAVE RAW DATA '+side)
+        fig112.update_layout(title=f+'Right Side Offset WAVE RAW DATA '+side)
+        
+        now = datetime.now()
+        
+        
+        dt_string = now.strftime("%d_%m_%Y_%H_%M_%S")
+        # plot(fig00)
+        if LeftSide:
+            plot(fig110,filename=f+" Left Side WaveResult_RawDataPerPanel "+side+".html") 
+        if Middle:    
+            plot(fig111,filename=f+" Middle Side WaveResult_RawDataPerPanel "+side+".html") 
+        if RightSide:
+            plot(fig112,filename=f+" Right Side WaveResult_RawDataPerPanel "+side+".html") 
+     
+    except:
+        1    
     
 #########################################
 #########################################
@@ -1198,7 +1208,7 @@ try:
                     namelength=-1
                 )
             )
-        figPHBACK.update_layout(title=f+' BACK Wave Data - Filtered color '+clr+' Max Filter = '+ str(MaxWaveWindow)+' LocatorIndexFront = '+str(LocatorIndex))
+        figPHBACK.update_layout(title=f+' BACK Wave Data - Filtered color '+clr+' Max Filter = '+ str(MaxWaveWindow)+' LocatorIndex = '+str(LocatorIndex))
         
         now = datetime.now()
         
@@ -1233,7 +1243,7 @@ figTableFRONT = go.Figure(data=[go.Table(header=dict(values=['PH#']+header),
                  cells=dict(values=[PHname]+ListofListFRONT))
                      ])
 
-figTableFRONT.update_layout(title=f+' Offset Table FRONT Max Filter = '+ str(MaxWaveWindow)+' LocatorIndexFront = '+str(LocatorIndex))
+figTableFRONT.update_layout(title=f+' Offset Table FRONT Max Filter = '+ str(MaxWaveWindow)+' LocatorIndex = '+str(LocatorIndex))
 
 plot(figTableFRONT,filename=f+" Offset Table FRONT.html") 
 
@@ -1246,7 +1256,7 @@ try:
     figTableBACK = go.Figure(data=[go.Table(header=dict(values=['PH#']+header),
                  cells=dict(values=[PHname]+ListofListBACK))
                      ])
-    figTableBACK.update_layout(title=f+' Offset Table BACK Max Filter = '+ str(MaxWaveWindow)+' LocatorIndexFront = '+str(LocatorIndex))
+    figTableBACK.update_layout(title=f+' Offset Table BACK Max Filter = '+ str(MaxWaveWindow)+' LocatorIndex = '+str(LocatorIndex))
 
 
     plot(figTableBACK,filename=f+" Offset Table BACK.html") 
@@ -1277,12 +1287,43 @@ try:
     figTableDelta = go.Figure(data=[go.Table(header=dict(values=['PH#']+header),
                  cells=dict(values=[PHname]+ListofListDelta,fill_color=[backGroundCLR]+fillcolorList))
                      ])
-    figTableDelta.update_layout(title=f+'Delta Offset Table (FRONT - BACK) Max Filter = '+ str(MaxWaveWindow)+' LocatorIndexFront = '+str(LocatorIndex))
+    figTableDelta.update_layout(title=f+'Delta Offset Table (FRONT - BACK) Max Filter = '+ str(MaxWaveWindow)+' LocatorIndex = '+str(LocatorIndex))
 
 
     plot(figTableDelta,filename=f+" Delta Offset Table.html") 
 except:
     1
+
+
+
+#### FRONT -BACK Average
+ 
+
+try:
+    ListofListAverage=[]    
+    header=[]
+    fillcolorList=[]  
+    
+
+    for col in ColorList:
+        header.append(col+'Average(Front&Back) Offset')
+    for col in ColorList:
+        ListofListAverage.append(list((np.asarray(PHoffsetPerHFRONT[col])+np.asarray(PHoffsetPerHBACK[col]))/2))
+        
+  
+    
+    
+        
+    figTableDelta = go.Figure(data=[go.Table(header=dict(values=['PH#']+header),
+                 cells=dict(values=[PHname]+ListofListAverage))
+                     ])
+    figTableDelta.update_layout(title=f+'Average Offset Table (FRONT & BACK) Max Filter = '+ str(MaxWaveWindow)+' LocatorIndex = '+str(LocatorIndex))
+
+
+    plot(figTableDelta,filename=f+" Average Offset Table.html") 
+except:
+    1
+
 
 # cells=dict(
 #     values=[a, b, c],

@@ -22,15 +22,18 @@ MaxWaveWindow=51;
 ColorLevels= 5;
 DivideByNum= 20;
 
+ColorLevelsTilt=3;
+DivideByNumTilt=4;
+
 
 
 Panel = 6;
 ColorForDisplay = 'Cyan'
 MainColor = "Black"
 
-LeftSide=1;
-Middle=1;
-RightSide=1;
+LeftSide=0;
+Middle=0;
+RightSide=0;
 CIScurve=1;
 DisplayOffSet=1;
 DisplayTilt=1;
@@ -404,7 +407,7 @@ except:
 PHoffSetFRONT,PHtiltFRONT,PHoffsetPerHFRONT,PHtiltPerHFRONT=CalcMeanAndTilt(WaveRawDataDicFRONT,WaveDataWithMaxFilterDicFRONT,PHlocFRONT)
 
 try:
-   PHoffSetBACK,PHtiltBACK,PHoffsetPerHBACK,PHtiltPerHFBACK=CalcMeanAndTilt(WaveRawDataDicBACK,WaveDataWithMaxFilterDicBACK,PHlocBACK)
+   PHoffSetBACK,PHtiltBACK,PHoffsetPerHBACK,PHtiltPerHBACK=CalcMeanAndTilt(WaveRawDataDicBACK,WaveDataWithMaxFilterDicBACK,PHlocBACK)
 except:
     1
  
@@ -1076,7 +1079,7 @@ try:
                         namelength=-1
                     )
                 )
-            figClr.update_layout(title='Registration for Cycle Start ='+str(rgistBtwPntStartCycle)+' Cycle End='+str(rgistBtwPntEndCycle)+' ---> '+f)
+            figClr.update_layout(title='wave registration normalized to '+MainColor+' for Cycle Start ='+str(rgistBtwPntStartCycle)+' Cycle End='+str(rgistBtwPntEndCycle)+' ---> '+f)
             
         now = datetime.now()
         
@@ -1085,7 +1088,8 @@ try:
             # plot(fig00)
         plot(figClr,filename=f+'Registration for cycle '+str(rgistBtwPntStartCycle)+'_'+str(rgistBtwPntEndCycle)+".html") 
 except:
-    1       
+    1      
+   
 ##################################################################################################       
  ##################################################################################################       
  ##################################################################################################       
@@ -1245,6 +1249,11 @@ PHname=[]
 header=[]
 ListofListFRONT=[]
 ListofListBACK=[]
+
+headerTilt=[]
+ListofListTiltFRONT=[]
+ListofListTiltBACK=[]
+
 side='Front'
 for i in range(24):
     PHname.append('PH NUMBER# '+str(i))
@@ -1252,27 +1261,29 @@ for i in range(24):
 for col in ColorList:
     header.append(col+' Offset')
     # header.append(col+' Tilt')
-    ListofListFRONT.append(PHoffsetPerHFRONT[col])
+    new_list = [-number for number in PHoffsetPerHFRONT[col]]
+    ListofListFRONT.append(new_list)
     # ListofList.append(PHtiltPerH[col])
 ####FRONT 
 figTableFRONT = go.Figure(data=[go.Table(header=dict(values=['PH#']+header),
-                 cells=dict(values=[PHname]+ListofListFRONT))
+                 cells=dict(values=[PHname]+ListofListFRONT,font=dict(color='black', size=15)))
                      ])
 
-figTableFRONT.update_layout(title=side+' offset table S.Golay = '+ str(MaxWaveWindow)+'---> '+f)
+figTableFRONT.update_layout(title=side+' offset (Correction-For simplex) table S.Golay = '+ str(MaxWaveWindow)+'---> '+f)
 
 plot(figTableFRONT,filename=f+" Offset Table FRONT.html") 
-
 ####BACK
  
 try:
     side='Back'
-
+    new_list=[]
     for col in ColorList:
-        ListofListBACK.append(PHoffsetPerHBACK[col])
+        new_list = [-number for number in PHoffsetPerHBACK[col]]
+
+        ListofListBACK.append(new_list)
         
     figTableBACK = go.Figure(data=[go.Table(header=dict(values=['PH#']+header),
-                 cells=dict(values=[PHname]+ListofListBACK))
+                 cells=dict(values=[PHname]+ListofListBACK,font=dict(color='black', size=15)))
                      ])
     figTableBACK.update_layout(title=side+' offset table S.Golay = '+ str(MaxWaveWindow)+'---> '+f)
 
@@ -1280,6 +1291,62 @@ try:
     plot(figTableBACK,filename=f+" Offset Table BACK.html") 
 except:
     1
+
+
+### Tilt
+side='Front'
+headerTilt=[]
+ListofListTiltFRONT=[]
+ListofListTiltBACK=[]
+
+for col in ColorList:
+    headerTilt.append(col+' Tilt')
+    # header.append(col+' Tilt')
+    ListofListTiltFRONT.append(PHtiltPerHFRONT[col])
+
+backGroundCLR='rgb(200, 200, 200)'
+colors = n_colors(backGroundCLR, 'rgb(200, 0, 0)', ColorLevelsTilt, colortype='rgb')
+fillcolorList=[]
+for i in range(len(ListofListTiltFRONT)):
+    fillcolorList.append(np.array(colors)[(abs(np.asarray(ListofListTiltFRONT[i]))/DivideByNumTilt).astype(int)])
+    
+
+####FRONT Tilt
+figTableTiltFRONT = go.Figure(data=[go.Table(header=dict(values=['PH#']+headerTilt),
+                 cells=dict(values=[PHname]+ListofListTiltFRONT,fill_color=[backGroundCLR]+fillcolorList,font=dict(color='black', size=15)))
+                     ])
+
+figTableTiltFRONT.update_layout(title=side+' Tilt table S.Golay = '+ str(MaxWaveWindow)+'---> '+f)
+
+plot(figTableTiltFRONT,filename=f+" Tilt Table FRONT.html") 
+
+####BACK Tilt
+
+
+try:
+    side='Back'
+    # headerTilt=[]
+    for col in ColorList:
+        # headerTilt.append(col+' Tilt')
+        # header.append(col+' Tilt')
+        ListofListTiltBACK.append(PHtiltPerHBACK[col])
+        
+    fillcolorList=[]
+    for i in range(len(ListofListTiltBACK)):
+        fillcolorList.append(np.array(colors)[(abs(np.asarray(ListofListTiltBACK[i]))/DivideByNumTilt).astype(int)]) 
+        
+    figTableTiltBACK = go.Figure(data=[go.Table(header=dict(values=['PH#']+headerTilt),
+                 cells=dict(values=[PHname]+ListofListTiltBACK,fill_color=[backGroundCLR]+fillcolorList,font=dict(color='black', size=15)))
+                     ])
+    
+    figTableTiltBACK.update_layout(title=side+' Tilt table S.Golay = '+ str(MaxWaveWindow)+'---> '+f)
+    
+    plot(figTableTiltBACK,filename=f+" Tilt Table BACK.html")  
+except:
+    1    
+
+
+
  
 #### FRONT -BACK delta
  
@@ -1303,7 +1370,7 @@ try:
     
         
     figTableDelta = go.Figure(data=[go.Table(header=dict(values=['PH#']+header),
-                 cells=dict(values=[PHname]+ListofListDelta,fill_color=[backGroundCLR]+fillcolorList))
+                 cells=dict(values=[PHname]+ListofListDelta,fill_color=[backGroundCLR]+fillcolorList,font=dict(color='black', size=15)))
                      ])
     figTableDelta.update_layout(title='Delta offset table S.Golay = '+ str(MaxWaveWindow)+'---> '+f)
 
@@ -1326,14 +1393,14 @@ try:
     for col in ColorList:
         header.append(col+'Average(Front&Back) Offset')
     for col in ColorList:
-        ListofListAverage.append(list((np.asarray(PHoffsetPerHFRONT[col])+np.asarray(PHoffsetPerHBACK[col]))/2))
+        ListofListAverage.append(list(-(np.asarray(PHoffsetPerHFRONT[col])+np.asarray(PHoffsetPerHBACK[col]))/2))
         
   
     
     
         
     figTableDelta = go.Figure(data=[go.Table(header=dict(values=['PH#']+header),
-                 cells=dict(values=[PHname]+ListofListAverage))
+                 cells=dict(values=[PHname]+ListofListAverage,font=dict(color='black', size=15)))
                      ])
     figTableDelta.update_layout(title='Correction table S.Golay = '+ str(MaxWaveWindow)+'---> '+f)
 

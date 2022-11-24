@@ -90,7 +90,7 @@ class CalcWaveFromRawData:
     def FilterRawData(self,ColorForDisplay):
         RawData= self.LoadRawData();
         
-        DataSec=RawData[RawData['Overall Status']=='Success']
+        DataSec=RawData[RawData['Overall Status']=='Success'].reset_index(drop=True);
 
         DataSecPrintDirc=DataSec[DataSec['Direction Type ']=='Print Direction']
         
@@ -397,9 +397,6 @@ except:
 
 
 
-
-# plt.figure()
-# plt.plot(t)
 
 
 ################ Calc offset and tilt

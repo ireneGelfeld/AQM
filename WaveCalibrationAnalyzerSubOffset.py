@@ -1342,6 +1342,11 @@ side='Front'
 headerTilt=[]
 ListofListTiltFRONT=[]
 ListofListTiltBACK=[]
+PHname=[]
+
+for i in range(24):
+    PHname.append(i)
+
 
 for col in ColorList:
     headerTilt.append(col+' Tilt')

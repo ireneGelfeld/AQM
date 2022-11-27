@@ -1342,10 +1342,10 @@ side='Front'
 headerTilt=[]
 ListofListTiltFRONT=[]
 ListofListTiltBACK=[]
-PHname=[]
+# PHname=[]
 
-for i in range(24):
-    PHname.append(i)
+# for i in range(24):
+#     PHname.append(i)
 
 
 for col in ColorList:
@@ -1356,13 +1356,16 @@ for col in ColorList:
 backGroundCLR='rgb(200, 200, 200)'
 colors = n_colors(backGroundCLR, 'rgb(200, 0, 0)', ColorLevelsTilt, colortype='rgb')
 fillcolorList=[]
+formatList=[]
+formatList.append("")
 for i in range(len(ListofListTiltFRONT)):
     fillcolorList.append(np.array(colors)[(abs(np.asarray(ListofListTiltFRONT[i]))/DivideByNumTilt).astype(int)])
+    formatList.append("0.2f")
     
 
 ####FRONT Tilt
 figTableTiltFRONT = go.Figure(data=[go.Table(header=dict(values=['PH#']+headerTilt),
-                 cells=dict(values=[PHname]+ListofListTiltFRONT,fill_color=[backGroundCLR]+fillcolorList,font=dict(color='black', size=15),format=["0.2f"]))
+                 cells=dict(values=[PHname]+ListofListTiltFRONT,fill_color=[backGroundCLR]+fillcolorList,font=dict(color='black', size=15),format=formatList))
                      ])
 
 figTableTiltFRONT.update_layout(title=side+' Tilt table S.Golay = '+ str(MaxWaveWindow)+'---> '+f)
@@ -1385,7 +1388,7 @@ try:
         fillcolorList.append(np.array(colors)[(abs(np.asarray(ListofListTiltBACK[i]))/DivideByNumTilt).astype(int)]) 
         
     figTableTiltBACK = go.Figure(data=[go.Table(header=dict(values=['PH#']+headerTilt),
-                 cells=dict(values=[PHname]+ListofListTiltBACK,fill_color=[backGroundCLR]+fillcolorList,font=dict(color='black', size=15),format=["0.2f"]))
+                 cells=dict(values=[PHname]+ListofListTiltBACK,fill_color=[backGroundCLR]+fillcolorList,font=dict(color='black', size=15),format=formatList))
                      ])
     
     figTableTiltBACK.update_layout(title=side+' Tilt table S.Golay = '+ str(MaxWaveWindow)+'---> '+f)

@@ -381,7 +381,12 @@ if len(cisFRONT) == 0:
     
 
 if registrationBetweenWavePrints:
-    DFdicPerClr =  CalcRegistrationFromWaveData(pthF+'/',side,Panel,ColorList,MainColor,StartCycle).DeltaForCycleAndColor()    
+    DFdicPerClrFRONT =  CalcRegistrationFromWaveData(pthF+'/',side,Panel,ColorList,MainColor,StartCycle).DeltaForCycleAndColor() 
+    try:
+        DFdicPerClrBACK =  CalcRegistrationFromWaveData(pthF+'/','Back',Panel,ColorList,MainColor,StartCycle).DeltaForCycleAndColor() 
+    except:
+        1
+
 
 WaveRawDataDicFRONT=CalcWaveFromRawData(pthF+'/',side,Panel).CreateDicOfWaveRawData();
 WaveDataWithMaxFilterDicFRONT=CalcWaveFromRawData(pthF+'/',side,Panel).FilterWaveDataDic()
@@ -393,7 +398,6 @@ try:
 
 except:
     1
-
 
 
 
@@ -1056,9 +1060,9 @@ if CIScurve:
 try:
     if registrationBetweenWavePrints:
         
-        figClr = go.Figure()
+        figClrFRONT = go.Figure()
             
-            
+        side='Front'    
         for clr in ColorList:
             if clr == MainColor:
                 continue;
@@ -1066,24 +1070,56 @@ try:
             for col in range(rgistBtwPntStartCycle,rgistBtwPntEndCycle+1):        
             # for col in DFdicPerClr[clr].columns:
                 
-                figClr.add_trace(
-                go.Scatter(y=DFdicPerClr[clr][col],line_color= clr,
+                figClrFRONT.add_trace(
+                go.Scatter(y=DFdicPerClrFRONT[clr][col],line_color= clr,
                             name='Registration for cycle '+str(col)+' color '+clr))
         
         
-            figClr.update_layout(
+            figClrFRONT.update_layout(
                     hoverlabel=dict(
                         namelength=-1
                     )
                 )
-            figClr.update_layout(title='wave registration normalized to '+MainColor+' for Cycle Start ='+str(rgistBtwPntStartCycle)+' Cycle End='+str(rgistBtwPntEndCycle)+' ---> '+f)
+            figClrFRONT.update_layout(title=side+' wave registration normalized to '+MainColor+' for Cycle Start ='+str(rgistBtwPntStartCycle)+' Cycle End='+str(rgistBtwPntEndCycle)+' ---> '+f)
             
         now = datetime.now()
         
         
         dt_string = now.strftime("%d_%m_%Y_%H_%M_%S")
             # plot(fig00)
-        plot(figClr,filename=f+'Registration for cycle '+str(rgistBtwPntStartCycle)+'_'+str(rgistBtwPntEndCycle)+".html") 
+        plot(figClrFRONT,filename=f+'Registration for cycle '+str(rgistBtwPntStartCycle)+'_'+str(rgistBtwPntEndCycle)+'_'+side+".html") 
+        
+        
+        ####BACK
+        
+        figClrBACK = go.Figure()
+            
+        side='Back'    
+        for clr in ColorList:
+            if clr == MainColor:
+                continue;
+            
+            for col in range(rgistBtwPntStartCycle,rgistBtwPntEndCycle+1):        
+            # for col in DFdicPerClr[clr].columns:
+                
+                figClrBACK.add_trace(
+                go.Scatter(y=DFdicPerClrBACK[clr][col],line_color= clr,
+                            name='Registration for cycle '+str(col)+' color '+clr))
+        
+        
+            figClrBACK.update_layout(
+                    hoverlabel=dict(
+                        namelength=-1
+                    )
+                )
+            figClrBACK.update_layout(title=side+' wave registration normalized to '+MainColor+' for Cycle Start ='+str(rgistBtwPntStartCycle)+' Cycle End='+str(rgistBtwPntEndCycle)+' ---> '+f)
+            
+        now = datetime.now()
+        
+        
+        dt_string = now.strftime("%d_%m_%Y_%H_%M_%S")
+            # plot(fig00)
+        plot(figClrBACK,filename=f+'Registration for cycle '+str(rgistBtwPntStartCycle)+'_'+str(rgistBtwPntEndCycle)+'_'+side+".html") 
 except:
     1      
    

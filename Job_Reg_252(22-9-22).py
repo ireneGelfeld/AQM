@@ -902,7 +902,7 @@ if Plot_Image_Placment:
                     #             # font_size=18,
                     #             hoverinfo='text')
                     
-                    ig.add_trace(xref ='x2',
+                    fig.add_trace(xref ='x2',
                                        yref ='y2',x=[dbtmpSentCrrBACK['Flat Id'][i]], y=[ymin],
                                 #opacity=0.5,
                                 marker=dict(color="crimson", size=6),

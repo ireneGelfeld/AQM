@@ -9,7 +9,7 @@ get_ipython().magic('reset -sf')
 
 #####################################Params #############################################################
 #########################################################################################################
-global StartCycle,StartCycle4Avr,PHpoitToIgnor,MaxWaveWindow
+global StartCycle,StartCycle4Avr,PHpoitToIgnor,MaxWaveWindow,DistanceBtWPointMM
 
 StartCycle=3
 rgistBtwPntStartCycle=4
@@ -23,9 +23,9 @@ ColorLevels= 5;
 DivideByNum= 20;
 
 ColorLevelsTilt=3;
-DivideByNumTilt=4;
+DivideByNumTilt=1;
 
-
+DistanceBtWPointMM=2.734
 
 Panel = 6;
 ColorForDisplay = 'Cyan'
@@ -37,7 +37,7 @@ RightSide=0;
 CIScurve=1;
 DisplayOffSet=1;
 DisplayTilt=1;
-registrationBetweenWavePrints=1;
+registrationBetweenWavePrints=0;
 presentAllColors=0
 
 
@@ -322,12 +322,13 @@ def CalcMeanAndTilt(WaveRawDataDic,WaveDataWithMaxFilterDic,PHloc):
                     PHrangeForCalc=slice(PHloc[i-1]+PHpoitToIgnor,PHloc[i]-PHpoitToIgnor+1);
                     indexSlice=slice(PHloc[i-1],PHloc[i])
                     PHrange=abs(PHloc[i]-PHloc[i-1]); 
-     
+            
+            Points=y[PHrangeForCalc].index*DistanceBtWPointMM
             PHoffsetPerHList.append(int(np.mean(y[PHrangeForCalc])))
-            z=np.polyfit(list(y[PHrangeForCalc].index), list(y[PHrangeForCalc]), 1)
-            tlt[PHrangeForCalc]=list(z[0]*(y[PHrangeForCalc].index)+z[1])
+            z=np.polyfit(list(Points), list(y[PHrangeForCalc]), 1)
+            tlt[PHrangeForCalc]=list(z[0]*(Points)+z[1])
             t[indexSlice]=[np.mean(y[PHrangeForCalc])]*PHrange;
-            PHtiltPerHList.append(int(z[0]))
+            PHtiltPerHList.append((z[0]))
             # x=x+list(y[PHrangeForCalc].index)
             # tlt1=tlt1+tlt[PHrangeForCalc]
     
@@ -1187,8 +1188,17 @@ for clr in ColorList:
     go.Scatter(y=WaveRawDataDicFRONT[clr][col]-WaveDataWithMaxFilterDicFRONT[clr][col],line_color= lineColor,
                 name='Fiter - Raw '+str(col)+' color '+clr), secondary_y=True)
     
+    ymax=max(WaveRawDataDicFRONT[ColorList[0]][col]-WaveDataWithMaxFilterDicFRONT[ColorList[0]][col])
     
-    for PHlocMem in PHlocFRONT:
+    for i,PHlocMem in enumerate(PHlocFRONT):
+        figPH.add_trace(go.Scatter(x=[PHlocMem], y=[ymax],
+                                marker=dict(color="green", size=6),
+                                mode="markers",
+                                text='PH #'+str(i),
+                                # font_size=18,
+                                hoverinfo='text'),secondary_y=True)
+        figPH.data[len(figPH.data)-1].showlegend = False
+
         figPH.add_vline(x=PHlocMem, line_width=2, line_dash="dash", line_color="green")
     
     
@@ -1196,6 +1206,7 @@ for clr in ColorList:
         figPH.add_trace(
         go.Scatter(y=PHoffSetFRONT[clr],line_color= lineColor,
                     name='Average(Fiter - Raw) '+str(col)+' color '+clr), secondary_y=True)
+        
     
     if DisplayTilt:
         figPH.add_trace(
@@ -1346,7 +1357,7 @@ for i in range(len(ListofListTiltFRONT)):
 
 ####FRONT Tilt
 figTableTiltFRONT = go.Figure(data=[go.Table(header=dict(values=['PH#']+headerTilt),
-                 cells=dict(values=[PHname]+ListofListTiltFRONT,fill_color=[backGroundCLR]+fillcolorList,font=dict(color='black', size=15)))
+                 cells=dict(values=[PHname]+ListofListTiltFRONT,fill_color=[backGroundCLR]+fillcolorList,font=dict(color='black', size=15),format=["0.2f"]))
                      ])
 
 figTableTiltFRONT.update_layout(title=side+' Tilt table S.Golay = '+ str(MaxWaveWindow)+'---> '+f)
@@ -1369,7 +1380,7 @@ try:
         fillcolorList.append(np.array(colors)[(abs(np.asarray(ListofListTiltBACK[i]))/DivideByNumTilt).astype(int)]) 
         
     figTableTiltBACK = go.Figure(data=[go.Table(header=dict(values=['PH#']+headerTilt),
-                 cells=dict(values=[PHname]+ListofListTiltBACK,fill_color=[backGroundCLR]+fillcolorList,font=dict(color='black', size=15)))
+                 cells=dict(values=[PHname]+ListofListTiltBACK,fill_color=[backGroundCLR]+fillcolorList,font=dict(color='black', size=15),format=["0.2f"]))
                      ])
     
     figTableTiltBACK.update_layout(title=side+' Tilt table S.Golay = '+ str(MaxWaveWindow)+'---> '+f)

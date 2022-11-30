@@ -18,11 +18,11 @@ rgistBtwPntEndCycle=5
 CycleNumber =3
 StartCycle4Avr = 2;
 PHpoitToIgnor=2;
-MaxWaveWindow=51;
+MaxWaveWindow=71;
 ColorLevels= 5;
 DivideByNum= 20;
 
-ColorLevelsTilt=3;
+ColorLevelsTilt=5;
 DivideByNumTilt=1;
 
 DistanceBtWPointMM=2.734
@@ -36,7 +36,7 @@ Middle=0;
 RightSide=0;
 CIScurve=1;
 DisplayOffSet=1;
-DisplayTilt=1;
+DisplayTilt=0;
 registrationBetweenWavePrints=0;
 presentAllColors=0
 

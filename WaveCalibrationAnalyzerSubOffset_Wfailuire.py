@@ -23,7 +23,7 @@ ColorLevels= 5;
 DivideByNum= 20;
 
 ColorLevelsTilt=7;
-DivideByNumTilt=0.5;
+DivideByNumTilt=1;
 
 DistanceBtWPointMM=2.734
 
@@ -128,7 +128,13 @@ class CalcWaveFromRawData:
                        l[tmp]=float(l[tmp]);
                    else: 
                        if l[tmp] == 'NotFound':
-                           break;
+                           if isinstance(l[tmp+1], float):
+                               l[tmp]=l[tmp+1]
+                           else:
+                               if l[tmp+1].replace('.', '', 1).replace('-', '').isdigit():
+                                  l[tmp]=float(l[tmp+1])
+                               else:
+                                  break;
             if not tmp == 'DONE':
                WaveRaw=pd.concat([WaveRaw,pd.DataFrame(l[0:tmp-1])],axis=1).rename(columns={0:i+1}) 
         return  WaveRaw;  
@@ -415,34 +421,10 @@ try:
    PHoffSetBACK,PHtiltBACK,PHoffsetPerHBACK,PHtiltPerHBACK=CalcMeanAndTilt(WaveRawDataDicBACK,WaveDataWithMaxFilterDicBACK,PHlocBACK)
 except:
     1
- 
-
-# x=range(12)  
-# y1=y[PHloc[i-1]+2:PHloc[i]-2]      
-# z = np.polyfit(x, y1, 3)
-
-# yy=z[0]*x+z[1]
-# plt.figure();
-# plt.plot(x,y1)
-# plt.plot(x,yy)
-# plt.show()
-
-# y=WaveRawDataDicFRONT[clr][col]-WaveDataWithMaxFilterDicFRONT[clr][col];
-# t=list(y);
-# tlt=t.copy();
-# for i in range(1,len(PHloc)):
-#     for j in range(PHloc[i-1],PHloc[i]):
-#         t[j]=np.mean(y[PHloc[i-1]+2:PHloc[i]-2])
-#         tlt[PHloc[i-1]+2:PHloc[i]-2]=savgol_filter(y[PHloc[i-1]+2:PHloc[i]-2], 11, 1)
+############
 
 
-# plt.figure();
-# plt.plot(t)
-# plt.show()
 
-# plt.figure();
-# plt.plot(tlt)
-# plt.show()
 
 #########################################
 #########################################

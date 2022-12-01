@@ -3,7 +3,16 @@
 Created on Thu Dec  1 10:51:03 2022
 
 @author: Ireneg
+
 """
+#######################################################
+MaxWaveWindow=100;
+limitDataCount=0.03;
+BarNum=20
+
+
+#######################################################
+
 import os
 
 
@@ -37,7 +46,50 @@ os.chdir(pthF)
 
 RawData=pd.read_csv(pthF+'/RawData.csv',header = None);
 
-MaxWaveWindow=100;
+
+
+
+z=np.polyfit(RawData[0], RawData[1], 1)
+tlt=(z[0]*(RawData[0])+z[1])
+
+
+RawData_Tilt=RawData[1]-tlt
+
+l=len(RawData_Tilt)
+
+# plt.Figure()
+m=plt.hist(abs(RawData_Tilt),BarNum)
+# plt.show()
+
+DataCount=m[0]
+DataRange=m[1]
+
+
+
+NumberOfvalidData=int((1-limitDataCount)*l);
+
+DataSum=0
+for i,dt in enumerate(DataCount):
+    DataSum=DataSum+dt;
+    if DataSum>NumberOfvalidData:
+        break;
+
+fixedRawData=[]
+for j,dt in enumerate(RawData_Tilt):
+    if abs(dt)<  DataRange[i]:
+        fixedRawData.append(RawData[1][j])
+    else:
+       fixedRawData.append(tlt[j]) 
+        
+RawData[1]=fixedRawData
+# plt.figure()
+# plt.plot(RawData[0],RawData[1])
+# plt.plot(RawData[0],tlt)
+# plt.plot(RawData[0],fixedRawData)
+
+
+####### Plot
+
 
 fig2 = go.Figure()
 
@@ -46,6 +98,10 @@ fig2 = go.Figure()
 fig2.add_trace(
     go.Scatter(x=list(RawData[0]),y=list(RawData[1]),line_color='red' , 
                 name='raw Data'))
+
+fig2.add_trace(
+    go.Scatter(x=list(RawData[0]),y=tlt,line_color='blue' , 
+                name='Tilt '+'Slop='+"{0:.3f}".format(z[0])))
 # fig.add_trace(
 #     go.Scatter(y=list(db[ColorForDisplay]),line_color=ColorForDisplay , line=dict(dash='dash'),
 #                 name=ColorForDisplay+'_After'), row=2, col=1)
@@ -83,6 +139,7 @@ for i in range(len(fig2.data)):
         step["args"][0]["visible"][i+1] = True  # Toggle i'th trace to "visible"
 
     step["args"][0]["visible"][0] = True 
+    step["args"][0]["visible"][1] = True
 
     steps.append(step)
 

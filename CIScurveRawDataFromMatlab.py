@@ -7,7 +7,7 @@ Created on Thu Dec  1 10:51:03 2022
 """
 #######################################################
 MaxWaveWindow=100;
-limitDataCount=0.03;
+limitDataCount=0.00;
 BarNum=20
 
 
@@ -101,7 +101,7 @@ fig2.add_trace(
 
 fig2.add_trace(
     go.Scatter(x=list(RawData[0]),y=tlt,line_color='blue' , 
-                name='Tilt '+'Slop='+"{0:.3f}".format(z[0])))
+                name='Tilt '+'Slop(x1000)='+"{0:.3f}".format(z[0]*1000)))
 # fig.add_trace(
 #     go.Scatter(y=list(db[ColorForDisplay]),line_color=ColorForDisplay , line=dict(dash='dash'),
 #                 name=ColorForDisplay+'_After'), row=2, col=1)

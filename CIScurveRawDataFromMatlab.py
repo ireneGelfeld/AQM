@@ -24,9 +24,18 @@ from plotly.offline import download_plotlyjs, init_notebook_mode,  plot
 from plotly.subplots import make_subplots
 
 
+from tkinter import filedialog
+from tkinter import *
+root = Tk()
+root.withdraw()
+pthF = filedialog.askdirectory()
 
 
-RawData=pd.read_csv('D:/CIScurve/Ariel_matlab/CIS tilt/2.bmp/Cropped images/Cropped images/RawData.csv',header = None);
+f=pthF.split('/')[len(pthF.split('/'))-1]
+DirectorypathF=pthF.replace(f,'');
+os.chdir(pthF)
+
+RawData=pd.read_csv(pthF+'/RawData.csv',header = None);
 
 MaxWaveWindow=100;
 

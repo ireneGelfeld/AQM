@@ -1237,7 +1237,7 @@ try:
                     name='Fiter - Raw '+str(col)+' color '+clr), secondary_y=True)
         
         
-        for PHlocMem in PHlocBACK:
+        for i,PHlocMem in enumerate(PHlocBACK):
             figPHBACK.add_trace(go.Scatter(x=[PHlocMem], y=[ymax],
                         marker=dict(color="green", size=6),
                         mode="markers",

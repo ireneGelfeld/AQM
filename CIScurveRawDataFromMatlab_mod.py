@@ -131,7 +131,7 @@ for i in range(len(XvalueMeanFULL)-1):
     if not len(enLoc) == 0:
         YvalueMeanFULL.append(np.mean(RawDataCopy[1][stLoc[len(stLoc)-1]:enLoc[len(enLoc)-1]])) 
         
-YvalueMeanFULL=YvalueMeanFULL[0:2]+YvalueMeanFULL
+# YvalueMeanFULL=YvalueMeanFULL[0:2]+YvalueMeanFULL
 plt.figure()
 plt.plot(RawDataCopy[0],RawDataCopy[1],'-x')
 plt.plot(XvalueMeanFULL[1:],YvalueMeanFULL,'-o')

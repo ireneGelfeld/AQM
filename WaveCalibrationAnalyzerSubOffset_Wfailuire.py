@@ -39,7 +39,7 @@ DisplayOffSet=1;
 DisplayTilt=1;
 registrationBetweenWavePrints=0;
 presentAllColors=0
-
+BeforAndAfterCorr=1
 
 #########################################################################################################
 
@@ -62,6 +62,7 @@ import pandas as pd
 import plotly.graph_objects as go
 from plotly.offline import download_plotlyjs, init_notebook_mode,  plot
 from plotly.subplots import make_subplots
+import math 
 
 
 class CalcWaveFromRawData:
@@ -296,6 +297,72 @@ class CIScurveFromRawData:
 
         
         return cisBACK,cisFRONT;    
+
+class RepareDistortions:
+     def  __init__(self, WaveRawDataDic,WaveDataWithMaxFilterDic,ColorList): 
+        self.WaveRawDataDic = WaveRawDataDic;
+        self.WaveDataWithMaxFilterDic = WaveDataWithMaxFilterDic;
+        self.ColorList= ColorList;
+        
+     def CalcWaveAfterFilterSubstraction(self): 
+        col='Mean'
+        WaveFilter_RawData={}
+        
+        for clr in self.ColorList:
+            WaveFilter_RawData[clr]=list(self.WaveRawDataDic[clr][col]-self.WaveDataWithMaxFilterDic[clr][col])
+        return   WaveFilter_RawData;
+    
+     def CalcCorrectionArray(self):
+        
+        WaveFilter_RawData=self.CalcWaveAfterFilterSubstraction();
+        
+        minDistpC=pd.DataFrame();
+        CorrectionArr=[]
+        for i in range(len(WaveFilter_RawData['Black'])):
+            minDistpC=pd.DataFrame();
+            for clrD in self.ColorList:
+                difList={}
+                for clr in ColorList:
+                    if clr == clrD:
+                        continue;
+                    difList[(abs(WaveFilter_RawData[clrD][i]-WaveFilter_RawData[clr][i]))]=clr;
+                tmpList=list(abs(np.array(list(difList.keys()))));
+                minVal=min(tmpList);
+                if  len(self.ColorList) > 4:   
+                    
+                    
+                    tmpList.remove(min(tmpList))  
+                    DistanceVal=math.sqrt(math.pow(minVal,2)+math.pow(min(tmpList),2));
+                    minDistpC=pd.concat([minDistpC,pd.DataFrame([[DistanceVal,difList[minVal],difList[min(tmpList)]]])],axis=0).rename(index={0:clrD})
+                else:
+
+                    DistanceVal=math.sqrt(math.pow(minVal,2)+math.pow(min(tmpList),2));
+                    minDistpC=pd.concat([minDistpC,pd.DataFrame([[DistanceVal,difList[minVal],difList[min(tmpList)]]])],axis=0).rename(index={0:clrD})
+                
+            clrName=pd.Series();    
+            clrName=minDistpC[[0]].idxmin()
+            ColssetCols=[]
+            ColssetCols.append(WaveFilter_RawData[clrName[0]][i])
+            for k in range(1,len(minDistpC.columns)):
+                ColssetCols.append(WaveFilter_RawData[minDistpC[k][clrName[0]]][i])
+                
+            CorrectionArr.append(np.mean(ColssetCols))
+            
+        return CorrectionArr
+    
+     def correctWaveRawData(self):
+      
+         CorrectionArr=self.CalcCorrectionArray();
+         WaveRawDataDicAfterCorr={};
+         WaveDataWithMaxFilterDicAfterCorr={};
+         for clr in self.ColorList:
+             WaveRawDataDicAfterCorr[clr]=self.WaveRawDataDic[clr]['Mean']-CorrectionArr;
+             WaveDataWithMaxFilterDicAfterCorr[clr]=pd.Series(savgol_filter(WaveRawDataDicAfterCorr[clr], MaxWaveWindow, 1))
+             
+         return  WaveRawDataDicAfterCorr,WaveDataWithMaxFilterDicAfterCorr 
+     
+ 
+
             
 def CalcMeanAndTilt(WaveRawDataDic,WaveDataWithMaxFilterDic,PHloc):
     PHoffSet={}
@@ -305,7 +372,10 @@ def CalcMeanAndTilt(WaveRawDataDic,WaveDataWithMaxFilterDic,PHloc):
     PHtiltPerH={}
     
     for ColorForDisplay in ColorList: 
-        y=WaveRawDataDic[ColorForDisplay]['Mean']-WaveDataWithMaxFilterDic[ColorForDisplay]['Mean'];
+        try:
+            y=WaveRawDataDic[ColorForDisplay]['Mean']-WaveDataWithMaxFilterDic[ColorForDisplay]['Mean'];
+        except:
+            y=WaveRawDataDic[ColorForDisplay]-WaveDataWithMaxFilterDic[ColorForDisplay];
         t=list(y);
         tlt=t.copy();
         PHoffsetPerHList=[]
@@ -349,6 +419,15 @@ def CalcMeanAndTilt(WaveRawDataDic,WaveDataWithMaxFilterDic,PHloc):
         PHtiltPerH[ColorForDisplay]=PHtiltPerHList
         
     return PHoffSet,PHtilt,PHoffsetPerH,PHtiltPerH                    
+
+
+
+
+        
+        
+        
+        
+
 
 # plt.figure()
 # plt.plot(y)
@@ -422,6 +501,49 @@ try:
 except:
     1
 ############
+col='Mean'
+WaveFilter_RawData={}
+
+for clr in ColorList:
+    WaveFilter_RawData[clr]=list(WaveRawDataDicFRONT[clr][col]-WaveDataWithMaxFilterDicFRONT[clr][col])
+
+
+minDistpC=pd.DataFrame();
+CorrectionArr=[]
+for i in range(len(WaveFilter_RawData['Black'])):
+    minDistpC=pd.DataFrame();
+    for clrD in ColorList:
+        difList={}
+        for clr in ColorList:
+            if clr == clrD:
+                continue;
+            difList[(abs(WaveFilter_RawData[clrD][i]-WaveFilter_RawData[clr][i]))]=clr;
+        minVal=min(difList.keys());
+        tmpList=list(difList.keys());
+        tmpList.remove(min(tmpList))  
+        minDistpC=pd.concat([minDistpC,pd.DataFrame([[math.sqrt(math.pow(minVal,2)+math.pow(min(tmpList),2)),difList[minVal],difList[min(tmpList)]]])],axis=0).rename(index={0:clrD})
+    clrName=pd.Series();    
+    clrName=minDistpC[[0]].idxmin()
+    CorrectionArr.append(np.mean([WaveFilter_RawData[clrName[0]][i],WaveFilter_RawData[minDistpC[1][clrName[0]]][i],WaveFilter_RawData[minDistpC[2][clrName[0]]][i]]))
+
+plt.figure()
+plt.plot(WaveRawDataDicFRONT[clr][col]-CorrectionArr)
+
+plt.plot(WaveRawDataDicFRONT[clr][col])
+####################
+
+WaveRawDataDicAfterCorrFRONT,WaveDataWithMaxFilterDicAfterCorrFRONT=RepareDistortions(WaveRawDataDicFRONT,WaveDataWithMaxFilterDicFRONT,ColorList).correctWaveRawData();
+try:
+    WaveRawDataDicAfterCorrBACK,WaveDataWithMaxFilterDicAfterCorrBACK=RepareDistortions(WaveRawDataDicBACK,WaveDataWithMaxFilterDicBACK,ColorList).correctWaveRawData();
+except:
+    1
+
+PHoffSetFRONTAfterCorr,PHtiltFRONTAfterCorr,PHoffsetPerHFRONTAfterCorr,PHtiltPerHFRONTAfterCorr=CalcMeanAndTilt(WaveRawDataDicAfterCorrFRONT,WaveDataWithMaxFilterDicAfterCorrFRONT,PHlocFRONT)
+
+try:
+   PHoffSetBACKAfterCorr,PHtiltBACKAfterCorr,PHoffsetPerHBACKAfterCorrAfterCorr,PHtiltPerHBACK=CalcMeanAndTilt(WaveRawDataDicAfterCorrBACK,WaveDataWithMaxFilterDicAfterCorrBACK,PHlocBACK)
+except:
+    1
 
 
 
@@ -1149,8 +1271,55 @@ if presentAllColors:
  ##################################################################################################       
  ##################################################################################################       
  ##################################################################################################          
-
-
+### Before and after correction
+if BeforAndAfterCorr:
+    
+    figClrBeforeAndAfterFRONT = go.Figure()
+    col='Mean'       
+    side='Front'    
+    for clr in ColorList:
+    
+        figClrBeforeAndAfterFRONT.add_trace(
+                go.Scatter(y=list(WaveRawDataDicFRONT[clr][col]),line_color= clr,line=dict(dash='dot'),
+                            name='Wave Raw Data Before Corr '+ clr))
+        figClrBeforeAndAfterFRONT.add_trace(
+                go.Scatter(y=list(WaveRawDataDicAfterCorrFRONT[clr]),line_color= clr,
+                            name='Wave Raw Data After Corr '+ clr))
+    figClrBeforeAndAfterFRONT.update_layout(title=side+' wave raw data before and after correction ---> '+f)
+            
+    now = datetime.now()
+    
+    
+    dt_string = now.strftime("%d_%m_%Y_%H_%M_%S")
+        # plot(fig00)
+    plot(figClrBeforeAndAfterFRONT,filename=f+'wave raw data before and after correction_'+side+".html") 
+    
+    try:
+        figClrBeforeAndAfterBACK = go.Figure()
+        col='Mean'       
+        side='Back'    
+        for clr in ColorList:
+        
+            figClrBeforeAndAfterBACK.add_trace(
+                    go.Scatter(y=list(WaveRawDataDicBACK[clr][col]),line_color= clr,line=dict(dash='dot'),
+                                name='Wave Raw Data Before Corr '+ clr))
+            figClrBeforeAndAfterBACK.add_trace(
+                    go.Scatter(y=list(WaveRawDataDicAfterCorrBACK[clr]),line_color= clr,
+                                name='Wave Raw Data After Corr '+ clr))
+        figClrBeforeAndAfterBACK.update_layout(title=side+' wave raw data before and after correction ---> '+f)
+                
+        now = datetime.now()
+        
+        
+        dt_string = now.strftime("%d_%m_%Y_%H_%M_%S")
+            # plot(fig00)
+        plot(figClrBeforeAndAfterBACK,filename=f+'wave raw data before and after correction_'+side+".html") 
+    except:
+        1
+##################################################################################################       
+ ##################################################################################################       
+ ##################################################################################################       
+ ##################################################################################################  
 figPH = make_subplots(specs=[[{"secondary_y": True}]])
 col='Mean';
 side='Front'
@@ -1276,6 +1445,144 @@ try:
 except:
     1    
  
+################################AFTER CORRECTION
+################################################       
+WaveRawDataDicAfterCorrFRONT,WaveDataWithMaxFilterDicAfterCorrFRONT
+
+figPHCorr = make_subplots(specs=[[{"secondary_y": True}]])
+col='Mean';
+side='Front'
+for clr in ColorList:     
+    lineColor=clr;
+  
+    
+    if lineColor=='Yellow':
+        lineColor='gold';
+    
+    figPHCorr.add_trace(
+    go.Scatter(y=WaveRawDataDicAfterCorrFRONT[clr],line_color= lineColor,
+                name='WaveData Raw AfterCorr '+str(col)+' color '+clr), secondary_y=False)
+    
+    figPHCorr.add_trace(
+    go.Scatter(y=WaveDataWithMaxFilterDicAfterCorrFRONT[clr],line_color= lineColor,
+                name='WaveData AfterCorr with Filter '+str(col)+' color '+clr), secondary_y=False)
+    
+    figPHCorr.add_trace(
+    go.Scatter(y=WaveRawDataDicAfterCorrFRONT[clr]-WaveDataWithMaxFilterDicAfterCorrFRONT[clr],line_color= lineColor,
+                name='Fiter - Raw AfterCorr '+str(col)+' color '+clr), secondary_y=True)
+    
+    ymax=max(WaveRawDataDicAfterCorrFRONT[ColorList[0]]-WaveDataWithMaxFilterDicAfterCorrFRONT[ColorList[0]])
+    
+    for i,PHlocMem in enumerate(PHlocFRONT):
+        figPHCorr.add_trace(go.Scatter(x=[PHlocMem], y=[ymax],
+                                marker=dict(color="green", size=6),
+                                mode="markers",
+                                text='PH #'+str(i),
+                                # font_size=18,
+                                hoverinfo='text'),secondary_y=True)
+        figPHCorr.data[len(figPHCorr.data)-1].showlegend = False
+
+        figPHCorr.add_vline(x=PHlocMem, line_width=2, line_dash="dash", line_color="green")
+    
+    
+    if DisplayOffSet:
+        figPHCorr.add_trace(
+        go.Scatter(y=PHoffSetFRONTAfterCorr[clr],line_color= lineColor,
+                    name='Average(Fiter - Raw) AfterCorr '+str(col)+' color '+clr), secondary_y=True)
+        
+    
+    if DisplayTilt:
+        figPHCorr.add_trace(
+        go.Scatter(y=PHtiltFRONTAfterCorr[clr],line_color= lineColor,line=dict(dash='dot'),
+                    name='Tilt(Fiter - Raw) AfterCorr '+str(col)+' color '+clr), secondary_y=True)
+    
+    
+    figPHCorr.update_layout(
+            hoverlabel=dict(
+                namelength=-1
+            )
+        )
+    figPHCorr.update_layout(title=side+' After Correction Wave Data S.Golay = '+ str(MaxWaveWindow)+'---> '+f)
+    
+    now = datetime.now()
+    
+    
+    dt_string = now.strftime("%d_%m_%Y_%H_%M_%S")
+    # plot(fig00)
+plot(figPHCorr,filename=f+' '+side+' After Correction Wave Data S.Golay _'+ str(MaxWaveWindow)+".html") 
+ 
+## Back ##
+try:
+    figPHBACKAfterCorr = make_subplots(specs=[[{"secondary_y": True}]])
+    col='Mean';
+    side='Back'
+    for clr in ColorList:     
+        lineColor=clr;
+        
+        if lineColor=='Yellow':
+            lineColor='gold';
+        
+        figPHBACKAfterCorr.add_trace(
+        go.Scatter(y=WaveRawDataDicAfterCorrBACK[clr],line_color= lineColor,
+                    name='WaveData AfterCorr Raw '+str(col)+' color '+clr), secondary_y=False)
+        
+        figPHBACKAfterCorr.add_trace(
+        go.Scatter(y=WaveDataWithMaxFilterDicAfterCorrBACK[clr],line_color= lineColor,
+                    name='WaveData AfterCorr with Filter '+str(col)+' color '+clr), secondary_y=False)
+        
+        figPHBACKAfterCorr.add_trace(
+        go.Scatter(y=WaveRawDataDicAfterCorrBACK[clr]-WaveDataWithMaxFilterDicAfterCorrBACK[clr],line_color= lineColor,
+                    name='Fiter - Raw AfterCorr '+str(col)+' color '+clr), secondary_y=True)
+        
+        
+        for i,PHlocMem in enumerate(PHlocBACK):
+            figPHBACKAfterCorr.add_trace(go.Scatter(x=[PHlocMem], y=[ymax],
+                        marker=dict(color="green", size=6),
+                        mode="markers",
+                        text='PH #'+str(i),
+                        # font_size=18,
+                        hoverinfo='text'),secondary_y=True)
+            figPHBACKAfterCorr.data[len(figPHBACKAfterCorr.data)-1].showlegend = False
+
+            figPHBACKAfterCorr.add_vline(x=PHlocMem, line_width=2, line_dash="dash", line_color="green")
+        
+        
+        if DisplayOffSet:
+            figPHBACKAfterCorr.add_trace(
+            go.Scatter(y=PHoffSetBACKAfterCorr[clr],line_color= lineColor,
+                        name='Average(Fiter - Raw) AfterCorr '+str(col)+' color '+clr), secondary_y=True)
+        
+        if DisplayTilt:
+            figPHBACKAfterCorr.add_trace(
+            go.Scatter(y=PHtiltBACKAfterCorr[clr],line_color= lineColor,line=dict(dash='dot'),
+                        name='Tilt(Fiter - Raw) AfterCorr '+str(col)+' color '+clr), secondary_y=True)
+        
+        
+        figPHBACKAfterCorr.update_layout(
+                hoverlabel=dict(
+                    namelength=-1
+                )
+            )
+        figPHBACKAfterCorr.update_layout(title=side+' AfterCorr Wave Data S.Golay = '+ str(MaxWaveWindow)+'---> '+f)
+        
+        now = datetime.now()
+        
+        
+        dt_string = now.strftime("%d_%m_%Y_%H_%M_%S")
+        # plot(fig00)
+    plot(figPHBACKAfterCorr,filename=f+' '+side+' AfterCorr Wave Data S.Golay _'+ str(MaxWaveWindow)+".html") 
+except:
+    1    
+
+
+
+
+
+
+
+
+
+
  
 ##################################################################################################       
 ##################################################################################################       

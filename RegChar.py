@@ -73,13 +73,13 @@ for k in range(1,RawData['file #'][len(RawData['file #'])-1]+1):
        ListofListdelta_x.append(tmp)
        tmp=[]
        
-    ListofListdelta_x.append(maxL)       
+    #ListofListdelta_x.append(maxL)       
     PageNumberDF=pd.concat([PageNumberDF,pd.Series(ListofListdelta_x)],axis=1).rename(columns={0:k})  
     # FirstRawPgNumberDF=pd.concat([FirstRawPgNumberDF,pd.Series(FirstRaw)],axis=1).rename(columns={0:k})  
     ListofListdelta_x=[]
 
 
-figHeatMap = px.imshow(list(PageNumberDF[1]),color_continuous_scale='OrRd', text_auto=True, aspect="auto")
+figHeatMap = px.imshow(list(PageNumberDF[1]),color_continuous_scale='OrRd', color_continuous_midpoint=abs(AbsMax)*0.45,text_auto=True, aspect="auto")
 
 
 steps= [{'args': [{'z':[list(PageNumberDF[k])]

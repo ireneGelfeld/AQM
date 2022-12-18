@@ -7,9 +7,9 @@ Created on Thu Dec  1 10:51:03 2022
 """
 #######################################################
 MaxWaveWindow=100;
-limitDataCount=0.18;
+limitDataCount=0.00;
 BarNum=20
-CISsavgolWindow=25
+CISsavgolWindow=7
 
 PixelSize_um=84.6666
 #######################################################
@@ -46,9 +46,15 @@ DirectorypathF=pthF.replace(f,'');
 os.chdir(pthF)
 
 RawData=pd.read_csv(pthF+'/RawData.csv',header = None);
+#### FIX FORMAT from ariel raw data to yuri rawdata
+RawData=RawData.reset_index(drop=False)
 
+RawData=RawData.rename(columns={'index':0,0:1})
 
+####### TILL HERE
 
+# YvalueMeanFULL=RawData[1]
+# XvalueMeanFULL=RawData[0]
 
 z=np.polyfit(RawData[0], RawData[1], 1)
 tlt=(z[0]*(RawData[0])+z[1])
@@ -131,7 +137,7 @@ for i in range(len(XvalueMeanFULL)-1):
     if not len(enLoc) == 0:
         YvalueMeanFULL.append(np.mean(RawDataCopy[1][stLoc[len(stLoc)-1]:enLoc[len(enLoc)-1]])) 
         
-# YvalueMeanFULL=YvalueMeanFULL[0:2]+YvalueMeanFULL
+# YvalueMeanFULL=YvalueMeanFULL[0:3]+YvalueMeanFULL
 plt.figure()
 plt.plot(RawDataCopy[0],RawDataCopy[1],'-x')
 plt.plot(XvalueMeanFULL[1:],YvalueMeanFULL,'-o')
@@ -178,6 +184,8 @@ plt.plot(XvalueMeanFULL[1:],YvalueMeanFULL,'-o')
 # plt.plot(XvalueMean[1:],np.diff(XvalueMean),'-o')
 
 Data385[0]=XvalueMeanFULL[1:]
+# Data385[0]=XvalueMeanFULL
+
 Data385[1]=YvalueMeanFULL
 Data385[2]=(Data385[1][0]-Data385[1])*PixelSize_um
 Data385[3]=(Data385[1]-Data385[1][0])
@@ -198,14 +206,23 @@ CIScurve=pd.DataFrame()
 
 y=savgol_filter(Data385[2], CISsavgolWindow, 1)
 
-# plt.figure()
-# plt.plot(y)
+plt.figure()
+plt.plot(Data385[2])
+
+plt.plot(y)
 
 
+CIScurve[0]=[0]
 for i,yy in enumerate(y):
-    CIScurve[i]=[yy]
+    CIScurve[i+1]=[yy]
 
-CIScurve.to_csv('CIScurev.csv',index=False,header=False);
+CIScurve.to_csv('CIScurevBACK_D13.csv',index=False,header=False);
+
+
+plt.figure()
+plt.plot(CIScurve.loc[0])
+
+
 
 # ####### Plot
 
@@ -326,7 +343,7 @@ for i in range(len(figCompare.data)):
     step = dict(
         method="update",
         args=[{"visible": [False] * len(figCompare.data)},
-              {"title":"385 points - For compare Slider switched to Step: " + str(i)}],  # layout attribute
+              {"title":pthF+" 385 points - For compare Slider switched to Step: " + str(i)+' '+f}],  # layout attribute
     )
 
         
@@ -357,7 +374,7 @@ figCompare.show()
 now = datetime.now()
 
 dt_string = now.strftime("%d_%m_%Y_%H_%M_%S")
-plot(figCompare,filename="CIS curve raw data and filter 385 compre"+ dt_string +".html") 
+plot(figCompare,filename=f +" CIS curve raw data and filter 385 compre"+ dt_string +".html") 
 
 
 
@@ -403,7 +420,7 @@ for i in range(len(figCIScalc.data)):
     step = dict(
         method="update",
         args=[{"visible": [False] * len(figCIScalc.data)},
-              {"title":"385 points - For CIS calc Slider switched to Step: " + str(i)+ ' Tilt in um=' +"{0:.3f}".format(tlt1[0]-tlt1[len(tlt1)-1])}],  # layout attribute
+              {"title":pthF+" 385 points - For CIS calc Slider switched to Step: " + str(i)+ ' Tilt in um=' +"{0:.3f}".format(tlt1[0]-tlt1[len(tlt1)-1])+' '+f}],  # layout attribute
     )
 
         
@@ -434,4 +451,4 @@ figCIScalc.show()
 now = datetime.now()
 
 dt_string = now.strftime("%d_%m_%Y_%H_%M_%S")
-plot(figCIScalc,filename="CIS curve raw data and filter 385 CIS calc"+ dt_string +".html") 
+plot(figCIScalc,filename=f+" CIS curve raw data and filter 385 CIS calc"+ dt_string +".html") 

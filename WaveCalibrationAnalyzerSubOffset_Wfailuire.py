@@ -31,16 +31,21 @@ Panel = 6;
 ColorForDisplay = 'Cyan'
 MainColor = "Black"
 
-LeftSide=0;
-Middle=0;
-RightSide=0;
-CIScurve=1;
+LeftSide=1;
+Middle=1;
+RightSide=1;
+
+PrintPerPanel=0;
+printPerCycle=1;
+CIScurve=0;
+
+WaveFilterResidue=0
 DisplayOffSet=1;
 DisplayTilt=1;
+
 registrationBetweenWavePrints=0;
 presentAllColors=0
-BeforAndAfterCorr=1
-
+BeforAndAfterCorr=0
 #########################################################################################################
 
 #########################################################################################################
@@ -461,20 +466,20 @@ ColorList= CalcWaveFromRawData(pthF+'/',side,Panel).getColors();
 
 LocatorIndex= CalcWaveFromRawData(pthF+'/',side,Panel).GetLocatorIndex(ColorForDisplay);
 # FlatList= CalcWaveFromRawData(pthF+'/',side,Panel,ColorForDisplay).getNumberOfFlats();
-
-cisBACK,cisFRONT=CIScurveFromRawData(pthF+'/').GetCIScurveOldVersion()
-
-if len(cisFRONT) == 0:
-    cisBACK,cisFRONT=CIScurveFromRawData(pthF+'/').GetCIScurveNewVersion()
+if CIScurve:
+    cisBACK,cisFRONT=CIScurveFromRawData(pthF+'/').GetCIScurveOldVersion()
     
+    if len(cisFRONT) == 0:
+        cisBACK,cisFRONT=CIScurveFromRawData(pthF+'/').GetCIScurveNewVersion()
+        
+        
     
-
-if registrationBetweenWavePrints:
-    DFdicPerClrFRONT =  CalcRegistrationFromWaveData(pthF+'/',side,Panel,ColorList,MainColor,StartCycle).DeltaForCycleAndColor() 
-    try:
-        DFdicPerClrBACK =  CalcRegistrationFromWaveData(pthF+'/','Back',Panel,ColorList,MainColor,StartCycle).DeltaForCycleAndColor() 
-    except:
-        1
+    if registrationBetweenWavePrints:
+        DFdicPerClrFRONT =  CalcRegistrationFromWaveData(pthF+'/',side,Panel,ColorList,MainColor,StartCycle).DeltaForCycleAndColor() 
+        try:
+            DFdicPerClrBACK =  CalcRegistrationFromWaveData(pthF+'/','Back',Panel,ColorList,MainColor,StartCycle).DeltaForCycleAndColor() 
+        except:
+            1
 
 
 WaveRawDataDicFRONT=CalcWaveFromRawData(pthF+'/',side,Panel).CreateDicOfWaveRawData();
@@ -501,36 +506,8 @@ try:
 except:
     1
 ############
-col='Mean'
-WaveFilter_RawData={}
 
-for clr in ColorList:
-    WaveFilter_RawData[clr]=list(WaveRawDataDicFRONT[clr][col]-WaveDataWithMaxFilterDicFRONT[clr][col])
-
-
-minDistpC=pd.DataFrame();
-CorrectionArr=[]
-for i in range(len(WaveFilter_RawData['Black'])):
-    minDistpC=pd.DataFrame();
-    for clrD in ColorList:
-        difList={}
-        for clr in ColorList:
-            if clr == clrD:
-                continue;
-            difList[(abs(WaveFilter_RawData[clrD][i]-WaveFilter_RawData[clr][i]))]=clr;
-        minVal=min(difList.keys());
-        tmpList=list(difList.keys());
-        tmpList.remove(min(tmpList))  
-        minDistpC=pd.concat([minDistpC,pd.DataFrame([[math.sqrt(math.pow(minVal,2)+math.pow(min(tmpList),2)),difList[minVal],difList[min(tmpList)]]])],axis=0).rename(index={0:clrD})
-    clrName=pd.Series();    
-    clrName=minDistpC[[0]].idxmin()
-    CorrectionArr.append(np.mean([WaveFilter_RawData[clrName[0]][i],WaveFilter_RawData[minDistpC[1][clrName[0]]][i],WaveFilter_RawData[minDistpC[2][clrName[0]]][i]]))
-
-plt.figure()
-plt.plot(WaveRawDataDicFRONT[clr][col]-CorrectionArr)
-
-plt.plot(WaveRawDataDicFRONT[clr][col])
-####################
+#################### Calc curev, filetr, offset, tilt after correction
 
 WaveRawDataDicAfterCorrFRONT,WaveDataWithMaxFilterDicAfterCorrFRONT=RepareDistortions(WaveRawDataDicFRONT,WaveDataWithMaxFilterDicFRONT,ColorList).correctWaveRawData();
 try:
@@ -546,102 +523,57 @@ except:
     1
 
 
+####################FRONT 2 BACK ###########################
+# side='Front';
+# ColorForDisplay= 'Cyan'
+# dbFRONT=CalcWaveFromRawData(pthF+'/',side,Panel).ArrangeRawDataForAnalize(ColorForDisplay);
+
+# side='Back';
+# dbBACK=CalcWaveFromRawData(pthF+'/',side,Panel).ArrangeRawDataForAnalize(ColorForDisplay);
+
+
+#############################################
+#############################################
+#############################################
+
+# figF2B = go.Figure()
+
+# for ColorForDisplay in ColorList:    
+#     dbFRONT=CalcWaveFromRawData(pthF+'/','Front',9).ArrangeRawDataForAnalize(ColorForDisplay);
+#     dbBACK=CalcWaveFromRawData(pthF+'/','Back',1).ArrangeRawDataForAnalize(ColorForDisplay);
+#     if ColorForDisplay=='Yellow':
+#         ColorForDisplay='gold'; 
+#     col=list(db.columns)
+            
+#     rnge=range(len(col))
+    
+#     for i in rnge:    
+#         figF2B.add_trace(
+#         go.Scatter(y=list(dbFRONT[i+1]-dbBACK[i+1]),line_color= ColorForDisplay,
+#                     name='Cycle '+str(i+1)+' '+'Panel '+str(9) +'and' +str(1)+' ' +ColorForDisplay))
+    
+
+# figF2B.update_layout(
+#      hoverlabel=dict(
+#          namelength=-1
+#      )
+#  )
+# figF2B.update_layout(title=side+'- Front 2 Back --->'+f)
+
+# plot(figF2B,filename=f+" Front 2 Back Panel Number "+str(Panel)+"_.html") 
+ 
 
 
 #########################################
 #########################################
 #########################################
-if LeftSide+Middle+RightSide:
-
-    fig00 = go.Figure()
-    fig001 = go.Figure()
-    fig002 = go.Figure()
-    side='Front';
-    # fig00 = make_subplots(rows=3, cols=1,subplot_titles=("LeftSide","Middle", "RightSide"), vertical_spacing=0.1, shared_xaxes=True)
+if printPerCycle:
+    if LeftSide+Middle+RightSide:
     
-    # rnge=[3,6,7]
-    
-    # db=ImagePlacement_Rightpp
-    # db=ImagePlacement_pp
-    # for ColorForDisplay in ColorList:
-    for ColorForDisplay in ColorList:    
-        db=CalcWaveFromRawData(pthF+'/',side,Panel).ArrangeRawDataForAnalize(ColorForDisplay);
-        
-        if ColorForDisplay=='Yellow':
-            ColorForDisplay='gold'; 
-            
-        col=list(db.columns)
-        
-        rnge=range(len(col))
-        
-        for i in rnge:
-        # for i in rnge:
-            # if SideOffset=='LeftSide':
-            #     offSet=db[i+1][0];
-            # else:
-            #     if SideOffset=='RightSide':    
-            #         offSet=db[i+1][length(len(db[i+1]))]
-            #     else:
-            #         if  SideOffset=='Middle':
-            #             offSet=np.min(db[i+1][int(len(db[i+1])/2)-50:int(len(db[i+1])/2)+50])
-            #         else:
-            #             offSet=0;
-            offSet=db[i+1][0];
-            fig00.add_trace(
-            go.Scatter(y=list(db[i+1]-offSet),line_color= ColorForDisplay,
-                        name='Cycle '+str(i+1)+' '+'Panel '+str(Panel)+' ' +ColorForDisplay))
-            
-            
-            offSet=np.min(db[i+1][int(len(db[i+1])/2)-50:int(len(db[i+1])/2)+50])
-            fig001.add_trace(
-            go.Scatter(y=list(db[i+1]-offSet),line_color= ColorForDisplay,
-                        name='Cycle '+str(i+1)+' '+'Panel '+str(Panel)+' ' +ColorForDisplay))
-            
-            offSet=db[i+1][(len(db[i+1]))-1]  
-            fig002.add_trace(
-            go.Scatter(y=list(db[i+1]-offSet),line_color= ColorForDisplay,
-                        name='Cycle '+str(i+1)+' '+'Panel '+str(Panel)+' ' +ColorForDisplay))
-    
-    
-    
-    fig00.update_layout(
-        hoverlabel=dict(
-            namelength=-1
-        )
-    )
-    fig001.update_layout(
-        hoverlabel=dict(
-            namelength=-1
-        )
-    )
-    fig002.update_layout(
-        hoverlabel=dict(
-            namelength=-1
-        )
-    )
-    fig00.update_layout(title=side+'- Left Side Offset WAVE RAW DATA --->'+f)
-    fig001.update_layout(title=side+'- Middle Side Offset WAVE RAW DATA --->'+f)
-    fig002.update_layout(title=side+'- Right Side Offset WAVE RAW DATA --->'+f)
-    
-    now = datetime.now()
-    
-    
-    dt_string = now.strftime("%d_%m_%Y_%H_%M_%S")
-    # plot(fig00)
-    if LeftSide:
-        plot(fig00,filename=f+" Left Side WaveResult_RawDataPerCycle "+side+".html") 
-    if Middle:    
-        plot(fig001,filename=f+" Middle Side WaveResult_RawDataPerCycle "+side+".html") 
-    if RightSide:
-        plot(fig002,filename=f+" Right Side WaveResult_RawDataPerCycle "+side+".html") 
-    
-    
-    ########## BACK ########
-    try:
-        fig000 = go.Figure()
-        fig011 = go.Figure()
-        fig022 = go.Figure()
-        
+        fig00 = go.Figure()
+        fig001 = go.Figure()
+        fig002 = go.Figure()
+        side='Front';
         # fig00 = make_subplots(rows=3, cols=1,subplot_titles=("LeftSide","Middle", "RightSide"), vertical_spacing=0.1, shared_xaxes=True)
         
         # rnge=[3,6,7]
@@ -650,10 +582,10 @@ if LeftSide+Middle+RightSide:
         # db=ImagePlacement_pp
         # for ColorForDisplay in ColorList:
         for ColorForDisplay in ColorList:    
-            db=CalcWaveFromRawData(pthF+'/','Back',Panel).ArrangeRawDataForAnalize(ColorForDisplay);
+            db=CalcWaveFromRawData(pthF+'/',side,Panel).ArrangeRawDataForAnalize(ColorForDisplay);
             
             if ColorForDisplay=='Yellow':
-                ColorForDisplay='gold';
+                ColorForDisplay='gold'; 
                 
             col=list(db.columns)
             
@@ -672,164 +604,162 @@ if LeftSide+Middle+RightSide:
                 #         else:
                 #             offSet=0;
                 offSet=db[i+1][0];
-                fig000.add_trace(
+                fig00.add_trace(
                 go.Scatter(y=list(db[i+1]-offSet),line_color= ColorForDisplay,
                             name='Cycle '+str(i+1)+' '+'Panel '+str(Panel)+' ' +ColorForDisplay))
                 
                 
                 offSet=np.min(db[i+1][int(len(db[i+1])/2)-50:int(len(db[i+1])/2)+50])
-                fig011.add_trace(
+                fig001.add_trace(
                 go.Scatter(y=list(db[i+1]-offSet),line_color= ColorForDisplay,
                             name='Cycle '+str(i+1)+' '+'Panel '+str(Panel)+' ' +ColorForDisplay))
                 
                 offSet=db[i+1][(len(db[i+1]))-1]  
-                fig022.add_trace(
+                fig002.add_trace(
                 go.Scatter(y=list(db[i+1]-offSet),line_color= ColorForDisplay,
                             name='Cycle '+str(i+1)+' '+'Panel '+str(Panel)+' ' +ColorForDisplay))
         
         
         
-        fig000.update_layout(
+        fig00.update_layout(
             hoverlabel=dict(
                 namelength=-1
             )
         )
-        fig011.update_layout(
+        fig001.update_layout(
             hoverlabel=dict(
                 namelength=-1
             )
         )
-        fig022.update_layout(
+        fig002.update_layout(
             hoverlabel=dict(
                 namelength=-1
             )
         )
-        
-        fig000.update_layout(title=side+'- Left Side Offset WAVE RAW DATA --->'+f)
-        fig011.update_layout(title=side+'- Middle Side Offset WAVE RAW DATA --->'+f)
-        fig022.update_layout(title=side+'- Right Side Offset WAVE RAW DATA --->'+f)
-    
+        fig00.update_layout(title=side+'- Left Side Offset WAVE RAW DATA --->'+f)
+        fig001.update_layout(title=side+'- Middle Side Offset WAVE RAW DATA --->'+f)
+        fig002.update_layout(title=side+'- Right Side Offset WAVE RAW DATA --->'+f)
         
         now = datetime.now()
         
         
         dt_string = now.strftime("%d_%m_%Y_%H_%M_%S")
-        
+        # plot(fig00)
         if LeftSide:
-            plot(fig000,filename=f+' Left Side WaveResult_RawDataPerCycle'+side+".html") 
-        if Middle:
-            plot(fig011,filename=f+' Middle Side WaveResult_RawDataPerCycle'+side+".html") 
+            plot(fig00,filename=f+" Left Side WaveResult_RawDataPerCycle Panel Number "+str(Panel)+' '+side+".html") 
+        if Middle:    
+            plot(fig001,filename=f+" Middle Side WaveResult_RawDataPerCycle Panel Number "+str(Panel)+' '+side+".html") 
         if RightSide:
-            plot(fig022,filename=f+' Right Side WaveResult_RawDataPerCycle'+side+".html") 
-    except:
-        1    
-    
-#########################################
-#########################################
-#########################################
-
-if LeftSide+Middle+RightSide:
-
-    fig01 = go.Figure()
-    side='Front';
-    # rnge=[3,6,7]
-    
-    # db=ImagePlacement_Rightpp
-    # db=ImagePlacement_pp
-    # for ColorForDisplay in ColorList:
-    for ColorForDisplay in ColorList:
-        db=CalcWaveFromRawData(pthF+'/',side,Panel).ArrangeRawDataForAnalize(ColorForDisplay);
-    
-        if ColorForDisplay=='Yellow':
-            ColorForDisplay='gold';    
+            plot(fig002,filename=f+" Right Side WaveResult_RawDataPerCycle Panel Number "+str(Panel)+' '+side+".html") 
         
-        col=list(db.columns)
         
-        rnge=range(len(col))
-        middledb=pd.DataFrame()
-        Rightdb=pd.DataFrame()
-        Leftdb=pd.DataFrame()
-        
-        middleSTD=[]
-        RightSTD=[]
-        LeftSTD=[]
-        for i in rnge:
-        # for i in rnge:
-            # if SideOffset=='LeftSide':
-            #     offSet=db[i+1][0];
-            # else:
-            #     if SideOffset=='RightSide':    
-            #         offSet=db[i+1][length(len(db[i+1]))]
-            #     else:
-            #         if  SideOffset=='Middle':
-            #             offSet=np.min(db[i+1][int(len(db[i+1])/2)-50:int(len(db[i+1])/2)+50])
-            #         else:
-            #             offSet=0;
+        ########## BACK ########
+        try:
+            fig000 = go.Figure()
+            fig011 = go.Figure()
+            fig022 = go.Figure()
+            side='Back';
+            # fig00 = make_subplots(rows=3, cols=1,subplot_titles=("LeftSide","Middle", "RightSide"), vertical_spacing=0.1, shared_xaxes=True)
             
-            offSet1=db[i+1][0];
+            # rnge=[3,6,7]
             
-            Leftdb=pd.concat([Leftdb,db[i+1]-offSet1],axis=1);
+            # db=ImagePlacement_Rightpp
+            # db=ImagePlacement_pp
+            # for ColorForDisplay in ColorList:
+            for ColorForDisplay in ColorList:    
+                db=CalcWaveFromRawData(pthF+'/','Back',Panel).ArrangeRawDataForAnalize(ColorForDisplay);
+                
+                if ColorForDisplay=='Yellow':
+                    ColorForDisplay='gold';
+                    
+                col=list(db.columns)
+                
+                rnge=range(len(col))
+                
+                for i in rnge:
+                # for i in rnge:
+                    # if SideOffset=='LeftSide':
+                    #     offSet=db[i+1][0];
+                    # else:
+                    #     if SideOffset=='RightSide':    
+                    #         offSet=db[i+1][length(len(db[i+1]))]
+                    #     else:
+                    #         if  SideOffset=='Middle':
+                    #             offSet=np.min(db[i+1][int(len(db[i+1])/2)-50:int(len(db[i+1])/2)+50])
+                    #         else:
+                    #             offSet=0;
+                    offSet=db[i+1][0];
+                    fig000.add_trace(
+                    go.Scatter(y=list(db[i+1]-offSet),line_color= ColorForDisplay,
+                                name='Cycle '+str(i+1)+' '+'Panel '+str(Panel)+' ' +ColorForDisplay))
+                    
+                    
+                    offSet=np.min(db[i+1][int(len(db[i+1])/2)-50:int(len(db[i+1])/2)+50])
+                    fig011.add_trace(
+                    go.Scatter(y=list(db[i+1]-offSet),line_color= ColorForDisplay,
+                                name='Cycle '+str(i+1)+' '+'Panel '+str(Panel)+' ' +ColorForDisplay))
+                    
+                    offSet=db[i+1][(len(db[i+1]))-1]  
+                    fig022.add_trace(
+                    go.Scatter(y=list(db[i+1]-offSet),line_color= ColorForDisplay,
+                                name='Cycle '+str(i+1)+' '+'Panel '+str(Panel)+' ' +ColorForDisplay))
             
-            offSet2=np.min(db[i+1][int(len(db[i+1])/2)-50:int(len(db[i+1])/2)+50])
-            middledb=pd.concat([middledb,db[i+1]-offSet2],axis=1);
             
-            offSet3=db[i+1][(len(db[i+1]))-1] 
-            Rightdb=pd.concat([Rightdb,db[i+1]-offSet3],axis=1);
+            
+            fig000.update_layout(
+                hoverlabel=dict(
+                    namelength=-1
+                )
+            )
+            fig011.update_layout(
+                hoverlabel=dict(
+                    namelength=-1
+                )
+            )
+            fig022.update_layout(
+                hoverlabel=dict(
+                    namelength=-1
+                )
+            )
+            
+            fig000.update_layout(title=side+'- Left Side Offset WAVE RAW DATA --->'+f)
+            fig011.update_layout(title=side+'- Middle Side Offset WAVE RAW DATA --->'+f)
+            fig022.update_layout(title=side+'- Right Side Offset WAVE RAW DATA --->'+f)
         
+            
+            now = datetime.now()
+            
+            
+            dt_string = now.strftime("%d_%m_%Y_%H_%M_%S")
+            
+            if LeftSide:
+                plot(fig000,filename=f+' Left Side WaveResult_RawDataPerCycle Panel Number '+str(Panel)+' '+side+".html") 
+            if Middle:
+                plot(fig011,filename=f+' Middle Side WaveResult_RawDataPerCycle Panel Number '+str(Panel)+' '+side+".html") 
+            if RightSide:
+                plot(fig022,filename=f+' Right Side WaveResult_RawDataPerCycle Panel Number '+str(Panel)+' '+side+".html") 
+        except:
+            1    
         
-        for j,i in enumerate(Leftdb.index):
-            if j == 0:
-                continue;
-            LeftSTD.append(np.std(Leftdb.loc[i,:]))
-            middleSTD.append(np.std(middledb.loc[i,:]))
-            RightSTD.append(np.std(Rightdb.loc[i,:]))
-           
+    #########################################
+    #########################################
+    #########################################
+    
+    if LeftSide+Middle+RightSide:
+    
+        fig01 = go.Figure()
+        side='Front';
+        # rnge=[3,6,7]
         
-        fig01.add_trace(
-        go.Scatter(y=LeftSTD,line_color= ColorForDisplay,
-                    name='Panel '+str(Panel)+' ' +ColorForDisplay+' LeftSide'))
-        
-        
-        fig01.add_trace(
-        go.Scatter(y=middleSTD,line_color= ColorForDisplay,
-                    name='Panel '+str(Panel)+' ' +ColorForDisplay+' Middle'))
-        
-        fig01.add_trace(
-        go.Scatter(y=RightSTD,line_color= ColorForDisplay,
-                    name='Panel '+str(Panel)+' ' +ColorForDisplay+' RightSide'))
-    
-    
-    
-    fig01.update_layout(
-        hoverlabel=dict(
-            namelength=-1
-        )
-    )
-    fig01.update_layout(title=side+'- <b>STD </b> Side Offset WAVE RAW DATA --->'+f )
-    
-    now = datetime.now()
-    
-    
-    dt_string = now.strftime("%d_%m_%Y_%H_%M_%S")
-    if LeftSide or Middle or RightSide:
-    # plot(fig00)
-        plot(fig01,filename=f+" STD SideOffset_ WaveResult_RawDataPerColor "+side+".html") 
-    
-    ################# Back  ########################
-    try:
-        fig010 = go.Figure()
-        side='Back';
-    # rnge=[3,6,7]
-    
-    # db=ImagePlacement_Rightpp
-    # db=ImagePlacement_pp
-    # for ColorForDisplay in ColorList:
+        # db=ImagePlacement_Rightpp
+        # db=ImagePlacement_pp
+        # for ColorForDisplay in ColorList:
         for ColorForDisplay in ColorList:
             db=CalcWaveFromRawData(pthF+'/',side,Panel).ArrangeRawDataForAnalize(ColorForDisplay);
-            
+        
             if ColorForDisplay=='Yellow':
-                ColorForDisplay='gold';
-                
+                ColorForDisplay='gold';    
+            
             col=list(db.columns)
             
             rnge=range(len(col))
@@ -872,136 +802,137 @@ if LeftSide+Middle+RightSide:
                 RightSTD.append(np.std(Rightdb.loc[i,:]))
                
             
-            fig010.add_trace(
+            fig01.add_trace(
             go.Scatter(y=LeftSTD,line_color= ColorForDisplay,
                         name='Panel '+str(Panel)+' ' +ColorForDisplay+' LeftSide'))
             
             
-            fig010.add_trace(
+            fig01.add_trace(
             go.Scatter(y=middleSTD,line_color= ColorForDisplay,
                         name='Panel '+str(Panel)+' ' +ColorForDisplay+' Middle'))
             
-            fig010.add_trace(
+            fig01.add_trace(
             go.Scatter(y=RightSTD,line_color= ColorForDisplay,
                         name='Panel '+str(Panel)+' ' +ColorForDisplay+' RightSide'))
         
         
         
-        fig010.update_layout(
+        fig01.update_layout(
             hoverlabel=dict(
                 namelength=-1
             )
         )
-        fig010.update_layout(title=side+'- <b>STD </b> Side Offset WAVE RAW DATA --->'+f)
+        fig01.update_layout(title=side+'- <b>STD </b> Side Offset WAVE RAW DATA --->'+f )
         
         now = datetime.now()
         
         
         dt_string = now.strftime("%d_%m_%Y_%H_%M_%S")
-        # plot(fig00)
         if LeftSide or Middle or RightSide:
-    
-            plot(fig010,filename=f+"STD SideOffset_ WaveResult_RawDataPerColor "+side+".html") 
-    except:
-        1    
+        # plot(fig00)
+            plot(fig01,filename=f+" STD SideOffset_ WaveResult_RawDataPerColor Panel Number "+str(Panel)+' '+side+".html") 
+        
+        ################# Back  ########################
+        try:
+            fig010 = go.Figure()
+            side='Back';
+        # rnge=[3,6,7]
+        
+        # db=ImagePlacement_Rightpp
+        # db=ImagePlacement_pp
+        # for ColorForDisplay in ColorList:
+            for ColorForDisplay in ColorList:
+                db=CalcWaveFromRawData(pthF+'/',side,Panel).ArrangeRawDataForAnalize(ColorForDisplay);
+                
+                if ColorForDisplay=='Yellow':
+                    ColorForDisplay='gold';
+                    
+                col=list(db.columns)
+                
+                rnge=range(len(col))
+                middledb=pd.DataFrame()
+                Rightdb=pd.DataFrame()
+                Leftdb=pd.DataFrame()
+                
+                middleSTD=[]
+                RightSTD=[]
+                LeftSTD=[]
+                for i in rnge:
+                # for i in rnge:
+                    # if SideOffset=='LeftSide':
+                    #     offSet=db[i+1][0];
+                    # else:
+                    #     if SideOffset=='RightSide':    
+                    #         offSet=db[i+1][length(len(db[i+1]))]
+                    #     else:
+                    #         if  SideOffset=='Middle':
+                    #             offSet=np.min(db[i+1][int(len(db[i+1])/2)-50:int(len(db[i+1])/2)+50])
+                    #         else:
+                    #             offSet=0;
+                    
+                    offSet1=db[i+1][0];
+                    
+                    Leftdb=pd.concat([Leftdb,db[i+1]-offSet1],axis=1);
+                    
+                    offSet2=np.min(db[i+1][int(len(db[i+1])/2)-50:int(len(db[i+1])/2)+50])
+                    middledb=pd.concat([middledb,db[i+1]-offSet2],axis=1);
+                    
+                    offSet3=db[i+1][(len(db[i+1]))-1] 
+                    Rightdb=pd.concat([Rightdb,db[i+1]-offSet3],axis=1);
+                
+                
+                for j,i in enumerate(Leftdb.index):
+                    if j == 0:
+                        continue;
+                    LeftSTD.append(np.std(Leftdb.loc[i,:]))
+                    middleSTD.append(np.std(middledb.loc[i,:]))
+                    RightSTD.append(np.std(Rightdb.loc[i,:]))
+                   
+                
+                fig010.add_trace(
+                go.Scatter(y=LeftSTD,line_color= ColorForDisplay,
+                            name='Panel '+str(Panel)+' ' +ColorForDisplay+' LeftSide'))
+                
+                
+                fig010.add_trace(
+                go.Scatter(y=middleSTD,line_color= ColorForDisplay,
+                            name='Panel '+str(Panel)+' ' +ColorForDisplay+' Middle'))
+                
+                fig010.add_trace(
+                go.Scatter(y=RightSTD,line_color= ColorForDisplay,
+                            name='Panel '+str(Panel)+' ' +ColorForDisplay+' RightSide'))
+            
+            
+            
+            fig010.update_layout(
+                hoverlabel=dict(
+                    namelength=-1
+                )
+            )
+            fig010.update_layout(title=side+'- <b>STD </b> Side Offset WAVE RAW DATA --->'+f)
+            
+            now = datetime.now()
+            
+            
+            dt_string = now.strftime("%d_%m_%Y_%H_%M_%S")
+            # plot(fig00)
+            if LeftSide or Middle or RightSide:
+        
+                plot(fig010,filename=f+"STD SideOffset_ WaveResult_RawDataPerColor Panel Number "+str(Panel)+' '+side+".html") 
+        except:
+            1    
 #########################################
 #########################################
 #########################################
 
 #################PANEL##################
-if LeftSide+Middle+RightSide:
-
-    fig100 = go.Figure()
-    fig101 = go.Figure()
-    fig102 = go.Figure()
-    side='Front';
-    # fig00 = make_subplots(rows=3, cols=1,subplot_titles=("LeftSide","Middle", "RightSide"), vertical_spacing=0.1, shared_xaxes=True)
+if PrintPerPanel:
+    if LeftSide+Middle+RightSide:
     
-    # rnge=[3,6,7]
-    
-    # db=ImagePlacement_Rightpp
-    # db=ImagePlacement_pp
-    # for ColorForDisplay in ColorList:
-    for Panel in  range(1,12):  
-        for ColorForDisplay in ColorList:
-            db=CalcWaveFromRawData(pthF+'/',side,Panel).ArrangeRawDataForAnalize(ColorForDisplay);
-            
-            
-            col=list(db.columns)
-            
-            rnge=range(len(col))
-            
-            if ColorForDisplay=='Yellow':
-                ColorForDisplay='gold';
-            
-            # for i in rnge:
-            # for i in rnge:
-                # if SideOffset=='LeftSide':
-                #     offSet=db[i+1][0];
-                # else:
-                #     if SideOffset=='RightSide':    
-                #         offSet=db[i+1][length(len(db[i+1]))]
-                #     else:
-                #         if  SideOffset=='Middle':
-                #             offSet=np.min(db[i+1][int(len(db[i+1])/2)-50:int(len(db[i+1])/2)+50])
-                #         else:
-                #             offSet=0;
-            offSet=db[CycleNumber][0];
-            fig100.add_trace(
-            go.Scatter(y=list(db[CycleNumber]-offSet),line_color= ColorForDisplay,
-                        name='Cycle '+str(CycleNumber)+' '+'Panel '+str(Panel)+' ' +ColorForDisplay))
-            
-            
-            offSet=np.min(db[CycleNumber][int(len(db[CycleNumber])/2)-50:int(len(db[CycleNumber])/2)+50])
-            fig101.add_trace(
-            go.Scatter(y=list(db[CycleNumber]-offSet),line_color= ColorForDisplay,
-                        name='Cycle '+str(CycleNumber)+' '+'Panel '+str(Panel)+' ' +ColorForDisplay))
-            
-            offSet=db[CycleNumber][(len(db[CycleNumber]))-1]  
-            fig102.add_trace(
-            go.Scatter(y=list(db[CycleNumber]-offSet),line_color= ColorForDisplay,
-                        name='Cycle '+str(CycleNumber)+' '+'Panel '+str(Panel)+' ' +ColorForDisplay))
-    
-    
-    
-    fig100.update_layout(
-        hoverlabel=dict(
-            namelength=-1
-        )
-    )
-    fig101.update_layout(
-        hoverlabel=dict(
-            namelength=-1
-        )
-    )
-    fig102.update_layout(
-        hoverlabel=dict(
-            namelength=-1
-        )
-    )
-    fig100.update_layout(title=side+'- Left Side Offset WAVE RAW DATA (For one Cycle)--->'+f)
-    fig101.update_layout(title=side+'- Middle Offset WAVE RAW DATA (For one Cycle)--->'+f)
-    fig102.update_layout(title=side+'- Right Side Offset WAVE RAW DATA (For one Cycle)--->'+f)
-    
-    now = datetime.now()
-    
-    
-    dt_string = now.strftime("%d_%m_%Y_%H_%M_%S")
-    # plot(fig00)
-    if LeftSide:
-        plot(fig100,filename=f+" Left Side WaveResult_RawDataPerPanel "+side+".html") 
-    if Middle:    
-        plot(fig101,filename=f+" Middle Side WaveResult_RawDataPerPanel "+side+".html") 
-    if RightSide:
-        plot(fig102,filename=f+" Right Side WaveResult_RawDataPerPanel "+side+".html") 
-    
-    
-    ########## BACK ########
-    try:
-        fig110 = go.Figure()
-        fig111 = go.Figure()
-        fig122 = go.Figure()
-        side = 'Back'
+        fig100 = go.Figure()
+        fig101 = go.Figure()
+        fig102 = go.Figure()
+        side='Front';
         # fig00 = make_subplots(rows=3, cols=1,subplot_titles=("LeftSide","Middle", "RightSide"), vertical_spacing=0.1, shared_xaxes=True)
         
         # rnge=[3,6,7]
@@ -1018,6 +949,9 @@ if LeftSide+Middle+RightSide:
                 
                 rnge=range(len(col))
                 
+                if ColorForDisplay=='Yellow':
+                    ColorForDisplay='gold';
+                
                 # for i in rnge:
                 # for i in rnge:
                     # if SideOffset=='LeftSide':
@@ -1030,48 +964,42 @@ if LeftSide+Middle+RightSide:
                     #             offSet=np.min(db[i+1][int(len(db[i+1])/2)-50:int(len(db[i+1])/2)+50])
                     #         else:
                     #             offSet=0;
-        
-                if ColorForDisplay=='Yellow':
-                    ColorForDisplay='gold';    
-                    
                 offSet=db[CycleNumber][0];
-                fig110.add_trace(
+                fig100.add_trace(
                 go.Scatter(y=list(db[CycleNumber]-offSet),line_color= ColorForDisplay,
                             name='Cycle '+str(CycleNumber)+' '+'Panel '+str(Panel)+' ' +ColorForDisplay))
                 
                 
                 offSet=np.min(db[CycleNumber][int(len(db[CycleNumber])/2)-50:int(len(db[CycleNumber])/2)+50])
-                fig111.add_trace(
+                fig101.add_trace(
                 go.Scatter(y=list(db[CycleNumber]-offSet),line_color= ColorForDisplay,
                             name='Cycle '+str(CycleNumber)+' '+'Panel '+str(Panel)+' ' +ColorForDisplay))
                 
                 offSet=db[CycleNumber][(len(db[CycleNumber]))-1]  
-                fig112.add_trace(
+                fig102.add_trace(
                 go.Scatter(y=list(db[CycleNumber]-offSet),line_color= ColorForDisplay,
                             name='Cycle '+str(CycleNumber)+' '+'Panel '+str(Panel)+' ' +ColorForDisplay))
-    
-    
-    
-        fig110.update_layout(
-            hoverlabel=dict(
-                namelength=-1
-            )
-        )
-        fig111.update_layout(
-            hoverlabel=dict(
-                namelength=-1
-            )
-        )
-        fig112.update_layout(
-            hoverlabel=dict(
-                namelength=-1
-            )
-        )
-        fig110.update_layout(title=side+'- Left Side Offset WAVE RAW DATA (For one Cycle)--->'+f)
-        fig111.update_layout(title=side+'- Middle Offset WAVE RAW DATA (For one Cycle)--->'+f)
-        fig112.update_layout(title=side+'- Right Side Offset WAVE RAW DATA (For one Cycle)--->'+f)
         
- 
+        
+        
+        fig100.update_layout(
+            hoverlabel=dict(
+                namelength=-1
+            )
+        )
+        fig101.update_layout(
+            hoverlabel=dict(
+                namelength=-1
+            )
+        )
+        fig102.update_layout(
+            hoverlabel=dict(
+                namelength=-1
+            )
+        )
+        fig100.update_layout(title=side+'- Left Side Offset WAVE RAW DATA (For one Cycle)--->'+f)
+        fig101.update_layout(title=side+'- Middle Offset WAVE RAW DATA (For one Cycle)--->'+f)
+        fig102.update_layout(title=side+'- Right Side Offset WAVE RAW DATA (For one Cycle)--->'+f)
         
         now = datetime.now()
         
@@ -1079,14 +1007,104 @@ if LeftSide+Middle+RightSide:
         dt_string = now.strftime("%d_%m_%Y_%H_%M_%S")
         # plot(fig00)
         if LeftSide:
-            plot(fig110,filename=f+" Left Side WaveResult_RawDataPerPanel "+side+".html") 
+            plot(fig100,filename=f+" Left Side WaveResult_RawDataPerPanel "+side+".html") 
         if Middle:    
-            plot(fig111,filename=f+" Middle Side WaveResult_RawDataPerPanel "+side+".html") 
+            plot(fig101,filename=f+" Middle Side WaveResult_RawDataPerPanel "+side+".html") 
         if RightSide:
-            plot(fig112,filename=f+" Right Side WaveResult_RawDataPerPanel "+side+".html") 
+            plot(fig102,filename=f+" Right Side WaveResult_RawDataPerPanel "+side+".html") 
+        
+        
+        ########## BACK ########
+        try:
+            fig110 = go.Figure()
+            fig111 = go.Figure()
+            fig122 = go.Figure()
+            side = 'Back'
+            # fig00 = make_subplots(rows=3, cols=1,subplot_titles=("LeftSide","Middle", "RightSide"), vertical_spacing=0.1, shared_xaxes=True)
+            
+            # rnge=[3,6,7]
+            
+            # db=ImagePlacement_Rightpp
+            # db=ImagePlacement_pp
+            # for ColorForDisplay in ColorList:
+            for Panel in  range(1,12):  
+                for ColorForDisplay in ColorList:
+                    db=CalcWaveFromRawData(pthF+'/',side,Panel).ArrangeRawDataForAnalize(ColorForDisplay);
+                    
+                    
+                    col=list(db.columns)
+                    
+                    rnge=range(len(col))
+                    
+                    # for i in rnge:
+                    # for i in rnge:
+                        # if SideOffset=='LeftSide':
+                        #     offSet=db[i+1][0];
+                        # else:
+                        #     if SideOffset=='RightSide':    
+                        #         offSet=db[i+1][length(len(db[i+1]))]
+                        #     else:
+                        #         if  SideOffset=='Middle':
+                        #             offSet=np.min(db[i+1][int(len(db[i+1])/2)-50:int(len(db[i+1])/2)+50])
+                        #         else:
+                        #             offSet=0;
+            
+                    if ColorForDisplay=='Yellow':
+                        ColorForDisplay='gold';    
+                        
+                    offSet=db[CycleNumber][0];
+                    fig110.add_trace(
+                    go.Scatter(y=list(db[CycleNumber]-offSet),line_color= ColorForDisplay,
+                                name='Cycle '+str(CycleNumber)+' '+'Panel '+str(Panel)+' ' +ColorForDisplay))
+                    
+                    
+                    offSet=np.min(db[CycleNumber][int(len(db[CycleNumber])/2)-50:int(len(db[CycleNumber])/2)+50])
+                    fig111.add_trace(
+                    go.Scatter(y=list(db[CycleNumber]-offSet),line_color= ColorForDisplay,
+                                name='Cycle '+str(CycleNumber)+' '+'Panel '+str(Panel)+' ' +ColorForDisplay))
+                    
+                    offSet=db[CycleNumber][(len(db[CycleNumber]))-1]  
+                    fig112.add_trace(
+                    go.Scatter(y=list(db[CycleNumber]-offSet),line_color= ColorForDisplay,
+                                name='Cycle '+str(CycleNumber)+' '+'Panel '+str(Panel)+' ' +ColorForDisplay))
+        
+        
+        
+            fig110.update_layout(
+                hoverlabel=dict(
+                    namelength=-1
+                )
+            )
+            fig111.update_layout(
+                hoverlabel=dict(
+                    namelength=-1
+                )
+            )
+            fig112.update_layout(
+                hoverlabel=dict(
+                    namelength=-1
+                )
+            )
+            fig110.update_layout(title=side+'- Left Side Offset WAVE RAW DATA (For one Cycle)--->'+f)
+            fig111.update_layout(title=side+'- Middle Offset WAVE RAW DATA (For one Cycle)--->'+f)
+            fig112.update_layout(title=side+'- Right Side Offset WAVE RAW DATA (For one Cycle)--->'+f)
+            
      
-    except:
-        1    
+            
+            now = datetime.now()
+            
+            
+            dt_string = now.strftime("%d_%m_%Y_%H_%M_%S")
+            # plot(fig00)
+            if LeftSide:
+                plot(fig110,filename=f+" Left Side WaveResult_RawDataPerPanel "+side+".html") 
+            if Middle:    
+                plot(fig111,filename=f+" Middle Side WaveResult_RawDataPerPanel "+side+".html") 
+            if RightSide:
+                plot(fig112,filename=f+" Right Side WaveResult_RawDataPerPanel "+side+".html") 
+         
+        except:
+            1    
     
 #########################################
 #########################################
@@ -1320,446 +1338,447 @@ if BeforAndAfterCorr:
  ##################################################################################################       
  ##################################################################################################       
  ##################################################################################################  
-figPH = make_subplots(specs=[[{"secondary_y": True}]])
-col='Mean';
-side='Front'
-for clr in ColorList:     
-    lineColor=clr;
-  
-    
-    if lineColor=='Yellow':
-        lineColor='gold';
-    
-    figPH.add_trace(
-    go.Scatter(y=WaveRawDataDicFRONT[clr][col],line_color= lineColor,
-                name='WaveData Raw '+str(col)+' color '+clr), secondary_y=False)
-    
-    figPH.add_trace(
-    go.Scatter(y=WaveDataWithMaxFilterDicFRONT[clr][col],line_color= lineColor,
-                name='WaveData with Filter '+str(col)+' color '+clr), secondary_y=False)
-    
-    figPH.add_trace(
-    go.Scatter(y=WaveRawDataDicFRONT[clr][col]-WaveDataWithMaxFilterDicFRONT[clr][col],line_color= lineColor,
-                name='Fiter - Raw '+str(col)+' color '+clr), secondary_y=True)
-    
-    ymax=max(WaveRawDataDicFRONT[ColorList[0]][col]-WaveDataWithMaxFilterDicFRONT[ColorList[0]][col])
-    
-    for i,PHlocMem in enumerate(PHlocFRONT):
-        figPH.add_trace(go.Scatter(x=[PHlocMem], y=[ymax],
-                                marker=dict(color="green", size=6),
-                                mode="markers",
-                                text='PH #'+str(i),
-                                # font_size=18,
-                                hoverinfo='text'),secondary_y=True)
-        figPH.data[len(figPH.data)-1].showlegend = False
-
-        figPH.add_vline(x=PHlocMem, line_width=2, line_dash="dash", line_color="green")
-    
-    
-    if DisplayOffSet:
-        figPH.add_trace(
-        go.Scatter(y=PHoffSetFRONT[clr],line_color= lineColor,
-                    name='Average(Fiter - Raw) '+str(col)+' color '+clr), secondary_y=True)
-        
-    
-    if DisplayTilt:
-        figPH.add_trace(
-        go.Scatter(y=PHtiltFRONT[clr],line_color= lineColor,line=dict(dash='dot'),
-                    name='Tilt(Fiter - Raw) '+str(col)+' color '+clr), secondary_y=True)
-    
-    
-    figPH.update_layout(
-            hoverlabel=dict(
-                namelength=-1
-            )
-        )
-    figPH.update_layout(title=side+' Wave Data S.Golay = '+ str(MaxWaveWindow)+'---> '+f)
-    
-    now = datetime.now()
-    
-    
-    dt_string = now.strftime("%d_%m_%Y_%H_%M_%S")
-    # plot(fig00)
-plot(figPH,filename=f+' '+side+' Wave Data S.Golay _'+ str(MaxWaveWindow)+".html") 
- 
-## Back ##
-try:
-    figPHBACK = make_subplots(specs=[[{"secondary_y": True}]])
+if WaveFilterResidue:
+    figPH = make_subplots(specs=[[{"secondary_y": True}]])
     col='Mean';
-    side='Back'
+    side='Front'
     for clr in ColorList:     
         lineColor=clr;
+      
         
         if lineColor=='Yellow':
             lineColor='gold';
         
-        figPHBACK.add_trace(
-        go.Scatter(y=WaveRawDataDicBACK[clr][col],line_color= lineColor,
+        figPH.add_trace(
+        go.Scatter(y=WaveRawDataDicFRONT[clr][col],line_color= lineColor,
                     name='WaveData Raw '+str(col)+' color '+clr), secondary_y=False)
         
-        figPHBACK.add_trace(
-        go.Scatter(y=WaveDataWithMaxFilterDicBACK[clr][col],line_color= lineColor,
+        figPH.add_trace(
+        go.Scatter(y=WaveDataWithMaxFilterDicFRONT[clr][col],line_color= lineColor,
                     name='WaveData with Filter '+str(col)+' color '+clr), secondary_y=False)
         
-        figPHBACK.add_trace(
-        go.Scatter(y=WaveRawDataDicBACK[clr][col]-WaveDataWithMaxFilterDicBACK[clr][col],line_color= lineColor,
+        figPH.add_trace(
+        go.Scatter(y=WaveRawDataDicFRONT[clr][col]-WaveDataWithMaxFilterDicFRONT[clr][col],line_color= lineColor,
                     name='Fiter - Raw '+str(col)+' color '+clr), secondary_y=True)
         
+        ymax=max(WaveRawDataDicFRONT[ColorList[0]][col]-WaveDataWithMaxFilterDicFRONT[ColorList[0]][col])
         
-        for i,PHlocMem in enumerate(PHlocBACK):
-            figPHBACK.add_trace(go.Scatter(x=[PHlocMem], y=[ymax],
-                        marker=dict(color="green", size=6),
-                        mode="markers",
-                        text='PH #'+str(i),
-                        # font_size=18,
-                        hoverinfo='text'),secondary_y=True)
-            figPHBACK.data[len(figPHBACK.data)-1].showlegend = False
-
-            figPHBACK.add_vline(x=PHlocMem, line_width=2, line_dash="dash", line_color="green")
+        for i,PHlocMem in enumerate(PHlocFRONT):
+            figPH.add_trace(go.Scatter(x=[PHlocMem], y=[ymax],
+                                    marker=dict(color="green", size=6),
+                                    mode="markers",
+                                    text='PH #'+str(i),
+                                    # font_size=18,
+                                    hoverinfo='text'),secondary_y=True)
+            figPH.data[len(figPH.data)-1].showlegend = False
+    
+            figPH.add_vline(x=PHlocMem, line_width=2, line_dash="dash", line_color="green")
         
         
         if DisplayOffSet:
-            figPHBACK.add_trace(
-            go.Scatter(y=PHoffSetBACK[clr],line_color= lineColor,
+            figPH.add_trace(
+            go.Scatter(y=PHoffSetFRONT[clr],line_color= lineColor,
                         name='Average(Fiter - Raw) '+str(col)+' color '+clr), secondary_y=True)
+            
         
         if DisplayTilt:
-            figPHBACK.add_trace(
-            go.Scatter(y=PHtiltBACK[clr],line_color= lineColor,line=dict(dash='dot'),
+            figPH.add_trace(
+            go.Scatter(y=PHtiltFRONT[clr],line_color= lineColor,line=dict(dash='dot'),
                         name='Tilt(Fiter - Raw) '+str(col)+' color '+clr), secondary_y=True)
         
         
-        figPHBACK.update_layout(
+        figPH.update_layout(
                 hoverlabel=dict(
                     namelength=-1
                 )
             )
-        figPHBACK.update_layout(title=side+' Wave Data S.Golay = '+ str(MaxWaveWindow)+'---> '+f)
+        figPH.update_layout(title=side+' Wave Data S.Golay = '+ str(MaxWaveWindow)+'---> '+f)
         
         now = datetime.now()
         
         
         dt_string = now.strftime("%d_%m_%Y_%H_%M_%S")
         # plot(fig00)
-    plot(figPHBACK,filename=f+' '+side+' Wave Data S.Golay _'+ str(MaxWaveWindow)+".html") 
-except:
-    1    
- 
-################################AFTER CORRECTION
-################################################       
-WaveRawDataDicAfterCorrFRONT,WaveDataWithMaxFilterDicAfterCorrFRONT
-
-figPHCorr = make_subplots(specs=[[{"secondary_y": True}]])
-col='Mean';
-side='Front'
-for clr in ColorList:     
-    lineColor=clr;
-  
+    plot(figPH,filename=f+' '+side+' Wave Data S.Golay _'+ str(MaxWaveWindow)+".html") 
+     
+    ## Back ##
+    try:
+        figPHBACK = make_subplots(specs=[[{"secondary_y": True}]])
+        col='Mean';
+        side='Back'
+        for clr in ColorList:     
+            lineColor=clr;
+            
+            if lineColor=='Yellow':
+                lineColor='gold';
+            
+            figPHBACK.add_trace(
+            go.Scatter(y=WaveRawDataDicBACK[clr][col],line_color= lineColor,
+                        name='WaveData Raw '+str(col)+' color '+clr), secondary_y=False)
+            
+            figPHBACK.add_trace(
+            go.Scatter(y=WaveDataWithMaxFilterDicBACK[clr][col],line_color= lineColor,
+                        name='WaveData with Filter '+str(col)+' color '+clr), secondary_y=False)
+            
+            figPHBACK.add_trace(
+            go.Scatter(y=WaveRawDataDicBACK[clr][col]-WaveDataWithMaxFilterDicBACK[clr][col],line_color= lineColor,
+                        name='Fiter - Raw '+str(col)+' color '+clr), secondary_y=True)
+            
+            
+            for i,PHlocMem in enumerate(PHlocBACK):
+                figPHBACK.add_trace(go.Scatter(x=[PHlocMem], y=[ymax],
+                            marker=dict(color="green", size=6),
+                            mode="markers",
+                            text='PH #'+str(i),
+                            # font_size=18,
+                            hoverinfo='text'),secondary_y=True)
+                figPHBACK.data[len(figPHBACK.data)-1].showlegend = False
     
-    if lineColor=='Yellow':
-        lineColor='gold';
+                figPHBACK.add_vline(x=PHlocMem, line_width=2, line_dash="dash", line_color="green")
+            
+            
+            if DisplayOffSet:
+                figPHBACK.add_trace(
+                go.Scatter(y=PHoffSetBACK[clr],line_color= lineColor,
+                            name='Average(Fiter - Raw) '+str(col)+' color '+clr), secondary_y=True)
+            
+            if DisplayTilt:
+                figPHBACK.add_trace(
+                go.Scatter(y=PHtiltBACK[clr],line_color= lineColor,line=dict(dash='dot'),
+                            name='Tilt(Fiter - Raw) '+str(col)+' color '+clr), secondary_y=True)
+            
+            
+            figPHBACK.update_layout(
+                    hoverlabel=dict(
+                        namelength=-1
+                    )
+                )
+            figPHBACK.update_layout(title=side+' Wave Data S.Golay = '+ str(MaxWaveWindow)+'---> '+f)
+            
+            now = datetime.now()
+            
+            
+            dt_string = now.strftime("%d_%m_%Y_%H_%M_%S")
+            # plot(fig00)
+        plot(figPHBACK,filename=f+' '+side+' Wave Data S.Golay _'+ str(MaxWaveWindow)+".html") 
+    except:
+        1    
+     
+    ################################AFTER CORRECTION
+    ################################################       
+    WaveRawDataDicAfterCorrFRONT,WaveDataWithMaxFilterDicAfterCorrFRONT
     
-    figPHCorr.add_trace(
-    go.Scatter(y=WaveRawDataDicAfterCorrFRONT[clr],line_color= lineColor,
-                name='WaveData Raw AfterCorr '+str(col)+' color '+clr), secondary_y=False)
-    
-    figPHCorr.add_trace(
-    go.Scatter(y=WaveDataWithMaxFilterDicAfterCorrFRONT[clr],line_color= lineColor,
-                name='WaveData AfterCorr with Filter '+str(col)+' color '+clr), secondary_y=False)
-    
-    figPHCorr.add_trace(
-    go.Scatter(y=WaveRawDataDicAfterCorrFRONT[clr]-WaveDataWithMaxFilterDicAfterCorrFRONT[clr],line_color= lineColor,
-                name='Fiter - Raw AfterCorr '+str(col)+' color '+clr), secondary_y=True)
-    
-    ymax=max(WaveRawDataDicAfterCorrFRONT[ColorList[0]]-WaveDataWithMaxFilterDicAfterCorrFRONT[ColorList[0]])
-    
-    for i,PHlocMem in enumerate(PHlocFRONT):
-        figPHCorr.add_trace(go.Scatter(x=[PHlocMem], y=[ymax],
-                                marker=dict(color="green", size=6),
-                                mode="markers",
-                                text='PH #'+str(i),
-                                # font_size=18,
-                                hoverinfo='text'),secondary_y=True)
-        figPHCorr.data[len(figPHCorr.data)-1].showlegend = False
-
-        figPHCorr.add_vline(x=PHlocMem, line_width=2, line_dash="dash", line_color="green")
-    
-    
-    if DisplayOffSet:
-        figPHCorr.add_trace(
-        go.Scatter(y=PHoffSetFRONTAfterCorr[clr],line_color= lineColor,
-                    name='Average(Fiter - Raw) AfterCorr '+str(col)+' color '+clr), secondary_y=True)
-        
-    
-    if DisplayTilt:
-        figPHCorr.add_trace(
-        go.Scatter(y=PHtiltFRONTAfterCorr[clr],line_color= lineColor,line=dict(dash='dot'),
-                    name='Tilt(Fiter - Raw) AfterCorr '+str(col)+' color '+clr), secondary_y=True)
-    
-    
-    figPHCorr.update_layout(
-            hoverlabel=dict(
-                namelength=-1
-            )
-        )
-    figPHCorr.update_layout(title=side+' After Correction Wave Data S.Golay = '+ str(MaxWaveWindow)+'---> '+f)
-    
-    now = datetime.now()
-    
-    
-    dt_string = now.strftime("%d_%m_%Y_%H_%M_%S")
-    # plot(fig00)
-plot(figPHCorr,filename=f+' '+side+' After Correction Wave Data S.Golay _'+ str(MaxWaveWindow)+".html") 
- 
-## Back ##
-try:
-    figPHBACKAfterCorr = make_subplots(specs=[[{"secondary_y": True}]])
+    figPHCorr = make_subplots(specs=[[{"secondary_y": True}]])
     col='Mean';
-    side='Back'
+    side='Front'
     for clr in ColorList:     
         lineColor=clr;
+      
         
         if lineColor=='Yellow':
             lineColor='gold';
         
-        figPHBACKAfterCorr.add_trace(
-        go.Scatter(y=WaveRawDataDicAfterCorrBACK[clr],line_color= lineColor,
-                    name='WaveData AfterCorr Raw '+str(col)+' color '+clr), secondary_y=False)
+        figPHCorr.add_trace(
+        go.Scatter(y=WaveRawDataDicAfterCorrFRONT[clr],line_color= lineColor,
+                    name='WaveData Raw AfterCorr '+str(col)+' color '+clr), secondary_y=False)
         
-        figPHBACKAfterCorr.add_trace(
-        go.Scatter(y=WaveDataWithMaxFilterDicAfterCorrBACK[clr],line_color= lineColor,
+        figPHCorr.add_trace(
+        go.Scatter(y=WaveDataWithMaxFilterDicAfterCorrFRONT[clr],line_color= lineColor,
                     name='WaveData AfterCorr with Filter '+str(col)+' color '+clr), secondary_y=False)
         
-        figPHBACKAfterCorr.add_trace(
-        go.Scatter(y=WaveRawDataDicAfterCorrBACK[clr]-WaveDataWithMaxFilterDicAfterCorrBACK[clr],line_color= lineColor,
+        figPHCorr.add_trace(
+        go.Scatter(y=WaveRawDataDicAfterCorrFRONT[clr]-WaveDataWithMaxFilterDicAfterCorrFRONT[clr],line_color= lineColor,
                     name='Fiter - Raw AfterCorr '+str(col)+' color '+clr), secondary_y=True)
         
+        ymax=max(WaveRawDataDicAfterCorrFRONT[ColorList[0]]-WaveDataWithMaxFilterDicAfterCorrFRONT[ColorList[0]])
         
-        for i,PHlocMem in enumerate(PHlocBACK):
-            figPHBACKAfterCorr.add_trace(go.Scatter(x=[PHlocMem], y=[ymax],
-                        marker=dict(color="green", size=6),
-                        mode="markers",
-                        text='PH #'+str(i),
-                        # font_size=18,
-                        hoverinfo='text'),secondary_y=True)
-            figPHBACKAfterCorr.data[len(figPHBACKAfterCorr.data)-1].showlegend = False
-
-            figPHBACKAfterCorr.add_vline(x=PHlocMem, line_width=2, line_dash="dash", line_color="green")
+        for i,PHlocMem in enumerate(PHlocFRONT):
+            figPHCorr.add_trace(go.Scatter(x=[PHlocMem], y=[ymax],
+                                    marker=dict(color="green", size=6),
+                                    mode="markers",
+                                    text='PH #'+str(i),
+                                    # font_size=18,
+                                    hoverinfo='text'),secondary_y=True)
+            figPHCorr.data[len(figPHCorr.data)-1].showlegend = False
+    
+            figPHCorr.add_vline(x=PHlocMem, line_width=2, line_dash="dash", line_color="green")
         
         
         if DisplayOffSet:
-            figPHBACKAfterCorr.add_trace(
-            go.Scatter(y=PHoffSetBACKAfterCorr[clr],line_color= lineColor,
+            figPHCorr.add_trace(
+            go.Scatter(y=PHoffSetFRONTAfterCorr[clr],line_color= lineColor,
                         name='Average(Fiter - Raw) AfterCorr '+str(col)+' color '+clr), secondary_y=True)
+            
         
         if DisplayTilt:
-            figPHBACKAfterCorr.add_trace(
-            go.Scatter(y=PHtiltBACKAfterCorr[clr],line_color= lineColor,line=dict(dash='dot'),
+            figPHCorr.add_trace(
+            go.Scatter(y=PHtiltFRONTAfterCorr[clr],line_color= lineColor,line=dict(dash='dot'),
                         name='Tilt(Fiter - Raw) AfterCorr '+str(col)+' color '+clr), secondary_y=True)
         
         
-        figPHBACKAfterCorr.update_layout(
+        figPHCorr.update_layout(
                 hoverlabel=dict(
                     namelength=-1
                 )
             )
-        figPHBACKAfterCorr.update_layout(title=side+' AfterCorr Wave Data S.Golay = '+ str(MaxWaveWindow)+'---> '+f)
+        figPHCorr.update_layout(title=side+' After Correction Wave Data S.Golay = '+ str(MaxWaveWindow)+'---> '+f)
         
         now = datetime.now()
         
         
         dt_string = now.strftime("%d_%m_%Y_%H_%M_%S")
         # plot(fig00)
-    plot(figPHBACKAfterCorr,filename=f+' '+side+' AfterCorr Wave Data S.Golay _'+ str(MaxWaveWindow)+".html") 
-except:
-    1    
-
-
-
-
-
-
-
-
-
-
- 
-##################################################################################################       
-##################################################################################################       
-##################################################################################################       
-##################################################################################################      
-
-PHname=[]
-header=[]
-ListofListFRONT=[]
-ListofListBACK=[]
-
-headerTilt=[]
-ListofListTiltFRONT=[]
-ListofListTiltBACK=[]
-
-side='Front'
-for i in range(24):
-    PHname.append('PH NUMBER# '+str(i))
-
-for col in ColorList:
-    header.append(col+' Offset')
-    # header.append(col+' Tilt')
-    new_list = [-number for number in PHoffsetPerHFRONT[col]]
-    ListofListFRONT.append(new_list)
-    # ListofList.append(PHtiltPerH[col])
-####FRONT 
-figTableFRONT = go.Figure(data=[go.Table(header=dict(values=['PH#']+header),
-                 cells=dict(values=[PHname]+ListofListFRONT,font=dict(color='black', size=15)))
-                     ])
-
-figTableFRONT.update_layout(title=side+' offset (Correction-For simplex) table S.Golay = '+ str(MaxWaveWindow)+'---> '+f)
-
-plot(figTableFRONT,filename=f+" Offset Table FRONT.html") 
-####BACK
- 
-try:
-    side='Back'
-    new_list=[]
-    for col in ColorList:
-        new_list = [-number for number in PHoffsetPerHBACK[col]]
-
-        ListofListBACK.append(new_list)
-        
-    figTableBACK = go.Figure(data=[go.Table(header=dict(values=['PH#']+header),
-                 cells=dict(values=[PHname]+ListofListBACK,font=dict(color='black', size=15)))
-                     ])
-    figTableBACK.update_layout(title=side+' offset table S.Golay = '+ str(MaxWaveWindow)+'---> '+f)
-
-
-    plot(figTableBACK,filename=f+" Offset Table BACK.html") 
-except:
-    1
-
-
-### Tilt
-side='Front'
-headerTilt=[]
-ListofListTiltFRONT=[]
-ListofListTiltBACK=[]
-# PHname=[]
-
-# for i in range(24):
-#     PHname.append(i)
-
-
-for col in ColorList:
-    headerTilt.append(col+' Tilt')
-    # header.append(col+' Tilt')
-    ListofListTiltFRONT.append(PHtiltPerHFRONT[col])
-
-backGroundCLR='rgb(200, 200, 200)'
-colors = n_colors(backGroundCLR, 'rgb(200, 0, 0)', ColorLevelsTilt, colortype='rgb')
-fillcolorList=[]
-formatList=[]
-formatList.append("")
-for i in range(len(ListofListTiltFRONT)):
-    fillcolorList.append(np.array(colors)[(abs(np.asarray(ListofListTiltFRONT[i]))/DivideByNumTilt).astype(int)])
-    formatList.append("0.2f")
+    plot(figPHCorr,filename=f+' '+side+' After Correction Wave Data S.Golay _'+ str(MaxWaveWindow)+".html") 
+     
+    ## Back ##
+    try:
+        figPHBACKAfterCorr = make_subplots(specs=[[{"secondary_y": True}]])
+        col='Mean';
+        side='Back'
+        for clr in ColorList:     
+            lineColor=clr;
+            
+            if lineColor=='Yellow':
+                lineColor='gold';
+            
+            figPHBACKAfterCorr.add_trace(
+            go.Scatter(y=WaveRawDataDicAfterCorrBACK[clr],line_color= lineColor,
+                        name='WaveData AfterCorr Raw '+str(col)+' color '+clr), secondary_y=False)
+            
+            figPHBACKAfterCorr.add_trace(
+            go.Scatter(y=WaveDataWithMaxFilterDicAfterCorrBACK[clr],line_color= lineColor,
+                        name='WaveData AfterCorr with Filter '+str(col)+' color '+clr), secondary_y=False)
+            
+            figPHBACKAfterCorr.add_trace(
+            go.Scatter(y=WaveRawDataDicAfterCorrBACK[clr]-WaveDataWithMaxFilterDicAfterCorrBACK[clr],line_color= lineColor,
+                        name='Fiter - Raw AfterCorr '+str(col)+' color '+clr), secondary_y=True)
+            
+            
+            for i,PHlocMem in enumerate(PHlocBACK):
+                figPHBACKAfterCorr.add_trace(go.Scatter(x=[PHlocMem], y=[ymax],
+                            marker=dict(color="green", size=6),
+                            mode="markers",
+                            text='PH #'+str(i),
+                            # font_size=18,
+                            hoverinfo='text'),secondary_y=True)
+                figPHBACKAfterCorr.data[len(figPHBACKAfterCorr.data)-1].showlegend = False
     
-
-####FRONT Tilt
-figTableTiltFRONT = go.Figure(data=[go.Table(header=dict(values=['PH#']+headerTilt),
-                 cells=dict(values=[PHname]+ListofListTiltFRONT,fill_color=[backGroundCLR]+fillcolorList,font=dict(color='black', size=15),format=formatList))
-                     ])
-
-figTableTiltFRONT.update_layout(title=side+' Tilt table S.Golay = '+ str(MaxWaveWindow)+'---> '+f)
-
-plot(figTableTiltFRONT,filename=f+" Tilt Table FRONT.html") 
-
-####BACK Tilt
-
-
-try:
-    side='Back'
-    # headerTilt=[]
+                figPHBACKAfterCorr.add_vline(x=PHlocMem, line_width=2, line_dash="dash", line_color="green")
+            
+            
+            if DisplayOffSet:
+                figPHBACKAfterCorr.add_trace(
+                go.Scatter(y=PHoffSetBACKAfterCorr[clr],line_color= lineColor,
+                            name='Average(Fiter - Raw) AfterCorr '+str(col)+' color '+clr), secondary_y=True)
+            
+            if DisplayTilt:
+                figPHBACKAfterCorr.add_trace(
+                go.Scatter(y=PHtiltBACKAfterCorr[clr],line_color= lineColor,line=dict(dash='dot'),
+                            name='Tilt(Fiter - Raw) AfterCorr '+str(col)+' color '+clr), secondary_y=True)
+            
+            
+            figPHBACKAfterCorr.update_layout(
+                    hoverlabel=dict(
+                        namelength=-1
+                    )
+                )
+            figPHBACKAfterCorr.update_layout(title=side+' AfterCorr Wave Data S.Golay = '+ str(MaxWaveWindow)+'---> '+f)
+            
+            now = datetime.now()
+            
+            
+            dt_string = now.strftime("%d_%m_%Y_%H_%M_%S")
+            # plot(fig00)
+        plot(figPHBACKAfterCorr,filename=f+' '+side+' AfterCorr Wave Data S.Golay _'+ str(MaxWaveWindow)+".html") 
+    except:
+        1    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+     
+    ##################################################################################################       
+    ##################################################################################################       
+    ##################################################################################################       
+    ##################################################################################################      
+    
+    PHname=[]
+    header=[]
+    ListofListFRONT=[]
+    ListofListBACK=[]
+    
+    headerTilt=[]
+    ListofListTiltFRONT=[]
+    ListofListTiltBACK=[]
+    
+    side='Front'
+    for i in range(24):
+        PHname.append('PH NUMBER# '+str(i))
+    
     for col in ColorList:
-        # headerTilt.append(col+' Tilt')
+        header.append(col+' Offset')
         # header.append(col+' Tilt')
-        ListofListTiltBACK.append(PHtiltPerHBACK[col])
-        
-    fillcolorList=[]
-    for i in range(len(ListofListTiltBACK)):
-        fillcolorList.append(np.array(colors)[(abs(np.asarray(ListofListTiltBACK[i]))/DivideByNumTilt).astype(int)]) 
-        
-    figTableTiltBACK = go.Figure(data=[go.Table(header=dict(values=['PH#']+headerTilt),
-                 cells=dict(values=[PHname]+ListofListTiltBACK,fill_color=[backGroundCLR]+fillcolorList,font=dict(color='black', size=15),format=formatList))
-                     ])
+        new_list = [-number for number in PHoffsetPerHFRONT[col]]
+        ListofListFRONT.append(new_list)
+        # ListofList.append(PHtiltPerH[col])
+    ####FRONT 
+    figTableFRONT = go.Figure(data=[go.Table(header=dict(values=['PH#']+header),
+                     cells=dict(values=[PHname]+ListofListFRONT,font=dict(color='black', size=15)))
+                         ])
     
-    figTableTiltBACK.update_layout(title=side+' Tilt table S.Golay = '+ str(MaxWaveWindow)+'---> '+f)
+    figTableFRONT.update_layout(title=side+' offset (Correction-For simplex) table S.Golay = '+ str(MaxWaveWindow)+'---> '+f)
     
-    plot(figTableTiltBACK,filename=f+" Tilt Table BACK.html")  
-except:
-    1    
-
-
-
- 
-#### FRONT -BACK delta
- 
-
-try:
-    ListofListDelta=[]    
-    header=[]
-    fillcolorList=[]  
+    plot(figTableFRONT,filename=f+" Offset Table FRONT.html") 
+    ####BACK
+     
+    try:
+        side='Back'
+        new_list=[]
+        for col in ColorList:
+            new_list = [-number for number in PHoffsetPerHBACK[col]]
+    
+            ListofListBACK.append(new_list)
+            
+        figTableBACK = go.Figure(data=[go.Table(header=dict(values=['PH#']+header),
+                     cells=dict(values=[PHname]+ListofListBACK,font=dict(color='black', size=15)))
+                         ])
+        figTableBACK.update_layout(title=side+' offset table S.Golay = '+ str(MaxWaveWindow)+'---> '+f)
+    
+    
+        plot(figTableBACK,filename=f+" Offset Table BACK.html") 
+    except:
+        1
+    
+    
+    ### Tilt
+    side='Front'
+    headerTilt=[]
+    ListofListTiltFRONT=[]
+    ListofListTiltBACK=[]
+    # PHname=[]
+    
+    # for i in range(24):
+    #     PHname.append(i)
+    
+    
+    for col in ColorList:
+        headerTilt.append(col+' Tilt')
+        # header.append(col+' Tilt')
+        ListofListTiltFRONT.append(PHtiltPerHFRONT[col])
+    
     backGroundCLR='rgb(200, 200, 200)'
-    colors = n_colors(backGroundCLR, 'rgb(200, 0, 0)', ColorLevels, colortype='rgb')
-
-    for col in ColorList:
-        header.append(col+'Delta(Front-Back) Offset')
-    for col in ColorList:
-        ListofListDelta.append(list(np.asarray(PHoffsetPerHFRONT[col])-np.asarray(PHoffsetPerHBACK[col])))
+    colors = n_colors(backGroundCLR, 'rgb(200, 0, 0)', ColorLevelsTilt, colortype='rgb')
+    fillcolorList=[]
+    formatList=[]
+    formatList.append("")
+    for i in range(len(ListofListTiltFRONT)):
+        fillcolorList.append(np.array(colors)[(abs(np.asarray(ListofListTiltFRONT[i]))/DivideByNumTilt).astype(int)])
+        formatList.append("0.2f")
         
-    for i in range(len(ListofListDelta)):
-        # x2 = 30 * np.ones(len(ListofListDelta[i]))
-        fillcolorList.append(np.array(colors)[(abs(np.asarray(ListofListDelta[i]))/DivideByNum).astype(int)])
+    
+    ####FRONT Tilt
+    figTableTiltFRONT = go.Figure(data=[go.Table(header=dict(values=['PH#']+headerTilt),
+                     cells=dict(values=[PHname]+ListofListTiltFRONT,fill_color=[backGroundCLR]+fillcolorList,font=dict(color='black', size=15),format=formatList))
+                         ])
+    
+    figTableTiltFRONT.update_layout(title=side+' Tilt table S.Golay = '+ str(MaxWaveWindow)+'---> '+f)
+    
+    plot(figTableTiltFRONT,filename=f+" Tilt Table FRONT.html") 
+    
+    ####BACK Tilt
     
     
+    try:
+        side='Back'
+        # headerTilt=[]
+        for col in ColorList:
+            # headerTilt.append(col+' Tilt')
+            # header.append(col+' Tilt')
+            ListofListTiltBACK.append(PHtiltPerHBACK[col])
+            
+        fillcolorList=[]
+        for i in range(len(ListofListTiltBACK)):
+            fillcolorList.append(np.array(colors)[(abs(np.asarray(ListofListTiltBACK[i]))/DivideByNumTilt).astype(int)]) 
+            
+        figTableTiltBACK = go.Figure(data=[go.Table(header=dict(values=['PH#']+headerTilt),
+                     cells=dict(values=[PHname]+ListofListTiltBACK,fill_color=[backGroundCLR]+fillcolorList,font=dict(color='black', size=15),format=formatList))
+                         ])
         
-    figTableDelta = go.Figure(data=[go.Table(header=dict(values=['PH#']+header),
-                 cells=dict(values=[PHname]+ListofListDelta,fill_color=[backGroundCLR]+fillcolorList,font=dict(color='black', size=15)))
-                     ])
-    figTableDelta.update_layout(title='Delta offset table S.Golay = '+ str(MaxWaveWindow)+'---> '+f)
-
-
-    plot(figTableDelta,filename=f+" Delta Offset Table.html") 
-except:
-    1
-
-
-
-#### FRONT -BACK Average
- 
-
-try:
-    ListofListAverage=[]    
-    header=[]
-    fillcolorList=[]  
-    
-
-    for col in ColorList:
-        header.append(col+'Average(Front&Back) Offset')
-    for col in ColorList:
-        ListofListAverage.append(list(-(np.asarray(PHoffsetPerHFRONT[col])+np.asarray(PHoffsetPerHBACK[col]))/2))
+        figTableTiltBACK.update_layout(title=side+' Tilt table S.Golay = '+ str(MaxWaveWindow)+'---> '+f)
         
-  
+        plot(figTableTiltBACK,filename=f+" Tilt Table BACK.html")  
+    except:
+        1    
     
     
+    
+     
+    #### FRONT -BACK delta
+     
+    
+    try:
+        ListofListDelta=[]    
+        header=[]
+        fillcolorList=[]  
+        backGroundCLR='rgb(200, 200, 200)'
+        colors = n_colors(backGroundCLR, 'rgb(200, 0, 0)', ColorLevels, colortype='rgb')
+    
+        for col in ColorList:
+            header.append(col+'Delta(Front-Back) Offset')
+        for col in ColorList:
+            ListofListDelta.append(list(np.asarray(PHoffsetPerHFRONT[col])-np.asarray(PHoffsetPerHBACK[col])))
+            
+        for i in range(len(ListofListDelta)):
+            # x2 = 30 * np.ones(len(ListofListDelta[i]))
+            fillcolorList.append(np.array(colors)[(abs(np.asarray(ListofListDelta[i]))/DivideByNum).astype(int)])
         
-    figTableDelta = go.Figure(data=[go.Table(header=dict(values=['PH#']+header),
-                 cells=dict(values=[PHname]+ListofListAverage,font=dict(color='black', size=15)))
-                     ])
-    figTableDelta.update_layout(title='Correction table S.Golay = '+ str(MaxWaveWindow)+'---> '+f)
-
-
-    plot(figTableDelta,filename=f+" Correction Table.html") 
-except:
-    1
+        
+            
+        figTableDelta = go.Figure(data=[go.Table(header=dict(values=['PH#']+header),
+                     cells=dict(values=[PHname]+ListofListDelta,fill_color=[backGroundCLR]+fillcolorList,font=dict(color='black', size=15)))
+                         ])
+        figTableDelta.update_layout(title='Delta offset table S.Golay = '+ str(MaxWaveWindow)+'---> '+f)
+    
+    
+        plot(figTableDelta,filename=f+" Delta Offset Table.html") 
+    except:
+        1
+    
+    
+    
+    #### FRONT -BACK Average
+     
+    
+    try:
+        ListofListAverage=[]    
+        header=[]
+        fillcolorList=[]  
+        
+    
+        for col in ColorList:
+            header.append(col+'Average(Front&Back) Offset')
+        for col in ColorList:
+            ListofListAverage.append(list(-(np.asarray(PHoffsetPerHFRONT[col])+np.asarray(PHoffsetPerHBACK[col]))/2))
+            
+      
+        
+        
+            
+        figTableDelta = go.Figure(data=[go.Table(header=dict(values=['PH#']+header),
+                     cells=dict(values=[PHname]+ListofListAverage,font=dict(color='black', size=15)))
+                         ])
+        figTableDelta.update_layout(title='Correction table S.Golay = '+ str(MaxWaveWindow)+'---> '+f)
+    
+    
+        plot(figTableDelta,filename=f+" Correction Table.html") 
+    except:
+        1
 
 
 # cells=dict(

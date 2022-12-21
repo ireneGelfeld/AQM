@@ -894,9 +894,9 @@ class PlotGraphPlotly(CalcWaveFromRawData):
         figTableDelta = go.Figure(data=[go.Table(header=dict(values=['PH#']+header),
                      cells=dict(values=[PHname]+ListofListDelta,fill_color=[backGroundCLR]+fillcolorList,font=dict(color='black', size=15),format=formatList))
                          ])
-        figTableDelta.update_layout(title=self.side+' '+PlotTitle)  
+        figTableDelta.update_layout(title=PlotTitle)  
         
-        plot(figTableDelta,filename=self.side+' '+fileName+".html")   
+        plot(figTableDelta,filename=fileName+".html")   
         
         return figTableDelta;
     
@@ -923,9 +923,9 @@ class PlotGraphPlotly(CalcWaveFromRawData):
         figTableAverage = go.Figure(data=[go.Table(header=dict(values=['PH#']+header),
                      cells=dict(values=[PHname]+ListofListAverage,font=dict(color='black', size=15)))
                          ])
-        figTableAverage.update_layout(title=self.side+' '+PlotTitle)  
+        figTableAverage.update_layout(title=PlotTitle)  
         
-        plot(figTableAverage,filename=self.side+' '+fileName+".html")   
+        plot(figTableAverage,filename=fileName+".html")   
         
         return figTableAverage;
 # plt.figure()

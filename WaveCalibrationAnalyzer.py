@@ -1017,38 +1017,7 @@ except:
 
 
 ############################Calc Average delta of cycle per panel
-PHoffsetPerHFRONT=PHtiltFRONTAfterCorr
-PHoffsetPerHBACK=PHtiltBACKAfterCorr
 
-
-PHname=[]
-for i in range(24):
-    PHname.append('PH NUMBER# '+str(i)) 
-ListofListDelta=[]    
-header=[]
-fillcolorList=[]  
-backGroundCLR='rgb(200, 200, 200)'
-colors = n_colors(backGroundCLR, 'rgb(200, 0, 0)', ColorLevels, colortype='rgb')
-
-for col in ColorList:
-    header.append(col+'Delta(Front-Back) Offset')
-for col in ColorList:
-    ListofListDelta.append(list(np.asarray(PHoffsetPerHFRONT[col])-np.asarray(PHoffsetPerHBACK[col])))
-formatList=[]
-formatList.append("")    
-for i in range(len(ListofListDelta)):
-    # x2 = 30 * np.ones(len(ListofListDelta[i]))
-    fillcolorList.append(np.array(colors)[(abs(np.asarray(ListofListDelta[i]))/DivideByNum).astype(int)])
-    formatList.append("0.2f")
-
-
-    
-figTableDelta = go.Figure(data=[go.Table(header=dict(values=['PH#']+header),
-             cells=dict(values=[PHname]+ListofListDelta,fill_color=[backGroundCLR]+fillcolorList,font=dict(color='black', size=15),format=formatList))
-                 ])
-figTableDelta.update_layout(title=self.side+' '+PlotTitle)  
-
-plot(figTableDelta,filename=self.side+' '+fileName+".html")   
 
 
 #######################################################################################

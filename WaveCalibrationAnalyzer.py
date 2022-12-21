@@ -1010,13 +1010,45 @@ except:
 PHoffSetFRONTAfterCorr,PHtiltFRONTAfterCorr,PHoffsetPerHFRONTAfterCorr,PHtiltPerHFRONTAfterCorr=CalcMeanAndTilt(WaveRawDataDicAfterCorrFRONT,WaveDataWithMaxFilterDicAfterCorrFRONT,PHlocFRONT)
 
 try:
-   PHoffSetBACKAfterCorr,PHtiltBACKAfterCorr,PHoffsetPerHBACKAfterCorrAfterCorr,PHtiltPerHBACKAfterCorr=CalcMeanAndTilt(WaveRawDataDicAfterCorrBACK,WaveDataWithMaxFilterDicAfterCorrBACK,PHlocBACK)
+   PHoffSetBACKAfterCorr,PHtiltBACKAfterCorr,PHoffsetPerHBACKAfterCorr,PHtiltPerHBACKAfterCorr=CalcMeanAndTilt(WaveRawDataDicAfterCorrBACK,WaveDataWithMaxFilterDicAfterCorrBACK,PHlocBACK)
 except:
     1
 
 
 
 ############################Calc Average delta of cycle per panel
+PHoffsetPerHFRONT=PHtiltFRONTAfterCorr
+PHoffsetPerHBACK=PHtiltBACKAfterCorr
+
+
+PHname=[]
+for i in range(24):
+    PHname.append('PH NUMBER# '+str(i)) 
+ListofListDelta=[]    
+header=[]
+fillcolorList=[]  
+backGroundCLR='rgb(200, 200, 200)'
+colors = n_colors(backGroundCLR, 'rgb(200, 0, 0)', ColorLevels, colortype='rgb')
+
+for col in ColorList:
+    header.append(col+'Delta(Front-Back) Offset')
+for col in ColorList:
+    ListofListDelta.append(list(np.asarray(PHoffsetPerHFRONT[col])-np.asarray(PHoffsetPerHBACK[col])))
+formatList=[]
+formatList.append("")    
+for i in range(len(ListofListDelta)):
+    # x2 = 30 * np.ones(len(ListofListDelta[i]))
+    fillcolorList.append(np.array(colors)[(abs(np.asarray(ListofListDelta[i]))/DivideByNum).astype(int)])
+    formatList.append("0.2f")
+
+
+    
+figTableDelta = go.Figure(data=[go.Table(header=dict(values=['PH#']+header),
+             cells=dict(values=[PHname]+ListofListDelta,fill_color=[backGroundCLR]+fillcolorList,font=dict(color='black', size=15),format=formatList))
+                 ])
+figTableDelta.update_layout(title=self.side+' '+PlotTitle)  
+
+plot(figTableDelta,filename=self.side+' '+fileName+".html")   
 
 
 #######################################################################################
@@ -1294,7 +1326,7 @@ if PlotTables:
         PlotTitle='Delta offset table S.Golay = '+ str(MaxWaveWindow)+'---> '+f
         fileName=f+" Delta Offset Table"
         side='Front';
-        TableFRONT_BACK_AverageAfterCorrFRONT=PlotGraphPlotly(pthF+'/',side,Panel,ColorList).PlotFRONT_BACKDeltaTable(PHtiltFRONTAfterCorr,PHtiltBACKAfterCorr,DivideByNum,ColorLevels,PlotTitle,fileName);
+        TableFRONT_BACK_AverageAfterCorrFRONT=PlotGraphPlotly(pthF+'/',side,Panel,ColorList).PlotFRONT_BACKDeltaTable(PHoffsetPerHFRONTAfterCorr,PHoffsetPerHBACKAfterCorr,DivideByNum,ColorLevels,PlotTitle,fileName);
     except:
         1
         
@@ -1304,7 +1336,7 @@ if PlotTables:
         PlotTitle='Correction table S.Golay = '+ str(MaxWaveWindow)+'---> '+f
         fileName=f+" FRONT -BACK Average Table"
         side='Front';
-        TableFRONT_BACK_AverageAfterCorrFRONT=PlotGraphPlotly(pthF+'/',side,Panel,ColorList).PlotFRONT_BACKAverageTable(PHtiltFRONTAfterCorr,PHtiltBACKAfterCorr,PlotTitle,fileName);
+        TableFRONT_BACK_AverageAfterCorrFRONT=PlotGraphPlotly(pthF+'/',side,Panel,ColorList).PlotFRONT_BACKAverageTable(PHoffsetPerHFRONTAfterCorr,PHoffsetPerHBACKAfterCorr,PlotTitle,fileName);
     except:
         1
 

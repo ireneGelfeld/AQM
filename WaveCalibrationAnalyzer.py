@@ -117,7 +117,7 @@ class CalcWaveFromRawData:
         cutCols=col[12:396]
         
         DataSecPrintDircPanelColorCUT=DataSecPrintDircPanelColor[cutCols];
-        LocatorIndex= DataSec['Locator Index'][0];
+        LocatorIndex= DataSec['Locator Index'][int(len(DataSec['Locator Index'])/2)];
         
         return LocatorIndex,DataSecPrintDircPanelColorCUT,cutCols;
     
@@ -714,10 +714,10 @@ class PlotGraphPlotly(CalcWaveFromRawData):
                         name='WaveData with Filter color '+clr), secondary_y=False)
             
             fig.add_trace(
-            go.Scatter(y=WaveRawDataDic[clr]-WaveDataWithMaxFilterDic[clr]['Mean'],line_color= lineColor,
+            go.Scatter(y=WaveRawDataDic[clr]-WaveDataWithMaxFilterDic[clr],line_color= lineColor,
                         name='Fiter - Raw color '+clr), secondary_y=True)
             
-            ymax=max(WaveRawDataDic[ColorList[0]]-WaveDataWithMaxFilterDic[self.ColorList[0]]['Mean'])
+            ymax=max(WaveRawDataDic[ColorList[0]]-WaveDataWithMaxFilterDic[self.ColorList[0]])
             
             for i,PHlocMem in enumerate(PHloc):
                 fig.add_trace(go.Scatter(x=[PHlocMem], y=[ymax],
@@ -896,7 +896,7 @@ class PlotGraphPlotly(CalcWaveFromRawData):
                          ])
         figTableDelta.update_layout(title=PlotTitle)  
         
-        plot(figTableDelta,filename=fileName+".html")   
+        plot(figTableDelta,filename=fileName+"_.html")   
         
         return figTableDelta;
     
@@ -925,7 +925,7 @@ class PlotGraphPlotly(CalcWaveFromRawData):
                          ])
         figTableAverage.update_layout(title=PlotTitle)  
         
-        plot(figTableAverage,filename=fileName+".html")   
+        plot(figTableAverage,filename=fileName+"_.html")   
         
         return figTableAverage;
 # plt.figure()
@@ -1238,14 +1238,14 @@ if WaveFilterResidue_dxPlot:
     PlotTitle=' After Correction Wave Data S.Golay = '+ str(MaxWaveWindow)+'---> '+f
     fileName=f+'  After Correction Wave Data S.Golay _'+ str(MaxWaveWindow)
     side='Front';
-    figWaveResidueAfterCorrFRONT=PlotGraphPlotly(pthF+'/',side,Panel,ColorList).PlotWaveDataResidue(WaveRawDataDicAfterCorrFRONT,WaveDataWithMaxFilterDicFRONT,PHlocFRONT,PHoffSetFRONT,PHtiltFRONT,PlotTitle,fileName)
+    figWaveResidueAfterCorrFRONT=PlotGraphPlotly(pthF+'/',side,Panel,ColorList).PlotWaveDataResidue(WaveRawDataDicAfterCorrFRONT,WaveDataWithMaxFilterDicAfterCorrFRONT,PHlocFRONT,PHoffSetFRONT,PHtiltFRONT,PlotTitle,fileName)
     
     ########BACK
     try:
         PlotTitle=' After Correction Wave Data S.Golay = '+ str(MaxWaveWindow)+'---> '+f
         fileName=f+'  After Correction Wave Data S.Golay _'+ str(MaxWaveWindow)
         side='Back';
-        figWaveResidueAfterCorrBACK=PlotGraphPlotly(pthF+'/',side,Panel,ColorList).PlotWaveDataResidue(WaveRawDataDicAfterCorrBACK,WaveDataWithMaxFilterDicBACK,PHlocBACK,PHoffSetBACK,PHtiltBACK,PlotTitle,fileName)
+        figWaveResidueAfterCorrBACK=PlotGraphPlotly(pthF+'/',side,Panel,ColorList).PlotWaveDataResidue(WaveRawDataDicAfterCorrBACK,WaveDataWithMaxFilterDicAfterCorrBACK,PHlocBACK,PHoffSetBACK,PHtiltBACK,PlotTitle,fileName)
     except:
          1     
 

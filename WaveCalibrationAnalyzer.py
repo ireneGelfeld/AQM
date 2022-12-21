@@ -9,7 +9,7 @@ get_ipython().magic('reset -sf')
 
 #####################################Params #############################################################
 #########################################################################################################
-global StartCycle,StartCycle4Avr,PHpoitToIgnor,MaxWaveWindow,DistanceBtWPointMM,Panel,Cycle2Display
+global StartCycle,StartCycle4Avr,PHpoitToIgnor,MaxWaveWindow,DistanceBtWPointMM,Panel,Cycle2Display,Panel2Disply
 
 
 
@@ -21,8 +21,8 @@ CycleNumber =3 # cycle view in => plot Per Panel
 StartCycle4Avr = 2; # Start averaging for all plots defult = 2
 Panel = 6;          #view panel for plot Per cycle
 ColorForDisplay = 'Cyan' # Not in use
-Cycle2Display = 2 # defult visible cycle in plot WaveDataSUBAverage_PerPanel_PerCycle
-
+Cycle2Display = 4 # defult visible cycle in plot WaveDataSUBAverage_PerPanel_PerCycle
+Panel2Disply= [11,6]
 ## for plot CIScurve
 CIScurve=1;# On/OFF plot
 
@@ -706,18 +706,18 @@ class PlotGraphPlotly(CalcWaveFromRawData):
                 lineColor='gold';
             
             fig.add_trace(
-            go.Scatter(y=WaveRawDataDic[clr]['Mean'],line_color= lineColor,
+            go.Scatter(y=WaveRawDataDic[clr],line_color= lineColor,
                         name='WaveData Raw '+str('Mean')+' color '+clr), secondary_y=False)
             
             fig.add_trace(
-            go.Scatter(y=WaveDataWithMaxFilterDic[clr]['Mean'],line_color= lineColor,
+            go.Scatter(y=WaveDataWithMaxFilterDic[clr],line_color= lineColor,
                         name='WaveData with Filter color '+clr), secondary_y=False)
             
             fig.add_trace(
-            go.Scatter(y=WaveRawDataDic[clr]['Mean']-WaveDataWithMaxFilterDic[clr]['Mean'],line_color= lineColor,
+            go.Scatter(y=WaveRawDataDic[clr]-WaveDataWithMaxFilterDic[clr]['Mean'],line_color= lineColor,
                         name='Fiter - Raw color '+clr), secondary_y=True)
             
-            ymax=max(WaveRawDataDic[ColorList[0]]['Mean']-WaveDataWithMaxFilterDic[self.ColorList[0]]['Mean'])
+            ymax=max(WaveRawDataDic[ColorList[0]]-WaveDataWithMaxFilterDic[self.ColorList[0]]['Mean'])
             
             for i,PHlocMem in enumerate(PHloc):
                 fig.add_trace(go.Scatter(x=[PHlocMem], y=[ymax],
@@ -787,6 +787,8 @@ class PlotGraphPlotly(CalcWaveFromRawData):
                                         name='WaveData Raw cycle '+str(col)+' - Mean'+' color '+clr+' Panel '+str(pnl)))    
                     
                     if not col == Cycle2Display:
+                        fig.data[len(fig.data)-1].visible = 'legendonly';
+                    if not pnl in Panel2Disply:
                         fig.data[len(fig.data)-1].visible = 'legendonly';
 
             
@@ -880,19 +882,21 @@ class PlotGraphPlotly(CalcWaveFromRawData):
             header.append(col+'Delta(Front-Back) Offset')
         for col in ColorList:
             ListofListDelta.append(list(np.asarray(PHoffsetPerHFRONT[col])-np.asarray(PHoffsetPerHBACK[col])))
-            
+        formatList=[]
+        formatList.append("")    
         for i in range(len(ListofListDelta)):
             # x2 = 30 * np.ones(len(ListofListDelta[i]))
             fillcolorList.append(np.array(colors)[(abs(np.asarray(ListofListDelta[i]))/DivideByNum).astype(int)])
-        
+            formatList.append("0.2f")
+
         
             
         figTableDelta = go.Figure(data=[go.Table(header=dict(values=['PH#']+header),
-                     cells=dict(values=[PHname]+ListofListDelta,fill_color=[backGroundCLR]+fillcolorList,font=dict(color='black', size=15)))
+                     cells=dict(values=[PHname]+ListofListDelta,fill_color=[backGroundCLR]+fillcolorList,font=dict(color='black', size=15),format=formatList))
                          ])
-        figTableDelta.update_layout(title=self.side+' '+PlotTitle)  
+        figTableDelta.update_layout(title=PlotTitle)  
         
-        plot(figTableDelta,filename=self.side+' '+fileName+".html")   
+        plot(figTableDelta,filename=fileName+".html")   
         
         return figTableDelta;
     
@@ -919,9 +923,9 @@ class PlotGraphPlotly(CalcWaveFromRawData):
         figTableAverage = go.Figure(data=[go.Table(header=dict(values=['PH#']+header),
                      cells=dict(values=[PHname]+ListofListAverage,font=dict(color='black', size=15)))
                          ])
-        figTableAverage.update_layout(title=self.side+' '+PlotTitle)  
+        figTableAverage.update_layout(title=PlotTitle)  
         
-        plot(figTableAverage,filename=self.side+' '+fileName+".html")   
+        plot(figTableAverage,filename=fileName+".html")   
         
         return figTableAverage;
 # plt.figure()
@@ -1006,13 +1010,14 @@ except:
 PHoffSetFRONTAfterCorr,PHtiltFRONTAfterCorr,PHoffsetPerHFRONTAfterCorr,PHtiltPerHFRONTAfterCorr=CalcMeanAndTilt(WaveRawDataDicAfterCorrFRONT,WaveDataWithMaxFilterDicAfterCorrFRONT,PHlocFRONT)
 
 try:
-   PHoffSetBACKAfterCorr,PHtiltBACKAfterCorr,PHoffsetPerHBACKAfterCorrAfterCorr,PHtiltPerHBACKAfterCorr=CalcMeanAndTilt(WaveRawDataDicAfterCorrBACK,WaveDataWithMaxFilterDicAfterCorrBACK,PHlocBACK)
+   PHoffSetBACKAfterCorr,PHtiltBACKAfterCorr,PHoffsetPerHBACKAfterCorr,PHtiltPerHBACKAfterCorr=CalcMeanAndTilt(WaveRawDataDicAfterCorrBACK,WaveDataWithMaxFilterDicAfterCorrBACK,PHlocBACK)
 except:
     1
 
 
 
 ############################Calc Average delta of cycle per panel
+
 
 
 #######################################################################################
@@ -1137,29 +1142,29 @@ if plotPerPanel:
 ##### Front
 if WaveDataSUBAverage_PerPanel_PerCycle:
     offSetType='Average All' ;
-    PlotTitle='- WAVE RAW DATA - Average Wave Data Per Panel--->'+f+' offSetType='+offSetType;
-    fileName=f+" WAVE RAW DATA - Average Wave Data Per Panel ";
+    PlotTitle='- Wave Behavior- Avi  Method --->'+f+' offSetType='+offSetType;
+    fileName=f+" Wave Behavior- Avi  Method Offsettype_"+offSetType;
     side='Front'
     figWaveDataSubAveragePerPanet=PlotGraphPlotly(pthF+'/',side,Panel,ColorList).PlotWaveDataSUBAveragePerPanelPerCycle(WaveRawDataDicFRONT,offSetType,PlotTitle,fileName);
 
     offSetType='Average Left Right' ;
-    PlotTitle='- WAVE RAW DATA - Average Wave Data Per Panel--->'+f+' offSetType='+offSetType;
-    fileName=f+" WAVE RAW DATA - Average Wave Data Per Panel ";
+    PlotTitle='- Wave Behavior- Avi  Method --->'+f+' offSetType='+offSetType;
+    fileName=f+" Wave Behavior- Avi  Method Offsettype_"+offSetType;
     side='Front'
     figWaveDataSubAveragePerPanet=PlotGraphPlotly(pthF+'/',side,Panel,ColorList).PlotWaveDataSUBAveragePerPanelPerCycle(WaveRawDataDicFRONT,offSetType,PlotTitle,fileName);
         
     #####Back
     try:
         offSetType='Average All' #
-        PlotTitle='- WAVE RAW DATA - Average Wave Data Per Panel--->'+f+' offSetType='+offSetType;
-        fileName=f+" WAVE RAW DATA - Average Wave Data Per Panel ";
+        PlotTitle='- Wave Behavior- Avi  Method --->'+f+' offSetType='+offSetType;
+        fileName=f+" Wave Behavior- Avi  Method Offsettype_"+offSetType;
         
         side='Back'
         figWaveDataSubAveragePerPanet=PlotGraphPlotly(pthF+'/',side,Panel,ColorList).PlotWaveDataSUBAveragePerPanelPerCycle(WaveRawDataDicBACK,offSetType,PlotTitle,fileName);
         
         offSetType='Average Left Right' #    
-        PlotTitle='- WAVE RAW DATA - Average Wave Data Per Panel--->'+f+' offSetType='+offSetType;
-        fileName=f+" WAVE RAW DATA - Average Wave Data Per Panel ";
+        PlotTitle='- Wave Behavior- Avi  Method --->'+f+' offSetType='+offSetType;
+        fileName=f+" Wave Behavior- Avi  Method Offsettype_"+offSetType;
         side='Back'
         figWaveDataSubAveragePerPanet=PlotGraphPlotly(pthF+'/',side,Panel,ColorList).PlotWaveDataSUBAveragePerPanelPerCycle(WaveRawDataDicBACK,offSetType,PlotTitle,fileName);
 
@@ -1227,20 +1232,20 @@ if BeforAndAfterCorr:
         1
 
 #################################################################################
-##################################Plot Wave DataResidue After correction
+##################################Plot DX Wave DataResidue After correction
 ########FRONT
 if WaveFilterResidue_dxPlot:
     PlotTitle=' After Correction Wave Data S.Golay = '+ str(MaxWaveWindow)+'---> '+f
     fileName=f+'  After Correction Wave Data S.Golay _'+ str(MaxWaveWindow)
     side='Front';
-    figWaveResidueAfterCorrFRONT=PlotGraphPlotly(pthF+'/',side,Panel,ColorList).PlotWaveDataResidue(WaveRawDataDicFRONT,WaveDataWithMaxFilterDicFRONT,PHlocFRONT,PHoffSetFRONT,PHtiltFRONT,PlotTitle,fileName)
+    figWaveResidueAfterCorrFRONT=PlotGraphPlotly(pthF+'/',side,Panel,ColorList).PlotWaveDataResidue(WaveRawDataDicAfterCorrFRONT,WaveDataWithMaxFilterDicFRONT,PHlocFRONT,PHoffSetFRONT,PHtiltFRONT,PlotTitle,fileName)
     
     ########BACK
     try:
         PlotTitle=' After Correction Wave Data S.Golay = '+ str(MaxWaveWindow)+'---> '+f
         fileName=f+'  After Correction Wave Data S.Golay _'+ str(MaxWaveWindow)
         side='Back';
-        figWaveResidueAfterCorrBACK=PlotGraphPlotly(pthF+'/',side,Panel,ColorList).PlotWaveDataResidue(WaveRawDataDicBACK,WaveDataWithMaxFilterDicBACK,PHlocBACK,PHoffSetBACK,PHtiltBACK,PlotTitle,fileName)
+        figWaveResidueAfterCorrBACK=PlotGraphPlotly(pthF+'/',side,Panel,ColorList).PlotWaveDataResidue(WaveRawDataDicAfterCorrBACK,WaveDataWithMaxFilterDicBACK,PHlocBACK,PHoffSetBACK,PHtiltBACK,PlotTitle,fileName)
     except:
          1     
 
@@ -1290,7 +1295,7 @@ if PlotTables:
         PlotTitle='Delta offset table S.Golay = '+ str(MaxWaveWindow)+'---> '+f
         fileName=f+" Delta Offset Table"
         side='Front';
-        TableFRONT_BACK_AverageAfterCorrFRONT=PlotGraphPlotly(pthF+'/',side,Panel,ColorList).PlotFRONT_BACKDeltaTable(PHoffsetPerHFRONT,PHoffsetPerHBACK,DivideByNum,ColorLevels,PlotTitle,fileName);
+        TableFRONT_BACK_AverageAfterCorrFRONT=PlotGraphPlotly(pthF+'/',side,Panel,ColorList).PlotFRONT_BACKDeltaTable(PHoffsetPerHFRONTAfterCorr,PHoffsetPerHBACKAfterCorr,DivideByNum,ColorLevels,PlotTitle,fileName);
     except:
         1
         
@@ -1300,7 +1305,7 @@ if PlotTables:
         PlotTitle='Correction table S.Golay = '+ str(MaxWaveWindow)+'---> '+f
         fileName=f+" FRONT -BACK Average Table"
         side='Front';
-        TableFRONT_BACK_AverageAfterCorrFRONT=PlotGraphPlotly(pthF+'/',side,Panel,ColorList).PlotFRONT_BACKAverageTable(PHoffsetPerHFRONT,PHoffsetPerHBACK,PlotTitle,fileName);
+        TableFRONT_BACK_AverageAfterCorrFRONT=PlotGraphPlotly(pthF+'/',side,Panel,ColorList).PlotFRONT_BACKAverageTable(PHoffsetPerHFRONTAfterCorr,PHoffsetPerHBACKAfterCorr,PlotTitle,fileName);
     except:
         1
 

@@ -323,7 +323,7 @@ class RepareDistortions:
             WaveFilter_RawData[clr]=list(self.WaveRawDataDic[clr][col]-self.WaveDataWithMaxFilterDic[clr][col])
         return   WaveFilter_RawData;
     
-     def CalcCorrectionArray(self):
+     def CalcCorrectionArrayOLD(self):
         
         WaveFilter_RawData=self.CalcWaveAfterFilterSubstraction();
         
@@ -358,8 +358,52 @@ class RepareDistortions:
             for k in range(1,len(minDistpC.columns)):
                 ColssetCols.append(WaveFilter_RawData[minDistpC[k][clrName[0]]][i])
                 
+            CorrectionArr.append(np.mean(ColssetCols))       
+         
+        return CorrectionArr
+    
+     def CalcCorrectionArray(self):
+        WaveFilter_RawData=self.CalcWaveAfterFilterSubstraction();
+        
+        minDistpC=pd.DataFrame();
+        CorrectionArr=[]
+        for i in range(len(WaveFilter_RawData['Black'])):
+            minDistpC=pd.DataFrame();
+            ##Build dic of distance for each color
+            count=0
+            for clrD in self.ColorList:
+                difList={}
+                for clr in self.ColorList:
+                    if clr == clrD:
+                        continue;
+                    difList[((WaveFilter_RawData[clrD][i]-WaveFilter_RawData[clr][i]))]=clr;
+                    count=count+1;
+                tmpList=list((np.array(list(difList.keys()))));
+                tmpList.sort()
+                DistanceVal=0;
+                listToAdd=[]
+                # minVal=min(tmpList);
+                if  len(self.ColorList) > 4:   
+                    NieghborColors = NieghborColorsFor7colrs-1;
+                else:
+                    NieghborColors = 1;    
+                for nbr in  range(NieghborColors):   
+                    DistanceVal=DistanceVal+math.pow(tmpList[nbr],2);
+                    listToAdd.append(difList[tmpList[nbr]])
+                DistanceVal=math.sqrt(DistanceVal);
+                listToAdd= [DistanceVal]+listToAdd
+                minDistpC=pd.concat([minDistpC,pd.DataFrame([listToAdd])],axis=0).rename(index={0:clrD})
+                # else:
+        
+            clrName=pd.Series();    
+            clrName=minDistpC[[0]].idxmin()
+            ColssetCols=[]
+            ColssetCols.append(WaveFilter_RawData[clrName[0]][i])
+            for k in range(1,len(minDistpC.columns)):
+                ColssetCols.append(WaveFilter_RawData[minDistpC[k][clrName[0]]][i])
+                
             CorrectionArr.append(np.mean(ColssetCols))
-            
+        
         return CorrectionArr
     
      def correctWaveRawData(self):
@@ -1046,7 +1090,7 @@ except:
 
 
 #######################################################################################
-
+# NieghborColorsFor7colrs=4
 # WaveFilter_RawData=RepareDistortions(WaveRawDataDicFRONT,WaveDataWithMaxFilterDicFRONT,ColorList).CalcWaveAfterFilterSubstraction();
 
 # minDistpC=pd.DataFrame();
@@ -1060,17 +1104,17 @@ except:
 #         for clr in ColorList:
 #             if clr == clrD:
 #                 continue;
-#             difList[(abs(WaveFilter_RawData[clrD][i]-WaveFilter_RawData[clr][i]))]=clr;
+#             difList[((WaveFilter_RawData[clrD][i]-WaveFilter_RawData[clr][i]))]=clr;
 #             count=count+1;
-#         tmpList=list(abs(np.array(list(difList.keys()))));
+#         tmpList=list((np.array(list(difList.keys()))));
 #         tmpList.sort()
 #         DistanceVal=0;
 #         listToAdd=[]
 #         # minVal=min(tmpList);
 #         if  len(RepareDistortions(WaveRawDataDicFRONT,WaveDataWithMaxFilterDicFRONT,ColorList).ColorList) > 4:   
-#             NieghborColors = NieghborColorsFor7colrs;
+#             NieghborColors = NieghborColorsFor7colrs-1;
 #         else:
-#             NieghborColors = 2;    
+#             NieghborColors = 1;    
 #         for nbr in  range(NieghborColors):   
 #             DistanceVal=DistanceVal+math.pow(tmpList[nbr],2);
 #             listToAdd.append(difList[tmpList[nbr]])
@@ -1087,7 +1131,7 @@ except:
 #         ColssetCols.append(WaveFilter_RawData[minDistpC[k][clrName[0]]][i])
         
 #     CorrectionArr.append(np.mean(ColssetCols))
-# #######################################################################################
+#######################################################################################
 #######################################################################################
 #######################################################################################
 #############################PLOT############################################

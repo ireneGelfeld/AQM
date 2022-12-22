@@ -181,9 +181,9 @@ class CalcWaveFromRawData:
         LocatorIndex= self.GetLocatorIndex(ColorForDisplay)
         WaveRawDataDic=self.CreateDicOfWaveRawData();
         PHloc=[]
-        PHloc.append(LocatorIndex-1)
-        numForward=LocatorIndex-1
-        numBack=LocatorIndex-1
+        PHloc.append(LocatorIndex)
+        numForward=LocatorIndex
+        numBack=LocatorIndex
 
         for i in range(len(WaveRawDataDic[ColorForDisplay]['Mean'])):
             numForward=numForward+16;

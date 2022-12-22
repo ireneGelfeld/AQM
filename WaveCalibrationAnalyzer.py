@@ -41,6 +41,7 @@ BeforAndAfterCorr=1# On/OFF plot
 WaveFilterResidue_dxPlot=1 # On/OFF plot
 PHpoitToIgnor=2; # Ponits of Print head to ignar (16 point in total) in each side
 MaxWaveWindow=51;# S.gol filter window
+S_g_Degree=1;# S.gol filter degree
 DistanceBtWPointMM=2.734
 NieghborColorsFor7colrs=6# parameter for distortion correction (number of nighboring colors)
 
@@ -172,7 +173,7 @@ class CalcWaveFromRawData:
         for ColorForDisplay in ColorList: 
             tmp=pd.DataFrame();
             for col in WaveRawDataDic[ColorForDisplay].columns:
-                tmp=pd.concat([tmp,pd.Series(savgol_filter(WaveRawDataDic[ColorForDisplay][col], MaxWaveWindow, 1))],axis=1)
+                tmp=pd.concat([tmp,pd.Series(savgol_filter(WaveRawDataDic[ColorForDisplay][col], MaxWaveWindow, S_g_Degree))],axis=1)
                 tmp=tmp.rename(columns={0:col})
             WaveDataWithMaxFilterDic[ColorForDisplay]=tmp
         return WaveDataWithMaxFilterDic;
@@ -185,7 +186,7 @@ class CalcWaveFromRawData:
         for ColorForDisplay in ColorList: 
             tmp=pd.DataFrame();
             for col in WaveRawDataDic[ColorForDisplay].columns:
-                tmp=pd.concat([tmp,pd.Series(savgol_filter(WaveRawDataDic[ColorForDisplay][col], MaxWaveWindow, 1))],axis=1)
+                tmp=pd.concat([tmp,pd.Series(savgol_filter(WaveRawDataDic[ColorForDisplay][col], MaxWaveWindow, S_g_Degree))],axis=1)
                 tmp=tmp.rename(columns={0:col})
             WaveDataWithMaxFilterDic[ColorForDisplay]=tmp
         return WaveDataWithMaxFilterDic;
@@ -426,7 +427,7 @@ class RepareDistortions:
          WaveDataWithMaxFilterDicAfterCorr={};
          for clr in self.ColorList:
              WaveRawDataDicAfterCorr[clr]=self.WaveRawDataDic[clr]['Mean']-CorrectionArr;
-             WaveDataWithMaxFilterDicAfterCorr[clr]=pd.Series(savgol_filter(WaveRawDataDicAfterCorr[clr], MaxWaveWindow, 1))
+             WaveDataWithMaxFilterDicAfterCorr[clr]=pd.Series(savgol_filter(WaveRawDataDicAfterCorr[clr], MaxWaveWindow, S_g_Degree))
              
          return  WaveRawDataDicAfterCorr,WaveDataWithMaxFilterDicAfterCorr,CorrectionArr 
      

@@ -376,7 +376,7 @@ class RepareDistortions:
                 for clr in self.ColorList:
                     if clr == clrD:
                         continue;
-                    difList[((WaveFilter_RawData[clrD][i]-WaveFilter_RawData[clr][i]))]=clr;
+                    difList[abs(WaveFilter_RawData[clrD][i]-WaveFilter_RawData[clr][i])]=clr;
                     count=count+1;
                 tmpList=list((np.array(list(difList.keys()))));
                 tmpList.sort()
@@ -1104,9 +1104,9 @@ except:
 #         for clr in ColorList:
 #             if clr == clrD:
 #                 continue;
-#             difList[((WaveFilter_RawData[clrD][i]-WaveFilter_RawData[clr][i]))]=clr;
+#             difList[abs(WaveFilter_RawData[clrD][i]-WaveFilter_RawData[clr][i])]=clr;
 #             count=count+1;
-#         tmpList=list((np.array(list(difList.keys()))));
+#         tmpList=list(np.array(list(difList.keys())));
 #         tmpList.sort()
 #         DistanceVal=0;
 #         listToAdd=[]
@@ -1115,6 +1115,7 @@ except:
 #             NieghborColors = NieghborColorsFor7colrs-1;
 #         else:
 #             NieghborColors = 1;    
+            
 #         for nbr in  range(NieghborColors):   
 #             DistanceVal=DistanceVal+math.pow(tmpList[nbr],2);
 #             listToAdd.append(difList[tmpList[nbr]])
@@ -1131,7 +1132,7 @@ except:
 #         ColssetCols.append(WaveFilter_RawData[minDistpC[k][clrName[0]]][i])
         
 #     CorrectionArr.append(np.mean(ColssetCols))
-#######################################################################################
+# #######################################################################################
 #######################################################################################
 #######################################################################################
 #############################PLOT############################################

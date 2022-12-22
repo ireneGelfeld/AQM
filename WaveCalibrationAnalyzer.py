@@ -42,6 +42,7 @@ WaveFilterResidue_dxPlot=1 # On/OFF plot
 PHpoitToIgnor=2; # Ponits of Print head to ignar (16 point in total) in each side
 MaxWaveWindow=51;# S.gol filter window
 DistanceBtWPointMM=2.734
+NieghborColorsFor7colrs=4# parameter for distortion correction (number of nighboring colors)
 
 
 ###for Tables
@@ -337,6 +338,7 @@ class RepareDistortions:
                         continue;
                     difList[(abs(WaveFilter_RawData[clrD][i]-WaveFilter_RawData[clr][i]))]=clr;
                 tmpList=list(abs(np.array(list(difList.keys()))));
+                
                 minVal=min(tmpList);
                 if  len(self.ColorList) > 4:   
                     
@@ -369,7 +371,7 @@ class RepareDistortions:
              WaveRawDataDicAfterCorr[clr]=self.WaveRawDataDic[clr]['Mean']-CorrectionArr;
              WaveDataWithMaxFilterDicAfterCorr[clr]=pd.Series(savgol_filter(WaveRawDataDicAfterCorr[clr], MaxWaveWindow, 1))
              
-         return  WaveRawDataDicAfterCorr,WaveDataWithMaxFilterDicAfterCorr 
+         return  WaveRawDataDicAfterCorr,WaveDataWithMaxFilterDicAfterCorr,CorrectionArr 
      
  
 
@@ -686,6 +688,7 @@ class PlotGraphPlotly(CalcWaveFromRawData):
                 fig.add_trace(
                         go.Scatter(y=list(WaveRawDataDicAfterCorr[clr]-OffsetBefore),line_color= clr,
                                     name='Wave Raw Data After Corr '+ clr))
+            
             fig.update_layout(title=self.side+' '+PlotTitle)
                     
           
@@ -693,6 +696,29 @@ class PlotGraphPlotly(CalcWaveFromRawData):
             plot(fig,filename=fileName+' ' +self.side+".html")
             
             return fig
+     def PlotDesidueBeforAfterAndAverageCorr(self,WaveRawDataDic,WaveRawDataDicAfterCorr,WaveDataWithMaxFilterDic,WaveDataWithMaxFilterDicAfterCorr,CorrectionArr,PlotTitle,fileName):
+        
+            fig = go.Figure()
+            
+            for clr in self.ColorList:
+                
+                fig.add_trace(
+                        go.Scatter(y=list(WaveRawDataDic[clr]['Mean']-WaveDataWithMaxFilterDic[clr]['Mean']),line_color= clr,line=dict(dash='dot'),
+                                    name='Wave Raw Data Before Corr '+ clr))
+                fig.add_trace(
+                        go.Scatter(y=list(WaveRawDataDicAfterCorr[clr]-WaveDataWithMaxFilterDicAfterCorr[clr]),line_color= clr,
+                                    name='Wave Raw Data After Corr '+ clr))
+            
+            fig.add_trace(
+            go.Scatter(y=list(CorrectionArr),line=dict(color="#d8576b", width=3),
+                        name='Average Correction'))
+            fig.update_layout(title=self.side+' '+PlotTitle)
+                    
+          
+                # plot(fig00)
+            plot(fig,filename=fileName+' ' +self.side+".html")
+            
+            return fig   
         
      def PlotWaveDataResidue(self,WaveRawDataDic,WaveDataWithMaxFilterDic,PHloc,PHoffSet,PHtilt,PlotTitle,fileName):
          
@@ -1001,9 +1027,9 @@ except:
 
 #################### Calc curev, filetr, offset, tilt after correction
 
-WaveRawDataDicAfterCorrFRONT,WaveDataWithMaxFilterDicAfterCorrFRONT=RepareDistortions(WaveRawDataDicFRONT,WaveDataWithMaxFilterDicFRONT,ColorList).correctWaveRawData();
+WaveRawDataDicAfterCorrFRONT,WaveDataWithMaxFilterDicAfterCorrFRONT,CorrectionArrFRONT=RepareDistortions(WaveRawDataDicFRONT,WaveDataWithMaxFilterDicFRONT,ColorList).correctWaveRawData();
 try:
-    WaveRawDataDicAfterCorrBACK,WaveDataWithMaxFilterDicAfterCorrBACK=RepareDistortions(WaveRawDataDicBACK,WaveDataWithMaxFilterDicBACK,ColorList).correctWaveRawData();
+    WaveRawDataDicAfterCorrBACK,WaveDataWithMaxFilterDicAfterCorrBACK,CorrectionArrBACK=RepareDistortions(WaveRawDataDicBACK,WaveDataWithMaxFilterDicBACK,ColorList).correctWaveRawData();
 except:
     1
 
@@ -1019,9 +1045,49 @@ except:
 ############################Calc Average delta of cycle per panel
 
 
+#######################################################################################
 
-#######################################################################################
-#######################################################################################
+# WaveFilter_RawData=RepareDistortions(WaveRawDataDicFRONT,WaveDataWithMaxFilterDicFRONT,ColorList).CalcWaveAfterFilterSubstraction();
+
+# minDistpC=pd.DataFrame();
+# CorrectionArr=[]
+# for i in range(len(WaveFilter_RawData['Black'])):
+#     minDistpC=pd.DataFrame();
+#     ##Build dic of distance for each color
+#     count=0
+#     for clrD in RepareDistortions(WaveRawDataDicFRONT,WaveDataWithMaxFilterDicFRONT,ColorList).ColorList:
+#         difList={}
+#         for clr in ColorList:
+#             if clr == clrD:
+#                 continue;
+#             difList[(abs(WaveFilter_RawData[clrD][i]-WaveFilter_RawData[clr][i]))]=clr;
+#             count=count+1;
+#         tmpList=list(abs(np.array(list(difList.keys()))));
+#         tmpList.sort()
+#         DistanceVal=0;
+#         listToAdd=[]
+#         # minVal=min(tmpList);
+#         if  len(RepareDistortions(WaveRawDataDicFRONT,WaveDataWithMaxFilterDicFRONT,ColorList).ColorList) > 4:   
+#             NieghborColors = NieghborColorsFor7colrs;
+#         else:
+#             NieghborColors = 2;    
+#         for nbr in  range(NieghborColors):   
+#             DistanceVal=DistanceVal+math.pow(tmpList[nbr],2);
+#             listToAdd.append(difList[tmpList[nbr]])
+#         DistanceVal=math.sqrt(DistanceVal);
+#         listToAdd= [DistanceVal]+listToAdd
+#         minDistpC=pd.concat([minDistpC,pd.DataFrame([listToAdd])],axis=0).rename(index={0:clrD})
+#         # else:
+
+#     clrName=pd.Series();    
+#     clrName=minDistpC[[0]].idxmin()
+#     ColssetCols=[]
+#     ColssetCols.append(WaveFilter_RawData[clrName[0]][i])
+#     for k in range(1,len(minDistpC.columns)):
+#         ColssetCols.append(WaveFilter_RawData[minDistpC[k][clrName[0]]][i])
+        
+#     CorrectionArr.append(np.mean(ColssetCols))
+# #######################################################################################
 #######################################################################################
 #######################################################################################
 #############################PLOT############################################
@@ -1210,7 +1276,24 @@ if registrationBetweenWavePrints: ##Yuval method
         figRegistrationBetweenWavePrintsBACK=PlotGraphPlotly(pthF+'/',side,Panel,ColorList).PlotRegistrationBetweenWavePrints(DFdicPerClrBACK,MainColor,rgistBtwPntStartCycle,rgistBtwPntEndCycle,fileName)
     except:
         1
-
+##################################################################################
+################################ Residue (Wave- S.Go filter) Before and  After Aplied AVRG Correction
+######FRONT 
+if BeforAndAfterCorr:
+    PlotTitle=' Residue (Wave- S.Go filter) before and after correction ---> '+f;
+    fileName=f+'Residue _Wave sub S.Go filter_ before and after correction_';
+    side='Front';
+    figCorrAvrBeforeAndAfterFRONT=PlotGraphPlotly(pthF+'/',side,Panel,ColorList).PlotDesidueBeforAfterAndAverageCorr(WaveRawDataDicFRONT,WaveRawDataDicAfterCorrFRONT,WaveDataWithMaxFilterDicFRONT,WaveDataWithMaxFilterDicAfterCorrFRONT,CorrectionArrFRONT,PlotTitle,fileName)
+    
+    ######BACK
+    try:
+        
+        PlotTitle=' Residue (Wave- S.Go filter) before and after correction ---> '+f;
+        fileName=f+'Residue _Wave sub S.Go filter_ before and after correction_';
+        side='Back';
+        figCorrAvrBeforeAndAfterBACK=PlotGraphPlotly(pthF+'/',side,Panel,ColorList).PlotDesidueBeforAfterAndAverageCorr(WaveRawDataDicBACK,WaveRawDataDicAfterCorrBACK,WaveDataWithMaxFilterDicBACK,WaveDataWithMaxFilterDicAfterCorrBACK,CorrectionArrBACK,PlotTitle,fileName)
+    except:
+        1
 
 ##################################################################################
 ################################Wave Data Before and  After Aplied AVRG Correction
@@ -1238,14 +1321,13 @@ if WaveFilterResidue_dxPlot:
     PlotTitle=' After Correction Wave Data S.Golay = '+ str(MaxWaveWindow)+'---> '+f
     fileName=f+'  After Correction Wave Data S.Golay _'+ str(MaxWaveWindow)
     side='Front';
-    figWaveResidueAfterCorrFRONT=PlotGraphPlotly(pthF+'/',side,Panel,ColorList).PlotWaveDataResidue(WaveRawDataDicAfterCorrFRONT,WaveDataWithMaxFilterDicAfterCorrFRONT,PHlocFRONT,PHoffSetFRONT,PHtiltFRONT,PlotTitle,fileName)
-    
+    figWaveResidueAfterCorrFRONT=PlotGraphPlotly(pthF+'/',side,Panel,ColorList).PlotWaveDataResidue(WaveRawDataDicAfterCorrFRONT,WaveDataWithMaxFilterDicAfterCorrFRONT,PHlocFRONT,PHoffSetFRONTAfterCorr,PHtiltFRONTAfterCorr,PlotTitle,fileName)
     ########BACK
     try:
         PlotTitle=' After Correction Wave Data S.Golay = '+ str(MaxWaveWindow)+'---> '+f
         fileName=f+'  After Correction Wave Data S.Golay _'+ str(MaxWaveWindow)
         side='Back';
-        figWaveResidueAfterCorrBACK=PlotGraphPlotly(pthF+'/',side,Panel,ColorList).PlotWaveDataResidue(WaveRawDataDicAfterCorrBACK,WaveDataWithMaxFilterDicAfterCorrBACK,PHlocBACK,PHoffSetBACK,PHtiltBACK,PlotTitle,fileName)
+        figWaveResidueAfterCorrBACK=PlotGraphPlotly(pthF+'/',side,Panel,ColorList).PlotWaveDataResidue(WaveRawDataDicAfterCorrBACK,WaveDataWithMaxFilterDicAfterCorrBACK,PHlocBACK,PHoffSetBACKAfterCorr,PHtiltBACKAfterCorr,PlotTitle,fileName)
     except:
          1     
 

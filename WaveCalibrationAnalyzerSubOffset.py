@@ -18,12 +18,12 @@ rgistBtwPntEndCycle=5
 CycleNumber =3
 StartCycle4Avr = 2;
 PHpoitToIgnor=2;
-MaxWaveWindow=51;
+MaxWaveWindow=71;
 ColorLevels= 5;
 DivideByNum= 20;
 
-ColorLevelsTilt=7;
-DivideByNumTilt=0.5;
+ColorLevelsTilt=5;
+DivideByNumTilt=1;
 
 DistanceBtWPointMM=2.734
 
@@ -36,7 +36,7 @@ Middle=0;
 RightSide=0;
 CIScurve=1;
 DisplayOffSet=1;
-DisplayTilt=1;
+DisplayTilt=0;
 registrationBetweenWavePrints=0;
 presentAllColors=0
 
@@ -90,10 +90,7 @@ class CalcWaveFromRawData:
     def FilterRawData(self,ColorForDisplay):
         RawData= self.LoadRawData();
         
-        # DataSec=RawData[RawData['Overall Status']=='Success'].reset_index(drop=True);
-        
-        DataSec=RawData;
-
+        DataSec=RawData[RawData['Overall Status']=='Success'].reset_index(drop=True);
 
         DataSecPrintDirc=DataSec[DataSec['Direction Type ']=='Print Direction']
         
@@ -1256,14 +1253,6 @@ try:
         
         
         for PHlocMem in PHlocBACK:
-            figPHBACK.add_trace(go.Scatter(x=[PHlocMem], y=[ymax],
-                        marker=dict(color="green", size=6),
-                        mode="markers",
-                        text='PH #'+str(i),
-                        # font_size=18,
-                        hoverinfo='text'),secondary_y=True)
-            figPHBACK.data[len(figPHBACK.data)-1].showlegend = False
-
             figPHBACK.add_vline(x=PHlocMem, line_width=2, line_dash="dash", line_color="green")
         
         

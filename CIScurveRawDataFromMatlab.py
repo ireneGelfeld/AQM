@@ -7,7 +7,7 @@ Created on Thu Dec  1 10:51:03 2022
 """
 #######################################################
 MaxWaveWindow=100;
-limitDataCount=0.00;
+limitDataCount=0.05;
 BarNum=20
 
 
@@ -81,7 +81,7 @@ for j,dt in enumerate(RawData_Tilt):
     else:
        fixedRawData.append(tlt[j]) 
         
-RawData[1]=fixedRawData
+# RawData[1]=fixedRawData
 # plt.figure()
 # plt.plot(RawData[0],RawData[1])
 # plt.plot(RawData[0],tlt)

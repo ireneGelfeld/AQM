@@ -16,7 +16,7 @@ global StartCycle,StartCycle4Avr,PHpoitToIgnor,MaxWaveWindow,DistanceBtWPointMM,
 ## for plot per panel and plot per cycle and WaveData SUB Average_PerPanel_PerCycle
 plotPerPanel=0;# On/OFF plot
 plotPerCycle=0;## On/OFF plot
-WaveDataSUBAverage_PerPanel_PerCycle=0 # On/OFF plot
+WaveDataSUBAverage_PerPanel_PerCycle=1 # On/OFF plot
 CycleNumber =3 # cycle view in => plot Per Panel
 StartCycle4Avr = 2; # Start averaging for all plots defult = 2
 Panel = 6;          #view panel for plot Per cycle

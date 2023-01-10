@@ -420,9 +420,10 @@ class RepareDistortions:
         
         return CorrectionArr
     
-     def correctWaveRawData(self):
+     def correctWaveRawData(self,pthF,CorrectionArrCSV_name):
       
          CorrectionArr=self.CalcCorrectionArray();
+         pd.DataFrame([CorrectionArr]).to_csv(pthF+'\\'+CorrectionArrCSV_name,header=False);
          WaveRawDataDicAfterCorr={};
          WaveDataWithMaxFilterDicAfterCorr={};
          for clr in self.ColorList:
@@ -1096,10 +1097,11 @@ except:
 ############
 
 #################### Calc curev, filetr, offset, tilt after correction
-
-WaveRawDataDicAfterCorrFRONT,WaveDataWithMaxFilterDicAfterCorrFRONT,CorrectionArrFRONT=RepareDistortions(WaveRawDataDicFRONT,WaveDataWithMaxFilterDicFRONT,ColorList).correctWaveRawData();
+CorrectionArrCSV_name='CorrectionArrFRONT.csv'
+WaveRawDataDicAfterCorrFRONT,WaveDataWithMaxFilterDicAfterCorrFRONT,CorrectionArrFRONT=RepareDistortions(WaveRawDataDicFRONT,WaveDataWithMaxFilterDicFRONT,ColorList).correctWaveRawData(pthF,CorrectionArrCSV_name);
 try:
-    WaveRawDataDicAfterCorrBACK,WaveDataWithMaxFilterDicAfterCorrBACK,CorrectionArrBACK=RepareDistortions(WaveRawDataDicBACK,WaveDataWithMaxFilterDicBACK,ColorList).correctWaveRawData();
+    CorrectionArrCSV_name='CorrectionArrBACK.csv'
+    WaveRawDataDicAfterCorrBACK,WaveDataWithMaxFilterDicAfterCorrBACK,CorrectionArrBACK=RepareDistortions(WaveRawDataDicBACK,WaveDataWithMaxFilterDicBACK,ColorList).correctWaveRawData(pthF,CorrectionArrCSV_name);
 except:
     1
 

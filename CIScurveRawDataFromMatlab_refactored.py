@@ -11,10 +11,10 @@ global  MaxWaveWindow,limitDataCount,BarNum,CISsavgolWindow,PixelSize_um
 YuriFormat=0;
 
 MaxWaveWindow=100;
-limitDataCount=0.05;
+limitDataCount=0.015;
 BarNum=20
-CISsavgolWindow=9
-FileNameCSV='CIS_B2.csv';
+CISsavgolWindow=11
+FileNameCSV='CIS_B20.csv';
 PixelSize_um=84.6666
 #######################################################
 
@@ -136,11 +136,20 @@ class ReduceNoise():
             if not len(enLoc) == 0:
                 YvalueMeanFULL.append(np.mean(RawDataCopy[1][stLoc[len(stLoc)-1]:enLoc[len(enLoc)-1]])) 
                 
+        try:
         # YvalueMeanFULL=YvalueMeanFULL[0:3]+YvalueMeanFULL
-        plt.figure()
-        plt.plot(RawDataCopy[0],RawDataCopy[1],'-x')
-        plt.plot(XvalueMeanFULL[1:],YvalueMeanFULL,'-o')
-        
+            plt.figure()
+            plt.plot(RawDataCopy[0],RawDataCopy[1],'-x')
+            plt.plot(XvalueMeanFULL[1:],YvalueMeanFULL,'-o')
+
+        except:
+            mY=384-len(YvalueMeanFULL)
+            YvalueMeanFULL=YvalueMeanFULL[0:mY]+YvalueMeanFULL
+            plt.figure()
+            plt.plot(RawDataCopy[0],RawDataCopy[1],'-x')
+            plt.plot(XvalueMeanFULL[1:],YvalueMeanFULL,'-o') 
+            
+            
         return XvalueMeanFULL,YvalueMeanFULL,RawDataCopy;
     
     def PrepareData4Saving(self,fileName):

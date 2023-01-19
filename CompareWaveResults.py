@@ -113,11 +113,15 @@ class CalcWave:
     def SortJobsByTime(self,ColmnList):
         JobNmeDic={}
         for c in ColmnList:
-            jobNme=c.split(' ')
-            tme=jobNme[len(jobNme)-1].split('-')
-            dte=jobNme[len(jobNme)-2].split('-')
-            # datetime(year, month, day, hour, minute, second, microsecond)
-            JobNmeDic[datetime(int(dte[len(dte)-1]), int(dte[len(dte)-2]), int(dte[len(dte)-3]),int(tme[len(tme)-3]), int(tme[len(tme)-2]), int(tme[len(tme)-1]))]=c;
+            try:
+                RawData,Hder = self.LoadRawData_CorrOP(c);
+                jobNme=c.split(' ')
+                tme=jobNme[len(jobNme)-1].split('-')
+                dte=jobNme[len(jobNme)-2].split('-')
+                # datetime(year, month, day, hour, minute, second, microsecond)
+                JobNmeDic[datetime(int(dte[len(dte)-1]), int(dte[len(dte)-2]), int(dte[len(dte)-3]),int(tme[len(tme)-3]), int(tme[len(tme)-2]), int(tme[len(tme)-1]))]=c;
+            except:
+                continue;
         JobNmeSORTED = OrderedDict(sorted(JobNmeDic.items()))    
         return JobNmeSORTED;
     
@@ -241,6 +245,7 @@ class CalcWaveFromRawData(CalcWave):
             ColorList=self.getColors(JobName);
             for clr in ColorList:
                 for col in WaveRawDataDic[clr].columns:
+                    # StpageAVR=np.mean([WaveRawDataDic[clr][col][0],WaveRawDataDic[clr][col][len(WaveRawDataDic[clr][col])-1]])
                     WaveRawDataDic[clr][col]=WaveRawDataDic[clr][col]+CorrectionCorrByColorAllWave[JobList[0]+' '+clr][:len(WaveRawDataDic[clr][col])];
                     StpageAVR=np.mean([WaveRawDataDic[clr][col][0],WaveRawDataDic[clr][col][len(WaveRawDataDic[clr][col])-1]])
                     WaveRawDataDic[clr][col]=WaveRawDataDic[clr][col]-StpageAVR;
@@ -466,6 +471,52 @@ try:
 except:
     1
 
+#######################################################
+# JobNmeSORTED,BeforeCorrByColorAllWave
+# CorrectionCorrByColorAllWave=pd.DataFrame();
+# BeforeCorrByColorAllWave=pd.DataFrame();
+# JobNmeSORTED= CalcWaveFromRawData(pthF,folderWaveCalibrationFront,side,Panel).SortJobsByTime(CalcWaveFromRawData(pthF,folderWaveCalibrationFront,side,Panel).folder)
+# for f in list(JobNmeSORTED.values()):
+#     try:
+#       ColorDic,BarDic,BeforCorrByColor,AfterCorrByColor,CorrectionCorrByColor = CalcWaveFromRawData(pthF,folderWaveCalibrationFront,side,Panel).OrgnazeDataByColorAndCorrectionState(f);
+#       colNmf={};
+#       for c in CorrectionCorrByColor.columns:
+#           colNmf[c]=f+' '+c;
+         
+#       CorrectionCorrByColor = CorrectionCorrByColor.rename(columns=colNmf);
+#       BeforCorrByColor = BeforCorrByColor.rename(columns=colNmf);
+      
+#       CorrectionCorrByColorAllWave=pd.concat([CorrectionCorrByColorAllWave,CorrectionCorrByColor],axis=1);
+#       BeforeCorrByColorAllWave=pd.concat([BeforeCorrByColorAllWave,BeforCorrByColor],axis=1);
+
+#       # CorrectionCorrByColorAllWave=pd.concat([CorrectionCorrByColorAllWave,BeforCorrByColor],axis=1);
+
+#     except:
+#           continue;
+
+
+# JobNmeSORTED,CorrectionCorrByColorAllWave= CalcWaveFromRawData(pthF,folderWaveCalibrationFront,side,Panel).CreateDFwithAllColorAndWaveCorrection();
+# JobList=list(JobNmeSORTED.values());
+# WaveRawData_sub_FirstCorr={}
+# for JobName in JobList[1:]:
+#     WaveRawDataDic=CalcWaveFromRawData(pthF,folderWaveCalibrationFront,side,Panel).CreateDicOfWaveRawData(JobName);
+#     ColorList=CalcWaveFromRawData(pthF,folderWaveCalibrationFront,side,Panel).getColors(JobName);
+#     for clr in ColorList:
+#         for col in WaveRawDataDic[clr].columns:
+#             WaveRawDataDic[clr][col]=WaveRawDataDic[clr][col]+CorrectionCorrByColorAllWave[JobList[0]+' '+clr][:len(WaveRawDataDic[clr][col])];
+#             StpageAVR=np.mean([WaveRawDataDic[clr][col][0],WaveRawDataDic[clr][col][len(WaveRawDataDic[clr][col])-1]])
+#             WaveRawDataDic[clr][col]=WaveRawDataDic[clr][col]-StpageAVR;
+
+#     WaveRawData_sub_FirstCorr[JobName]=WaveRawDataDic;
+
+
+
+
+
+
+
+# plt.Figure()
+# plt.plot(WaveRawDataDic[clr][col])
 
 #########################PLOT########################################
 

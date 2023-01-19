@@ -16,7 +16,7 @@ global StartCycle,StartCycle4Avr,PHpoitToIgnor,MaxWaveWindow,DistanceBtWPointMM,
 ## for plot per panel and plot per cycle and WaveData SUB Average_PerPanel_PerCycle
 plotPerPanel=0;# On/OFF plot
 plotPerCycle=0;## On/OFF plot
-WaveDataSUBAverage_PerPanel_PerCycle=1 # On/OFF plot
+WaveDataSUBAverage_PerPanel_PerCycle=0 # On/OFF plot
 CycleNumber =3 # cycle view in => plot Per Panel
 StartCycle4Avr = 2; # Start averaging for all plots defult = 2
 Panel = 6;          #view panel for plot Per cycle
@@ -24,7 +24,7 @@ ColorForDisplay = 'Cyan' # Not in use
 Cycle2Display = 4 # defult visible cycle in plot WaveDataSUBAverage_PerPanel_PerCycle
 Panel2Disply= [11,6]
 ## for plot CIScurve
-CIScurve=0;# On/OFF plot
+CIScurve=1;# On/OFF plot
 
 ## for plot registration estimation in Wave Prints (yuval)
 registrationBetweenWavePrints=0; # On/OFF plot
@@ -34,20 +34,20 @@ rgistBtwPntEndCycle=StartCycle+1 # for long print can change to larger number
 MainColor = "Black" #Referance Color
 
 ##  Wave plot ( before and after correction)
-BeforAndAfterCorr=1# On/OFF plot
+BeforAndAfterCorr=0# On/OFF plot
 
 
 ## DX plot - delta between wave and starvitzky filer (residue) 
 WaveFilterResidue_dxPlot=1 # On/OFF plot
 PHpoitToIgnor=2; # Ponits of Print head to ignar (16 point in total) in each side
 MaxWaveWindow=51;# S.gol filter window
-S_g_Degree=1;# S.gol filter degree
+S_g_Degree=2;# S.gol filter degree
 DistanceBtWPointMM=2.734
-NieghborColorsFor7colrs=6# parameter for distortion correction (number of nighboring colors)
+NieghborColorsFor7colrs=4# parameter for distortion correction (number of nighboring colors)
 
 
 ###for Tables
-PlotTables=0 # On/OFF table
+PlotTables=1 # On/OFF table
 ColorLevels= 5; # Heat Map for offset- number of levels of colors from white to hot red
 DivideByNum= 20; # Correction for offset Haet map- if occurs error try to increase this number
 ColorLevelsTilt=7; #Heat Map for tilt- number of levels of colors from white to hot red

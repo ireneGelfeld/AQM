@@ -10,8 +10,8 @@ get_ipython().magic('reset -sf')
 #####################################Params #############################################################
 #########################################################################################################
 Panel = 6;
-MaxWaveWindow=100
-FilterDegree = 1
+MaxWaveWindow=300
+FilterDegree = 2
 ColorForDisplay = 'Cyan'
 ShowOriginalFilter=1;
 #########################################################################################################
@@ -267,7 +267,7 @@ if ShowOriginalFilter == 1:
                 visible=False,
                 line=dict(color="#46039f", width=2),
                 name="Window Size = " + str(step),
-                y=savgol_filter(db1[ColorForDisplay], step, 1)), row=1, col=1)
+                y=savgol_filter(db1[ColorForDisplay], step, FilterDegree)), row=1, col=1)
     
     # for step in  np.arange(3, MaxWaveWindow+3, 2):    
         fig.add_trace(
@@ -276,7 +276,7 @@ if ShowOriginalFilter == 1:
                 # line=dict(color="#00CED1", width=1),
                 line=dict(color="#d8576b", width=2),
                 name="Window Size = " + str(step),
-                y=savgol_filter(db1[ColorForDisplay], step, 1)), row=2, col=1)
+                y=savgol_filter(db1[ColorForDisplay], step, FilterDegree)), row=2, col=1)
     
     
     # Make 10th trace visible
@@ -359,7 +359,7 @@ if ShowOriginalFilter == 1:
                     visible=False,
                     line=dict(color="#46039f", width=2),
                     name="Window Size = " + str(step),
-                    y=savgol_filter(db1[ColorForDisplay], step, 1)), row=1, col=1)
+                    y=savgol_filter(db1[ColorForDisplay], step, FilterDegree)), row=1, col=1)
         
         # for step in  np.arange(3, MaxWaveWindow+3, 2):    
             fig11.add_trace(
@@ -368,7 +368,7 @@ if ShowOriginalFilter == 1:
                     # line=dict(color="#00CED1", width=1),
                     line=dict(color="#d8576b", width=2),
                     name="Window Size = " + str(step),
-                    y=savgol_filter(db1[ColorForDisplay], step, 1)), row=2, col=1)
+                    y=savgol_filter(db1[ColorForDisplay], step,FilterDegree)), row=2, col=1)
         
         
         # Make 10th trace visible
@@ -449,7 +449,7 @@ for step in  np.arange(3, MaxWaveWindow+3, 2):
                 visible=False,
                 line=dict(color=value, width=2),
                 name="Window Size = " + str(step),
-                y=savgol_filter(db1[value], step, 1)))
+                y=savgol_filter(db1[value], step, FilterDegree)))
 
 
 
@@ -526,7 +526,7 @@ try:
                     visible=False,
                     line=dict(color=value, width=2),
                     name="Window Size = " + str(step),
-                    y=savgol_filter(db1[value], step, 1)))
+                    y=savgol_filter(db1[value], step, FilterDegree)))
     
     
     

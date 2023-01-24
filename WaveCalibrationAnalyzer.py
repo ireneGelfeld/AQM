@@ -34,11 +34,11 @@ rgistBtwPntEndCycle=StartCycle+1 # for long print can change to larger number
 MainColor = "Black" #Referance Color
 
 ##  Wave plot ( before and after correction)
-BeforAndAfterCorr=0# On/OFF plot
+BeforAndAfterCorr=1# On/OFF plot
 
 
 ## DX plot - delta between wave and starvitzky filer (residue) 
-WaveFilterResidue_dxPlot=1 # On/OFF plot
+WaveFilterResidue_dxPlot=0 # On/OFF plot
 PHpoitToIgnor=2; # Ponits of Print head to ignar (16 point in total) in each side
 MaxWaveWindow=51;# S.gol filter window
 S_g_Degree=2;# S.gol filter degree
@@ -47,7 +47,7 @@ NieghborColorsFor7colrs=4# parameter for distortion correction (number of nighbo
 
 
 ###for Tables
-PlotTables=1 # On/OFF table
+PlotTables=0# On/OFF table
 ColorLevels= 5; # Heat Map for offset- number of levels of colors from white to hot red
 DivideByNum= 20; # Correction for offset Haet map- if occurs error try to increase this number
 ColorLevelsTilt=7; #Heat Map for tilt- number of levels of colors from white to hot red

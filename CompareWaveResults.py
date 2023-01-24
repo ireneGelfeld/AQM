@@ -146,7 +146,7 @@ class CalcWave:
 
             except:
                   continue;
-        return  JobNmeSORTED,BeforeCorrByColorAllWave;
+        return  JobNmeSORTED,BeforeCorrByColorAllWave,CorrectionCorrByColorAllWave;
     
 
 
@@ -235,9 +235,9 @@ class CalcWaveFromRawData(CalcWave):
             WaveRawDataDic[ColorForDisplay]=tmp;
         return WaveRawDataDic;
     
-    def CompareWaveDataToEarliestWave(self):    
+    def CompareWaveDataToEarliestWave_Corr(self):    
                
-        JobNmeSORTED,CorrectionCorrByColorAllWave= self.CreateDFwithAllColorAndWaveCorrection();
+        JobNmeSORTED,BeforeCorrByColorAllWave,CorrectionCorrByColorAllWave= self.CreateDFwithAllColorAndWaveCorrection();
         JobList=list(JobNmeSORTED.values());
         WaveRawData_sub_FirstCorr={}
         for JobName in JobList[1:]:
@@ -254,9 +254,77 @@ class CalcWaveFromRawData(CalcWave):
        
         return WaveRawData_sub_FirstCorr,ColorList,JobNmeSORTED;
     
-    def CalcC2CPerCycle(self):
+    def CompareWaveDataToEarliestWave_BeforeCorr(self):    
+               
+        JobNmeSORTED,BeforeCorrByColorAllWave,CorrectionCorrByColorAllWave= self.CreateDFwithAllColorAndWaveCorrection();
+        JobList=list(JobNmeSORTED.values());
+        WaveRawData_sub_FirstCorr={}
+        for JobName in JobList[1:]:
+            WaveRawDataDic=self.CreateDicOfWaveRawData(JobName);
+            ColorList=self.getColors(JobName);
+            for clr in ColorList:
+                for col in WaveRawDataDic[clr].columns:
+                    # StpageAVR=np.mean([WaveRawDataDic[clr][col][0],WaveRawDataDic[clr][col][len(WaveRawDataDic[clr][col])-1]])
+                    WaveRawDataDic[clr][col]=WaveRawDataDic[clr][col]+BeforeCorrByColorAllWave[JobList[0]+' '+clr][:len(WaveRawDataDic[clr][col])];
+                    StpageAVR=np.mean([WaveRawDataDic[clr][col][0],WaveRawDataDic[clr][col][len(WaveRawDataDic[clr][col])-1]])
+                    WaveRawDataDic[clr][col]=WaveRawDataDic[clr][col]-StpageAVR;
+
+            WaveRawData_sub_FirstCorr[JobName]=WaveRawDataDic;
+       
+        return WaveRawData_sub_FirstCorr,ColorList,JobNmeSORTED;
+    
+    def CompareWaveDataToEarliestWave_RawData(self): 
         
-        WaveRawData_sub_FirstCorr,ColorList,JobNmeSORTED= self.CompareWaveDataToEarliestWave();
+        JobNmeSORTED= self.SortJobsByTime(self.folder)
+        JobList=list(JobNmeSORTED.values());
+        strJob=0;
+        while strJob<len(JobList):
+            try:
+                WaveRawDataDicRefJob=self.CreateDicOfWaveRawData(JobList[strJob]);
+                break;
+            except:
+               strJob=strJob+1;
+               continue;
+                    
+        
+        WaveRawData_sub_FirstCorr={}
+        for JobName in JobList[strJob:]:
+            WaveRawDataDic=self.CreateDicOfWaveRawData(JobName);
+            ColorList=CalcWaveFromRawData(pthF,folderWaveCalibrationFront,side,Panel).getColors(JobName);
+            for clr in ColorList:
+                for col in WaveRawDataDic[clr].columns:
+                    WaveRawDataDic[clr][col]=WaveRawDataDic[clr][col]-WaveRawDataDicRefJob[clr]['Mean'][:len(WaveRawDataDic[clr][col])];
+                    StpageAVR=np.mean([WaveRawDataDic[clr][col][0],WaveRawDataDic[clr][col][len(WaveRawDataDic[clr][col])-1]])
+                    WaveRawDataDic[clr][col]=WaveRawDataDic[clr][col]-StpageAVR;
+        
+            WaveRawData_sub_FirstCorr[JobName]=WaveRawDataDic;
+        
+        return WaveRawData_sub_FirstCorr,ColorList,JobNmeSORTED;
+
+    def CalcC2CPerCycle_corrRawData(self):
+        
+        WaveRawData_sub_FirstCorr,ColorList,JobNmeSORTED= self.CompareWaveDataToEarliestWave_RawData();
+        C2C_FromWaveDifferance={}
+        for jb in list(WaveRawData_sub_FirstCorr.keys()):
+            Df=pd.DataFrame();
+            for col in WaveRawData_sub_FirstCorr[jb][ColorList[0]].columns:
+                if col == 'Mean':
+                    continue;
+                tmp=[]    
+                for i in range(len(WaveRawData_sub_FirstCorr[jb][ColorList[0]][1])):
+                    l=[]
+                    for clr in ColorList:
+                        l.append(WaveRawData_sub_FirstCorr[jb][clr][col][i])
+                    tmp.append(np.max(l)-np.min(l));
+                Df=pd.concat([Df,pd.Series(tmp)],axis=1).rename(columns={0:col})
+                
+            C2C_FromWaveDifferance[jb]=Df        
+        
+        return C2C_FromWaveDifferance;    
+        
+    def CalcC2CPerCycle_corr(self):
+        
+        WaveRawData_sub_FirstCorr,ColorList,JobNmeSORTED= self.CompareWaveDataToEarliestWave_Corr();
         C2C_FromWaveDifferance={}
         for jb in list(WaveRawData_sub_FirstCorr.keys()):
             Df=pd.DataFrame();
@@ -275,6 +343,29 @@ class CalcWaveFromRawData(CalcWave):
         
         return C2C_FromWaveDifferance;
                
+
+    def CalcC2CPerCycle_Beforecorr(self):
+        
+        WaveRawData_sub_FirstCorr,ColorList,JobNmeSORTED= self.CompareWaveDataToEarliestWave_BeforeCorr();
+        C2C_FromWaveDifferance={}
+        for jb in list(WaveRawData_sub_FirstCorr.keys()):
+            Df=pd.DataFrame();
+            for col in WaveRawData_sub_FirstCorr[jb][ColorList[0]].columns:
+                if col == 'Mean':
+                    continue;
+                tmp=[]    
+                for i in range(len(WaveRawData_sub_FirstCorr[jb][ColorList[0]][1])):
+                    l=[]
+                    for clr in ColorList:
+                        l.append(WaveRawData_sub_FirstCorr[jb][clr][col][i])
+                    tmp.append(np.max(l)-np.min(l));
+                Df=pd.concat([Df,pd.Series(tmp)],axis=1).rename(columns={0:col})
+                
+            C2C_FromWaveDifferance[jb]=Df        
+        
+        return C2C_FromWaveDifferance;
+
+
 
 class PlotGraphPlotly:       
     def  __init__(self,db,PlotTitle,fileName,ColorList): 
@@ -460,22 +551,37 @@ os.chdir(pthF)
 
 side='Front';
 
-WaveRawData_sub_FirstCorrFRONT,ColorList,JobNmeSORTED= CalcWaveFromRawData(pthF,folderWaveCalibrationFront,side,Panel).CompareWaveDataToEarliestWave()
-C2C_FromWaveDifferanceFRONT= CalcWaveFromRawData(pthF,folderWaveCalibrationFront,side,Panel).CalcC2CPerCycle()
+# WaveRawData_sub_FirstCorrFRONT,ColorList,JobNmeSORTED= CalcWaveFromRawData(pthF,folderWaveCalibrationFront,side,Panel).CompareWaveDataToEarliestWave_Corr()
+# C2C_FromWaveDifferanceFRONT= CalcWaveFromRawData(pthF,folderWaveCalibrationFront,side,Panel).CalcC2CPerCycle_corr()
+
+# WaveRawData_sub_FirstCorrFRONT,ColorList,JobNmeSORTED= CalcWaveFromRawData(pthF,folderWaveCalibrationFront,side,Panel).CompareWaveDataToEarliestWave_BeforeCorr()
+# C2C_FromWaveDifferanceFRONT= CalcWaveFromRawData(pthF,folderWaveCalibrationFront,side,Panel).CalcC2CPerCycle_Beforecorr()
+
+
+# try:
+#    side='Back';
+#    WaveRawData_sub_FirstCorrBACK,ColorList,JobNmeSORTED= CalcWaveFromRawData(pthF,folderWaveCalibrationFront,side,Panel).CompareWaveDataToEarliestWave()
+#    C2C_FromWaveDifferanceBACK= CalcWaveFromRawData(pthF,folderWaveCalibrationFront,side,Panel).CalcC2CPerCycle()
+
+# except:
+#     1
+WaveRawData_sub_FirstCorrFRONT,ColorList,JobNmeSORTED= CalcWaveFromRawData(pthF,folderWaveCalibrationFront,side,Panel).CompareWaveDataToEarliestWave_RawData()
+C2C_FromWaveDifferanceFRONT= CalcWaveFromRawData(pthF,folderWaveCalibrationFront,side,Panel).CalcC2CPerCycle_corrRawData()
+
 
 try:
    side='Back';
-   WaveRawData_sub_FirstCorrBACK,ColorList,JobNmeSORTED= CalcWaveFromRawData(pthF,folderWaveCalibrationFront,side,Panel).CompareWaveDataToEarliestWave()
-   C2C_FromWaveDifferanceBACK= CalcWaveFromRawData(pthF,folderWaveCalibrationFront,side,Panel).CalcC2CPerCycle()
+   WaveRawData_sub_FirstCorrBACK,ColorList,JobNmeSORTED= CalcWaveFromRawData(pthF,folderWaveCalibrationFront,side,Panel).CompareWaveDataToEarliestWave_RawData()
+   C2C_FromWaveDifferanceBACK= CalcWaveFromRawData(pthF,folderWaveCalibrationFront,side,Panel).CalcC2CPerCycle_corrRawData()
 
 except:
     1
-
 #######################################################
 # JobNmeSORTED,BeforeCorrByColorAllWave
 # CorrectionCorrByColorAllWave=pd.DataFrame();
 # BeforeCorrByColorAllWave=pd.DataFrame();
 # JobNmeSORTED= CalcWaveFromRawData(pthF,folderWaveCalibrationFront,side,Panel).SortJobsByTime(CalcWaveFromRawData(pthF,folderWaveCalibrationFront,side,Panel).folder)
+
 # for f in list(JobNmeSORTED.values()):
 #     try:
 #       ColorDic,BarDic,BeforCorrByColor,AfterCorrByColor,CorrectionCorrByColor = CalcWaveFromRawData(pthF,folderWaveCalibrationFront,side,Panel).OrgnazeDataByColorAndCorrectionState(f);
@@ -495,7 +601,35 @@ except:
 #           continue;
 
 
-# JobNmeSORTED,CorrectionCorrByColorAllWave= CalcWaveFromRawData(pthF,folderWaveCalibrationFront,side,Panel).CreateDFwithAllColorAndWaveCorrection();
+
+
+# JobNmeSORTED= CalcWaveFromRawData(pthF,folderWaveCalibrationFront,side,Panel).SortJobsByTime(CalcWaveFromRawData(pthF,folderWaveCalibrationFront,side,Panel).folder)
+# JobList=list(JobNmeSORTED.values());
+# strJob=0;
+# while strJob<len(JobList):
+#     try:
+#         WaveRawDataDicRefJob=CalcWaveFromRawData(pthF,folderWaveCalibrationFront,side,Panel).CreateDicOfWaveRawData(JobList[strJob]);
+#         break;
+#     except:
+#        strJob=strJob+1;
+#        continue;
+            
+
+# WaveRawData_sub_FirstCorr={}
+# for JobName in JobList[strJob:]:
+#     WaveRawDataDic=CalcWaveFromRawData(pthF,folderWaveCalibrationFront,side,Panel).CreateDicOfWaveRawData(JobName);
+#     ColorList=CalcWaveFromRawData(pthF,folderWaveCalibrationFront,side,Panel).getColors(JobName);
+#     for clr in ColorList:
+#         for col in WaveRawDataDic[clr].columns:
+#             WaveRawDataDic[clr][col]=WaveRawDataDic[clr][col]-WaveRawDataDicRefJob[clr]['Mean'][:len(WaveRawDataDic[clr][col])];
+#             StpageAVR=np.mean([WaveRawDataDic[clr][col][0],WaveRawDataDic[clr][col][len(WaveRawDataDic[clr][col])-1]])
+#             WaveRawDataDic[clr][col]=WaveRawDataDic[clr][col]-StpageAVR;
+
+#     WaveRawData_sub_FirstCorr[JobName]=WaveRawDataDic;
+
+# ########################################
+
+# JobNmeSORTED,BeforeCorrByColorAllWave,CorrectionCorrByColorAllWave= CalcWaveFromRawData(pthF,folderWaveCalibrationFront,side,Panel).CreateDFwithAllColorAndWaveCorrection();
 # JobList=list(JobNmeSORTED.values());
 # WaveRawData_sub_FirstCorr={}
 # for JobName in JobList[1:]:
@@ -503,7 +637,7 @@ except:
 #     ColorList=CalcWaveFromRawData(pthF,folderWaveCalibrationFront,side,Panel).getColors(JobName);
 #     for clr in ColorList:
 #         for col in WaveRawDataDic[clr].columns:
-#             WaveRawDataDic[clr][col]=WaveRawDataDic[clr][col]+CorrectionCorrByColorAllWave[JobList[0]+' '+clr][:len(WaveRawDataDic[clr][col])];
+#             WaveRawDataDic[clr][col]=WaveRawDataDic[clr][col]-BeforeCorrByColorAllWave[JobList[0]+' '+clr][:len(WaveRawDataDic[clr][col])];
 #             StpageAVR=np.mean([WaveRawDataDic[clr][col][0],WaveRawDataDic[clr][col][len(WaveRawDataDic[clr][col])-1]])
 #             WaveRawDataDic[clr][col]=WaveRawDataDic[clr][col]-StpageAVR;
 
@@ -511,13 +645,10 @@ except:
 
 
 
-
-
-
-
+# BeforeCorrByColorAllWave.columns
+# col='QCS WaveCalibration_78 Archive 18-01-2023 16-31-27 Cyan'
 # plt.Figure()
-# plt.plot(WaveRawDataDic[clr][col])
-
+# plt.plot(CorrectionCorrByColorAllWave[col])
 #########################PLOT########################################
 
 

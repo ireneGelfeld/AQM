@@ -114,7 +114,7 @@ class CalcWave:
         JobNmeDic={}
         for c in ColmnList:
             try:
-                RawData,Hder = self.LoadRawData_CorrOP(c);
+                # RawData,Hder = self.LoadRawData_CorrOP(c);
                 jobNme=c.split(' ')
                 tme=jobNme[len(jobNme)-1].split('-')
                 dte=jobNme[len(jobNme)-2].split('-')
@@ -288,7 +288,7 @@ class CalcWaveFromRawData(CalcWave):
                     
         
         WaveRawData_sub_FirstCorr={}
-        for JobName in JobList[strJob:]:
+        for JobName in JobList[strJob+1:]:
             WaveRawDataDic=self.CreateDicOfWaveRawData(JobName);
             ColorList=CalcWaveFromRawData(pthF,folderWaveCalibrationFront,side,Panel).getColors(JobName);
             for clr in ColorList:
@@ -599,6 +599,21 @@ except:
 
 #     except:
 #           continue;
+# ColmnList=CalcWaveFromRawData(pthF,folderWaveCalibrationFront,side,Panel).folder
+# JobNmeDic={}
+# for c in ColmnList:
+#     try:
+#         # RawData,Hder = CalcWaveFromRawData(pthF,folderWaveCalibrationFront,side,Panel).LoadRawData_CorrOP(c);
+#         jobNme=c.split(' ')
+#         tme=jobNme[len(jobNme)-1].split('-')
+#         dte=jobNme[len(jobNme)-2].split('-')
+#         # datetime(year, month, day, hour, minute, second, microsecond)
+#         JobNmeDic[datetime(int(dte[len(dte)-1]), int(dte[len(dte)-2]), int(dte[len(dte)-3]),int(tme[len(tme)-3]), int(tme[len(tme)-2]), int(tme[len(tme)-1]))]=c;
+#     except:
+#         continue;
+# JobNmeSORTED = OrderedDict(sorted(JobNmeDic.items()))    
+
+
 
 
 
@@ -611,12 +626,12 @@ except:
 #         WaveRawDataDicRefJob=CalcWaveFromRawData(pthF,folderWaveCalibrationFront,side,Panel).CreateDicOfWaveRawData(JobList[strJob]);
 #         break;
 #     except:
-#        strJob=strJob+1;
-#        continue;
+#         strJob=strJob+1;
+#         continue;
             
 
 # WaveRawData_sub_FirstCorr={}
-# for JobName in JobList[strJob:]:
+# for JobName in JobList[strJob+1:]:
 #     WaveRawDataDic=CalcWaveFromRawData(pthF,folderWaveCalibrationFront,side,Panel).CreateDicOfWaveRawData(JobName);
 #     ColorList=CalcWaveFromRawData(pthF,folderWaveCalibrationFront,side,Panel).getColors(JobName);
 #     for clr in ColorList:

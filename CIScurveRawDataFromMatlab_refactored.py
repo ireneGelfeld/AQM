@@ -11,10 +11,10 @@ global  MaxWaveWindow,limitDataCount,BarNum,CISsavgolWindow,PixelSize_um
 YuriFormat=0;
 
 MaxWaveWindow=100;
-limitDataCount=0.05;
+limitDataCount=0.001;
 BarNum=20
 CISsavgolWindow=9
-FileNameCSV='CIS_B2.csv';
+FileNameCSV='CIS_B2_sideB.csv';
 PixelSize_um=84.6666
 #######################################################
 
@@ -137,6 +137,9 @@ class ReduceNoise():
                 YvalueMeanFULL.append(np.mean(RawDataCopy[1][stLoc[len(stLoc)-1]:enLoc[len(enLoc)-1]])) 
                 
         # YvalueMeanFULL=YvalueMeanFULL[0:3]+YvalueMeanFULL
+        if len(XvalueMeanFULL[1:])>len(YvalueMeanFULL):
+            dlt=len(XvalueMeanFULL[1:])-len(YvalueMeanFULL);
+            YvalueMeanFULL=YvalueMeanFULL[0:dlt]+YvalueMeanFULL
         plt.figure()
         plt.plot(RawDataCopy[0],RawDataCopy[1],'-x')
         plt.plot(XvalueMeanFULL[1:],YvalueMeanFULL,'-o')

@@ -13,8 +13,8 @@ YuriFormat=0;
 MaxWaveWindow=100;
 limitDataCount=0.001;
 BarNum=20
-CISsavgolWindow=9
-FileNameCSV='CIS_B2_sideB.csv';
+CISsavgolWindow=13
+FileNameCSV='CIS_D6_BackFixed_filter_'+str(CISsavgolWindow)+'.csv';
 PixelSize_um=84.6666
 #######################################################
 

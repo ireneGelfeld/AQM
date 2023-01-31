@@ -299,12 +299,12 @@ DataCount,DataRange,NumberOfvalidData,RawData_Tilt,tlt,z=  ReduceNoise(RawData).
 Data385,CIScurve,y,z1,tlt1,z,tlt=ReduceNoise(RawData).PrepareData4Saving(FileNameCSV)
 
 ###########################Plot
-xdb=Data385[0]
-ydb=Data385[3]
-plotTitle=pthF+'-->'+f+" 385 points - For CIS (for comparison) Slider switched to Step: " # Can modify Plot title
-fileName=f +" CIS curve raw data and filter 385 compre"+ ".html";
+# xdb=Data385[0]
+# ydb=Data385[3]
+# plotTitle=pthF+'-->'+f+" 385 points - For CIS (for comparison) Slider switched to Step: " # Can modify Plot title
+# fileName=f +" CIS curve raw data and filter 385 compre"+ ".html";
 
-figCompare=plotPlotly(xdb,ydb,plotTitle,fileName,tlt,z).PlotCIS();
+# figCompare=plotPlotly(xdb,ydb,plotTitle,fileName,tlt,z).PlotCIS();
 
 ###### To Implament 
 xdb=Data385[0]

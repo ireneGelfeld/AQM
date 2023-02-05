@@ -18,7 +18,7 @@ MarkSetVersion=252
 if MarkSetVersion==252:
 
     DistBetweenSets =  125686; 
-    GlobalScale = 0.9945 # Drop3 simplex = 0.9976, Duplex = 0.9984 ,,,, Drop5 Simplex = 0.9953, Duplex = 0.9945 
+    GlobalScale = 0.9953 # Drop3 simplex = 0.9976, Duplex = 0.9984 ,,,, Drop5 Simplex = 0.9953, Duplex = 0.9945 
 else:
 #For 201
     DistBetweenSets =  102693; 
@@ -632,7 +632,7 @@ class CalcC2C_AvrgOfAll():
         
         zip_file_path = self.pthF+f
         subdir_name_in_zip = self.side+'/'+'RawResults';
-        fname='Registration_Left.csv';
+        file_name_in_zip='Registration_Left.csv';
         
         try:
             dbtmp=self.GetFileFromZip(zip_file_path,subdir_name_in_zip,file_name_in_zip);
@@ -871,11 +871,6 @@ print(endCalc - startCalc)
 
 
 
-
-
-
-
-
 ####################Thread###################################
 ScaleMaxMinDF_FRONTFLeft=CalcC2C_AvrgOfAll(pthF,folder,'Front',JobLength,PanelLengthInMM,'Left').CalcScaleForAllJOBS();
 ScaleMaxMinDF_FRONTRight=CalcC2C_AvrgOfAll(pthF,folder,'Front',JobLength,PanelLengthInMM,'Right').CalcScaleForAllJOBS();
@@ -946,12 +941,12 @@ try:
     db2= DataPivotBack
 except:
     1
-figC2C=    figI2SBack=PlotPlotly(pthF, side).Plot2subPlots(subplot_titles1, subplot_titles2, PlotTitle, db1, db2,dbName1,dbName2,fileName);
+figC2C=  PlotPlotly(pthF, side).Plot2subPlots(subplot_titles1, subplot_titles2, PlotTitle, db1, db2,dbName1,dbName2,fileName);
 
 
 
-############################################Scale ####################################################
-################Front
+#############################################Scale ####################################################
+#################Front
 subplot_titles1="LEFT"
 subplot_titles2="RIGHT"
 PlotTitle= 'Scale-FRONT'

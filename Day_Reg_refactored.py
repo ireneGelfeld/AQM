@@ -17,12 +17,15 @@ MarkSetVersion=252
 
 if MarkSetVersion==252:
 
-    DistBetweenSets =  125686; 
+    
     GlobalScale = 0.9953 # Drop3 simplex = 0.9976, Duplex = 0.9984 ,,,, Drop5 Simplex = 0.9953, Duplex = 0.9945 
+    DistBetweenSets =  125686/GlobalScale; 
+    
 else:
 #For 201
-    DistBetweenSets =  102693; 
     GlobalScale = 0.9976
+    DistBetweenSets =  102693; 
+    
 
 PanelLengthInMM = 650;
 JobLength = 0;

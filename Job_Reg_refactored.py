@@ -10,7 +10,7 @@ Created on Sun Apr 24 12:35:16 2022
 #get_ipython().magic('reset -sf')
 
 #######################PARAMS#########################################
-global LoadTarget,GlobalScale,DistBetweenSets
+global LoadTarget,GlobalScale,DistBetweenSets,JobLength
 
 
 #For 252
@@ -31,6 +31,7 @@ else:
 
 
 
+JobLength = 0;
 
 
 
@@ -62,6 +63,9 @@ from datetime import datetime
 import glob
 from zipfile import ZipFile 
 from pathlib import Path
+import zipfile 
+from io import BytesIO
+
 # Load the Pandas libraries with alias 'pd' 
 import pandas as pd 
 import plotly.graph_objects as go
@@ -82,12 +86,37 @@ class CalcC2C():
         self.JobLength = JobLength;
         self.LoadTarget=LoadTarget;
     
-    def LoadRawData(self):
+    def LoadRawDataOLD(self):
         RawData=pd.read_csv(self.pthF+self.side+'/'+'RawResults'+'/'+self.fname);
         l1=RawData.iloc[:,1].unique().tolist()
         RawDataSuccess=RawData[RawData['Registration Status']=='Success'].reset_index(drop=True)
         flatNumberFailed=(RawData[RawData['Registration Status']!='Success'].iloc[:,1].unique().tolist());
         return  RawDataSuccess,flatNumberFailed,l1;
+    
+    
+    def GetFileFromZip(self,zip_file_path,subdir_name_in_zip,file_name_in_zip):
+        
+        with zipfile.ZipFile(zip_file_path, 'r') as zip_ref:
+            file_path_in_zip = subdir_name_in_zip + "/" + file_name_in_zip
+            with zip_ref.open(file_path_in_zip) as file:
+                # read the contents of the file into memory
+                file_content = file.read()
+                
+                # convert the file content to a pandas dataframe
+                df = pd.read_csv(BytesIO(file_content))
+        return  df;     
+    
+    def LoadRawData(self):
+        
+        zip_file_path = self.pthF
+        subdir_name_in_zip = self.side+'/'+'RawResults';
+        file_name_in_zip = self.fname;
+        
+        RawData=self.GetFileFromZip(zip_file_path, subdir_name_in_zip, file_name_in_zip);
+        l1=RawData.iloc[:,1].unique().tolist()
+        RawDataSuccess=RawData[RawData['Registration Status']=='Success'].reset_index(drop=True)
+        flatNumberFailed=(RawData[RawData['Registration Status']!='Success'].iloc[:,1].unique().tolist());
+        return  RawDataSuccess,flatNumberFailed,l1; 
     
     def CalcMeanByColor(self,RawDataSuccess):
         DataAllMeanColorSET1 = RawDataSuccess.groupby(['Ink\Sets'])['Set #1 X'].mean().reset_index()
@@ -111,14 +140,9 @@ class CalcC2C():
     def LoadMeanColorPos(self):
         Lname=self.fname.split('.');
         LLname=Lname[0].split('_');
-        
-        pthComp=self.pthF.split('/');
-        RecPath = pthComp[0] + '/';
-        for i,pt in enumerate(pthComp):
-            if i>0 and i<len(pthComp)-2:
-                RecPath= RecPath + pt + '/';
-            
-        MeregedDataAllMeanColor = pd.read_csv(RecPath +'/'+'MeregedDataAllMeanColor_'+self.side+'_'+LLname[1]+'.csv')    
+        pthComp=self.pthF.replace(self.pthF.split('/')[len(self.pthF.split('/'))-1],"")[:-1]
+           
+        MeregedDataAllMeanColor = pd.read_csv(pthComp +'/'+'MeregedDataAllMeanColor_'+self.side+'_'+LLname[1]+'.csv')    
             
             
         return MeregedDataAllMeanColor
@@ -418,26 +442,74 @@ class DispImagePlacment():
         self.side = side;
         self.pageSide=pageSide;
         self.JobLength = JobLength;
+
         
     def CheckIfFileValid(self):
         vlid=False;
         dbtmp=pd.DataFrame();
-        pthFf=self.pthF+'/'+self.side+'/'+'RawResults';
-        os.chdir(pthFf);
-        fname='ImagePlacement_Left.csv';
-        if os.path.exists(fname) and Path(fname).stat().st_size:
-            dbtmp=pd.read_csv(fname,usecols=[0]);
+        # pthFf=self.pthF+f+'/'+self.side+'/'+'RawResults';
+        
+        zip_file_path = self.pthF+'/'+f
+        subdir_name_in_zip = self.side+'/'+'RawResults';
+        file_name_in_zip = 'ImagePlacement_Left.csv';
+        
+        try:
+            dbtmp=self.GetFileFromZip(zip_file_path,subdir_name_in_zip,file_name_in_zip);
             if len(dbtmp['Flat Id'])>self.JobLength:
                 vlid= True;
+        except:
+            vlid=False;
+                        
         return vlid;
+
+
+
+        
+    # def CheckIfFileValid(self):
+    #     vlid=False;
+    #     dbtmp=pd.DataFrame();
+    #     pthFf=self.pthF+'/'+self.side+'/'+'RawResults';
+    #     os.chdir(pthFf);
+    #     fname='ImagePlacement_Left.csv';
+    #     if os.path.exists(fname) and Path(fname).stat().st_size:
+    #         dbtmp=pd.read_csv(fname,usecols=[0]);
+    #         if len(dbtmp['Flat Id'])>self.JobLength:
+    #             vlid= True;
+    #     return vlid;
     
+    # def ExtractBaslineAndAppliedCorrection(self):
+    #     ImagePlacement_res=pd.read_csv(self.pthF+'/'+self.side+'/'+'AnalysisResults/ImagePlacementAnalysis_'+self.side+'.csv')
+    #     BaseLine=ImagePlacement_res['Expected X'][0];
+    #     dbtmpSentCrr=ImagePlacement_res[(ImagePlacement_res['Correction Sent-Applied']) == 'Sent'].reset_index(drop=True)
+
+    #     return BaseLine,dbtmpSentCrr              
+
+    def GetFileFromZip(self,zip_file_path,subdir_name_in_zip,file_name_in_zip):
+        
+        with zipfile.ZipFile(zip_file_path, 'r') as zip_ref:
+            file_path_in_zip = subdir_name_in_zip + "/" + file_name_in_zip
+            with zip_ref.open(file_path_in_zip) as file:
+                # read the contents of the file into memory
+                file_content = file.read()
+                
+                # convert the file content to a pandas dataframe
+                df = pd.read_csv(BytesIO(file_content))
+        return  df;     
+
     def ExtractBaslineAndAppliedCorrection(self):
-        ImagePlacement_res=pd.read_csv(self.pthF+'/'+self.side+'/'+'AnalysisResults/ImagePlacementAnalysis_'+self.side+'.csv')
+        # magePlacement_res=pd.read_csv(self.pthF+f+'/'+self.side+'/'+'AnalysisResults/ImagePlacementAnalysis_'+self.side+'.csv',usecols=[5])
+        zip_file_path = self.pthF+'/'+self.f
+        subdir_name_in_zip = self.side+'/'+'AnalysisResults';
+        file_name_in_zip = 'ImagePlacementAnalysis_'+self.side+'.csv';
+        
+        ImagePlacement_res=self.GetFileFromZip(zip_file_path,subdir_name_in_zip,file_name_in_zip);
+
         BaseLine=ImagePlacement_res['Expected X'][0];
         dbtmpSentCrr=ImagePlacement_res[(ImagePlacement_res['Correction Sent-Applied']) == 'Sent'].reset_index(drop=True)
 
-        return BaseLine,dbtmpSentCrr              
-
+        return BaseLine,dbtmpSentCrr;
+    
+    
     def ReadImagePlacmentAndCorrectionData(self):
                 os.chdir(self.pthF);
                 dbtmpSentCrr=pd.DataFrame()
@@ -448,17 +520,30 @@ class DispImagePlacment():
                 pthFf=self.pthF+'/'+self.side+'/'+'RawResults/';
                 pthCrr=pthF+'/'+self.side+'/CorrectionOperators'+'/';
                 fcorr='PanelCorrection.csv'
-                if self.CheckIfFileValid():
-                    BaseLine,dbtmpSentCrr=self.ExtractBaslineAndAppliedCorrection();
-                    dbtmp=pd.read_csv(fname);
-                    ImagePlacement_pp[f]=dbtmp['T1->X']-BaseLine
-                    ImagePlacement_pp['Flat Id']=dbtmp['Flat Id'];
-                    ImagePlacement_pp['Panel Id']=dbtmp['Panel Id'];
-                    try:
-                       os.chdir(pthCrr);
-                       PanelCorrection=pd.read_csv(fcorr)
-                    except:
-                        1
+                #if self.CheckIfFileValid():
+                BaseLine,dbtmpSentCrr=self.ExtractBaslineAndAppliedCorrection();
+                
+                zip_file_path = self.pthF+'/'+self.f
+                subdir_name_in_zip = self.side+'/'+'RawResults';
+                file_name_in_zip = fname;
+                
+                # dbtmp=pd.read_csv(fname);
+                dbtmp=self.GetFileFromZip(zip_file_path,subdir_name_in_zip,file_name_in_zip);
+                ImagePlacement_pp[f]=dbtmp['T1->X']-BaseLine
+                ImagePlacement_pp['Flat Id']=dbtmp['Flat Id'];
+                ImagePlacement_pp['Panel Id']=dbtmp['Panel Id'];
+                try:
+                   # os.chdir(pthCrr);
+                   # PanelCorrection=pd.read_csv(fcorr)
+                   
+                   zip_file_path = self.pthF+'/'+self.f
+                   subdir_name_in_zip = self.side+'/CorrectionOperators';
+                   file_name_in_zip = fcorr;
+                   
+                   PanelCorrection=self.GetFileFromZip(zip_file_path,subdir_name_in_zip,file_name_in_zip);
+                   
+                except:
+                    1
               
                     
                 return  ImagePlacement_pp,dbtmpSentCrr,BaseLine,PanelCorrection; 
@@ -488,10 +573,12 @@ from tkinter import filedialog
 from tkinter import *
 root = Tk()
 root.withdraw()
-pthF = filedialog.askdirectory()
+pthFf = filedialog.askopenfilename()
 
 # pthF='C:/Users/Ireneg/OneDrive - Landa Group/שולחן העבודה/AQM/all (1)/QCS Production_0 Archive 22-12-2021 11-35-17'
-f=pthF.split('/')[len(pthF.split('/'))-1]
+f=pthFf.split('/')[len(pthFf.split('/'))-1]
+
+pthF=pthFf.replace(pthFf.split('/')[len(pthFf.split('/'))-1],"")[:-1]
 
 import time
 
@@ -499,7 +586,8 @@ start = time.time()
 
 ############## Calc Image Placment
 
-ImagePlacement_ppFRONT,dbtmpSentCrrFRONT,BaseLineFRONT,PanelCorrectionFRONT=DispImagePlacment(pthF+'/',f,'Front','Left',JobLength).ReadImagePlacmentAndCorrectionData();
+ImagePlacement_ppFRONT,dbtmpSentCrrFRONT,BaseLineFRONT,PanelCorrectionFRONT=DispImagePlacment(pthF,f,'Front','Left',JobLength).ReadImagePlacmentAndCorrectionData();
+
 
 # ImagePlacement_ppFRONT,dbtmpSentCrrFRONT,BaseLineFRONT,PanelCorrectionFRONT=ReadImagePlacmentDataAndCorrection(pthF,'Front',fname,fnameResFRONT,JobLength)
 try:
@@ -534,14 +622,15 @@ side='Front';
 fname='Registration_Left.csv'
 # St1dataAllColorsFrontLeft,St2dataAllColorsFrontLeft,St3dataAllColorsFrontLeft,indexNumberFailed=CalcC2C(pthF+'/',side,fname,JobLength).CalcC2CSingleSidePerSet()
 
-St1dataAllColorsFrontLeft,St2dataAllColorsFrontLeft,St3dataAllColorsFrontLeft,indexNumberFailed,MeregedDataAllMeanColorFRONTLeft=CalcC2C(pthF+'/',side,fname,JobLength,LoadTarget).CalcC2CSingleSidePerSetDEFULTvalue()
+
+St1dataAllColorsFrontLeft,St2dataAllColorsFrontLeft,St3dataAllColorsFrontLeft,indexNumberFailed,MeregedDataAllMeanColorFRONTLeft=CalcC2C(pthF+'/'+f,side,fname,JobLength,LoadTarget).CalcC2CSingleSidePerSetDEFULTvalue()
 
 
-    
+ 
 side='Front';
 fname='Registration_Right.csv'
 # St1dataAllColorsFrontRight,St2dataAllColorsFrontRight,St3dataAllColorsFrontRight,indexNumberFailed=CalcC2C(pthF+'/',side,fname,JobLength).CalcC2CSingleSidePerSet()
-St1dataAllColorsFrontRight,St2dataAllColorsFrontRight,St3dataAllColorsFrontRight,indexNumberFailed,MeregedDataAllMeanColorFRONTRight=CalcC2C(pthF+'/',side,fname,JobLength,LoadTarget).CalcC2CSingleSidePerSetDEFULTvalue()
+St1dataAllColorsFrontRight,St2dataAllColorsFrontRight,St3dataAllColorsFrontRight,indexNumberFailed,MeregedDataAllMeanColorFRONTRight=CalcC2C(pthF+'/'+f,side,fname,JobLength,LoadTarget).CalcC2CSingleSidePerSetDEFULTvalue()
 # 
 inx=list(St1dataAllColorsFrontLeft.index)
 St1dataAllColorsFrontMean=pd.DataFrame()
@@ -557,11 +646,11 @@ for i in inx:
 try:
     side='Back';
     fname='Registration_Left.csv'
-    St1dataAllColorsBackLeft,St2dataAllColorsBackLeft,St3dataAllColorsBackLeft,indexNumberFailed,MeregedDataAllMeanColorBackLeft=CalcC2C(pthF+'/',side,fname,JobLength,LoadTarget).CalcC2CSingleSidePerSetDEFULTvalue()
+    St1dataAllColorsBackLeft,St2dataAllColorsBackLeft,St3dataAllColorsBackLeft,indexNumberFailed,MeregedDataAllMeanColorBackLeft=CalcC2C(pthF+'/'+f ,side,fname,JobLength,LoadTarget).CalcC2CSingleSidePerSetDEFULTvalue()
         
     side='Back';
     fname='Registration_Right.csv'
-    St1dataAllColorsBackRight,St2dataAllColorsBackRight,St3dataAllColorsBackRight,indexNumberFailed,MeregedDataAllMeanColorBackRight=CalcC2C(pthF+'/',side,fname,JobLength,LoadTarget).CalcC2CSingleSidePerSetDEFULTvalue()
+    St1dataAllColorsBackRight,St2dataAllColorsBackRight,St3dataAllColorsBackRight,indexNumberFailed,MeregedDataAllMeanColorBackRight=CalcC2C(pthF+'/'+f ,side,fname,JobLength,LoadTarget).CalcC2CSingleSidePerSetDEFULTvalue()
     
     inx=list(St1dataAllColorsBackLeft.index)
     St1dataAllColorsBackMean=pd.DataFrame()
@@ -638,7 +727,7 @@ if Plot_MinMaxSETS:
 side='Front';
 fname='Registration_Left.csv'
 
-RawDataSuccess,flatNumberFailed,l1= CalcC2C(pthF+'/',side,fname,JobLength,LoadTarget).LoadRawData();
+RawDataSuccess,flatNumberFailed,l1= CalcC2C(pthF+'/'+f ,side,fname,JobLength,LoadTarget).LoadRawData();
         
 # RawDataSuccess=CalcC2C(pthF+'/',side,fname,JobLength,LoadTarget).ConvertRowsToInt(RawDataSuccess);
 
@@ -731,7 +820,7 @@ if Plot_Scale:
     PanelLengthInMM = 650;
     # St1dataAllColorsFrontLeft,St2dataAllColorsFrontLeft,St3dataAllColorsFrontLeft,indexNumberFailed=CalcC2C(pthF+'/',side,fname,JobLength).CalcC2CSingleSidePerSet()
     
-    St1dataAllColorsFrontFullLeft,St2dataAllColorsFrontFullLeft,St3dataAllColorsFrontFullLeft,RefSETlocLeft,ScaleFRONTLeft,ScaleLeftFRONTMaxMin,colorDicLeft=CalcC2C(pthF+'/',side,fname,JobLength,LoadTarget).DataForCalcSCALE(PanelLengthInMM)
+    St1dataAllColorsFrontFullLeft,St2dataAllColorsFrontFullLeft,St3dataAllColorsFrontFullLeft,RefSETlocLeft,ScaleFRONTLeft,ScaleLeftFRONTMaxMin,colorDicLeft=CalcC2C(pthF+'/'+f,side,fname,JobLength,LoadTarget).DataForCalcSCALE(PanelLengthInMM)
     
     
     
@@ -740,7 +829,7 @@ if Plot_Scale:
     fname='Registration_Right.csv'
     #PanelLengthInMM = 650;
     # St1dataAllColorsFrontRight,St2dataAllColorsFrontRight,St3dataAllColorsFrontRight,indexNumberFailed=CalcC2C(pthF+'/',side,fname,JobLength).CalcC2CSingleSidePerSet()
-    St1dataAllColorsFrontFullRight,St2dataAllColorsFrontFullRight,St3dataAllColorsFrontFullRight,RefSETlocRight,ScaleFRONTRight,ScaleRightFRONTMaxMin,colorDicRight=CalcC2C(pthF+'/',side,fname,JobLength,LoadTarget).DataForCalcSCALE(PanelLengthInMM)
+    St1dataAllColorsFrontFullRight,St2dataAllColorsFrontFullRight,St3dataAllColorsFrontFullRight,RefSETlocRight,ScaleFRONTRight,ScaleRightFRONTMaxMin,colorDicRight=CalcC2C(pthF+'/'+f,side,fname,JobLength,LoadTarget).DataForCalcSCALE(PanelLengthInMM)
     # 
     
     
@@ -750,7 +839,7 @@ if Plot_Scale:
     #    PanelLengthInMM = 650;
         # St1dataAllColorsFrontLeft,St2dataAllColorsFrontLeft,St3dataAllColorsFrontLeft,indexNumberFailed=CalcC2C(pthF+'/',side,fname,JobLength).CalcC2CSingleSidePerSet()
     
-        St1dataAllColorsBackFullLeft,St2dataAllColorsBackFullLeft,St3dataAllColorsBackFullLeft,RefSETlocLeftBACK,ScaleBACKLeft,ScaleLeftBACKMaxMin,colorDicLeft=CalcC2C(pthF+'/',side,fname,JobLength,LoadTarget).DataForCalcSCALE(PanelLengthInMM)
+        St1dataAllColorsBackFullLeft,St2dataAllColorsBackFullLeft,St3dataAllColorsBackFullLeft,RefSETlocLeftBACK,ScaleBACKLeft,ScaleLeftBACKMaxMin,colorDicLeft=CalcC2C(pthF+'/'+f,side,fname,JobLength,LoadTarget).DataForCalcSCALE(PanelLengthInMM)
     
     
     
@@ -759,7 +848,7 @@ if Plot_Scale:
         fname='Registration_Right.csv'
     #    PanelLengthInMM = 650;
         # St1dataAllColorsFrontRight,St2dataAllColorsFrontRight,St3dataAllColorsFrontRight,indexNumberFailed=CalcC2C(pthF+'/',side,fname,JobLength).CalcC2CSingleSidePerSet()
-        St1dataAllColorsBackFullRight,St2dataAllColorsBackFullRight,St3dataAllColorsBackFullRight,RefSETlocRightBACK,ScaleBACKRight,ScaleRightBACKMaxMin,colorDicRight=CalcC2C(pthF+'/',side,fname,JobLength,LoadTarget).DataForCalcSCALE(PanelLengthInMM)
+        St1dataAllColorsBackFullRight,St2dataAllColorsBackFullRight,St3dataAllColorsBackFullRight,RefSETlocRightBACK,ScaleBACKRight,ScaleRightBACKMaxMin,colorDicRight=CalcC2C(pthF+'/'+f,side,fname,JobLength,LoadTarget).DataForCalcSCALE(PanelLengthInMM)
     except:
         1
 

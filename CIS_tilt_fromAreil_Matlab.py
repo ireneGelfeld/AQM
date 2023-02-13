@@ -202,11 +202,13 @@ root.withdraw()
 pthF = filedialog.askopenfilename()
 
 if not "Cropped images" in pthF:
-    img = cv2.imread(pthF);
-    I1 =  CroppImageClass().CroppImage(img);
+    
     f2delete=pthF.split('/')[len(pthF.split('/'))-1]
     f = "1.bmp"
     pth4save=pthF.replace(f2delete,"")
+    os.chdir(pth4save)
+    img = cv2.imread(pthF);
+    I1 =  CroppImageClass().CroppImage(img);
 
     
 else:

@@ -6,15 +6,25 @@ Created on Thu Dec  1 10:51:03 2022
 
 """
 #######################################################
-global  MaxWaveWindow,limitDataCount,BarNum,CISsavgolWindow,PixelSize_um
-
+global  MaxWaveWindow,StpWindowSize,SvGolPol,limitDataCount,BarNum,CISsavgolWindow,CISsavgolWindow12k,PixelSize_um
+global limitDataCount
 YuriFormat=0;
 
 MaxWaveWindow=100;
-limitDataCount=0.003;
+MaxWaveWindow12k=1000;
+
+StpWindowSize=2
+StpWindowSize12k=10
+
+SvGolPol=1
+limitDataCount=0.001;
 BarNum=20
 CISsavgolWindow=11
+CISsavgolWindow12k=373
 FileNameCSV='CIS_B2_filter_'+str(CISsavgolWindow)+'.csv';
+FileNameCSV12k='CIS_B2_filter12k_'+str(CISsavgolWindow12k)+'.csv';
+
+
 PixelSize_um=84.6666
 #######################################################
 
@@ -37,7 +47,13 @@ import plotly.graph_objects as go
 from plotly.offline import download_plotlyjs, init_notebook_mode,  plot
 from plotly.subplots import make_subplots
 
+from tkinter import filedialog
+from tkinter import *
+from tkinter import simpledialog
 
+
+root = Tk()
+root.withdraw()
 
 
 
@@ -88,6 +104,7 @@ class ReduceNoise():
                 break;
         inx2delete=[]
         fixedRawData=[]
+        
         for j,dt in enumerate(RawData_Tilt):
             if abs(dt)<  DataRange[i]:
                 fixedRawData.append(self.RawData[1][j])
@@ -104,6 +121,9 @@ class ReduceNoise():
         plt.figure()
         plt.plot(RawDataCopy[0],RawDataCopy[1],'o')
         plt.plot(self.RawData[0],self.RawData[1],'x')
+        plt.title('LimitDataCount='+str(limitDataCount))
+        
+
         
         return RawDataCopy;
     
@@ -146,7 +166,7 @@ class ReduceNoise():
         
         return XvalueMeanFULL,YvalueMeanFULL,RawDataCopy;
     
-    def PrepareData4Saving(self,fileName):
+    def PrepareData4Saving(self,fileName,saveCSV):
         
         XvalueMeanFULL,YvalueMeanFULL,RawDataCopy=self.CutDataTo385Points();
         Data385=pd.DataFrame();
@@ -170,19 +190,38 @@ class ReduceNoise():
         
         CIScurve=pd.DataFrame()
         
-        y=savgol_filter(Data385[2], CISsavgolWindow, 1)       
+        y=savgol_filter(Data385[2], CISsavgolWindow, SvGolPol)       
         
     
         
         CIScurve[0]=[0]
         for i,yy in enumerate(y):
             CIScurve[i+1]=[yy]
-        
-        CIScurve.to_csv(fileName,index=False,header=False);
+            
+        if saveCSV:
+            CIScurve.to_csv(fileName,index=False,header=False);
         
        
         return Data385,CIScurve,y,z1,tlt1,z,tlt
+    
+    def PrepareData4Saving12k(self,fileName):
+            
+            
+            
+            CIScurve=pd.DataFrame()
+            
+            y=savgol_filter(self.RawData[1], CISsavgolWindow12k, SvGolPol)       
+            
         
+            
+            for i,yy in enumerate(y):
+                CIScurve[i]=[yy]-y[0]
+            
+            CIScurve.to_csv(fileName,index=False,header=False);
+            
+           
+            return CIScurve
+    
 
  
 class plotPlotly():
@@ -197,7 +236,7 @@ class plotPlotly():
       
 
 
-   def PlotCIS(self):
+   def PlotCIS(self,MaxWaveWindow,StpWindowSize):
         fig = go.Figure()
 
 
@@ -214,13 +253,13 @@ class plotPlotly():
         #                 name=ColorForDisplay+'_After'), row=2, col=1)
         
         ##### Fiter Vs Befor ####
-        for step in  np.arange(3, MaxWaveWindow+3, 2):
+        for step in  np.arange(3, MaxWaveWindow+3, StpWindowSize):
             fig.add_trace(
                 go.Scatter(
                     visible=False,
                     line=dict(color='green', width=2),
                     name="Window Size = " + str(step),x=list(self.xdb),
-                    y=savgol_filter(self.ydb, step, 1)))
+                    y=savgol_filter(self.ydb, step, SvGolPol)))
         
         
         
@@ -254,7 +293,7 @@ class plotPlotly():
         sliders = [dict(
             active=10,
             currentvalue={"prefix": "Window Size: "},
-            pad={"t": int(MaxWaveWindow)},
+            pad={"t": int(MaxWaveWindow/StpWindowSize)},
             steps=steps
         )]
         
@@ -276,12 +315,21 @@ class plotPlotly():
  ###############################################################################################################       
  ###############################################################################################################       
  ###############################################################################################################       
-from tkinter import filedialog
-from tkinter import *
-root = Tk()
-root.withdraw()
+
+
 pthF = filedialog.askdirectory()
-        
+print('**************************************************************************')
+print('Please Enter  machine Name in the Dialog box')        
+MachineName = simpledialog.askstring("Input", "Enter The machine Name:", parent=root)
+print('Done');
+print('**************************************************************************')
+
+print('**************************************************************************')
+print('Please Enter Data Limit in the Dialog box')
+limitDataCount = float(simpledialog.askstring("Input", "Enter Data Pracentege to ignore:", parent=root))
+print('Done');
+print('**************************************************************************')
+
 
 f=pthF.split('/')[len(pthF.split('/'))-1]
 DirectorypathF=pthF.replace(f,'');
@@ -295,8 +343,23 @@ if YuriFormat:
     RawData=ReduceNoise(RawData).FixRawDatFromat_OneRow();
     
 
-DataCount,DataRange,NumberOfvalidData,RawData_Tilt,tlt,z=  ReduceNoise(RawData).CalcHistOfData();
-Data385,CIScurve,y,z1,tlt1,z,tlt=ReduceNoise(RawData).PrepareData4Saving(FileNameCSV)
+DataCount,DataRange,NumberOfvalidData,RawData_Tilt,tlt12k,z12k=  ReduceNoise(RawData).CalcHistOfData();
+
+Data385,CIScurve,y,z1,tlt1,z,tlt=ReduceNoise(RawData).PrepareData4Saving(FileNameCSV,0)
+
+
+#### FIX FORMAT from ariel raw data to yuri rawdata
+
+# y=savgol_filter(RawData[1], CISsavgolWindow12k, SvGolPol)       
+
+
+
+# CIScurve[0]=[0]
+# for i,yy in enumerate(y):
+#     CIScurve[i+1]=[yy]
+
+# CIScurve.to_csv(fileName,index=False,header=False);
+
 
 ###########################Plot
 # xdb=Data385[0]
@@ -309,8 +372,42 @@ Data385,CIScurve,y,z1,tlt1,z,tlt=ReduceNoise(RawData).PrepareData4Saving(FileNam
 ###### To Implament 
 xdb=Data385[0]
 ydb=Data385[2]
-plotTitle=pthF+'-->'+f+' Tilt in um=' +"{0:.3f}".format(tlt1[0]-tlt1[len(tlt1)-1])+" 385 points - For CIS (for implamentation) Slider switched to Step: " # Can modify Plot title
+plotTitle=pthF+'-->'+f+' Tilt in um=' +"{0:.3f}".format(tlt1[0]-tlt1[len(tlt1)-1])+" _385 points - For CIS (for implamentation) Slider switched to Step: " # Can modify Plot title
 fileName=f +" CIS curve raw data and filter 385 implament"+ ".html";
 
-figCIScalc=plotPlotly(xdb,ydb,plotTitle,fileName,tlt1,z1).PlotCIS();
+figCIScalc=plotPlotly(xdb,ydb,plotTitle,fileName,tlt1,z1).PlotCIS(MaxWaveWindow,StpWindowSize);
+print('**************************************************************************')
+print('Please Enter  WindowSize in the Dialog box')   
+CISsavgolWindow = int(simpledialog.askstring("Input", "Enter WindowSize value:", parent=root))
+print('Done');
+print('**************************************************************************')
+FileNameCSV='CIS_'+MachineName+'_filter_'+str(CISsavgolWindow)+'.csv';
+Data385,CIScurve,y,z1,tlt1,z,tlt=ReduceNoise(RawData).PrepareData4Saving(FileNameCSV,1)
 
+
+########### 12k point
+xdb=RawData[0]
+ydb=RawData[1]
+plotTitle=pthF+'-->'+f+' Tilt in um=' +"{0:.3f}".format(tlt1[0]-tlt1[len(tlt1)-1])+" _12k points - For CIS (for implamentation) Slider switched to Step: " # Can modify Plot title
+fileName=f +" CIS curve raw data and filter 12k implament"+ ".html";
+
+figCIScalc=plotPlotly(xdb,ydb,plotTitle,fileName,tlt12k,z12k).PlotCIS(MaxWaveWindow12k,StpWindowSize12k);
+print('**************************************************************************')
+print('Please Enter  WindowSize12k in the Dialog box')   
+CISsavgolWindow12k = int(simpledialog.askstring("Input", "Enter WindowSize12k value:", parent=root))
+print('Done');
+print('**************************************************************************')
+
+FileNameCSV12k='CIS_'+MachineName+'_filter12k_'+str(CISsavgolWindow12k)+'.csv';
+CIScurve12k=ReduceNoise(RawData).PrepareData4Saving12k(FileNameCSV12k)
+
+
+plt.figure();
+plt.plot(CIScurve.loc[0,:])
+plt.title('385 points'+' windowSize='+str(CISsavgolWindow))
+
+
+
+plt.figure();
+plt.plot(CIScurve12k.loc[0,:])
+plt.title('12k points'+' windowSize='+str(CISsavgolWindow12k))

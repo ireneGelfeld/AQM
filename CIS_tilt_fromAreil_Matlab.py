@@ -50,7 +50,7 @@ class CroppImageClass():
         
         
         # Convert the coordinates from the cropped images to the original image
-        point01 = (point1[0], point1[1])
+        point01 = (0, point1[1])
         point02 = (int(img.shape[1])-(int(cropped_img2.shape[1])-point2[0]), point2[1])
         
         print("Selected point 1 in the original image:", point01)
@@ -235,7 +235,7 @@ figCIScalc=plotPlotly(ImageGL,plotTitle,fileName,RecDimX, RecDimY).PlotCIS();
 T_Lum = simpledialog.askstring("Input", "Enter T_Lum value:", parent=root)
 RawData=pd.DataFrame();
 
-max_val,max_index = CIScurveFromImage(ImageGL).AplyFilters(float(T_Lum), RecDimX, RecDimY)
+max_val,max_index = CIScurveFromImage(ImageGL).AplyFilters(float(T_Lum)+0.01, RecDimX, RecDimY)
 
 RawData['Value']=list(max_index)
 

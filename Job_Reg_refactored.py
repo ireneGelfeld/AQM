@@ -33,7 +33,7 @@ else:
 
 JobLength = 0;
 PanelNumber = 1;#Panel number for calculating Mean,STD,sum   
-DataPracent_toConcider= 90 #in % --> for example => 90 % --> cuts Off 5 %  from top and 5 % from bottomm
+DataPracent_toConcider= 95 #in % --> for example => 90 % --> cuts Off 5 %  from top and 5 % from bottomm
 #DistBetweenSets =  126357  #102693 Duplex Drop3 = 125864,   Duplex-Drop5 126357
 #Simplex Drop3 = 125965,  Simplex Drop5 = 126256 
 LoadTarget = 0 ; #True from targets in the AQM or False - from the tabel 
@@ -569,7 +569,7 @@ def findMinMaxDiv(Vector):
     
     MaxDiv = list(Vector)
     MaxDivNotNaN = [x for x in MaxDiv if not math.isnan(x)]
-    DataPracent_toIgnor=  int((100- DataPracent_toConcider)/2)
+    DataPracent_toIgnor=  ((100- DataPracent_toConcider)/2)
     percentile_99 = np.percentile(MaxDivNotNaN, DataPracent_toConcider+DataPracent_toIgnor)
     percentile_1 = np.percentile(MaxDivNotNaN, DataPracent_toIgnor )
     
@@ -974,11 +974,11 @@ if Plot_Image_Placment:
             
         frontTitle="FRONT-correction sum(p"+str(PanelNumber)+")="+"{:.2f}".format(frontC)+' Mean(p'+str(PanelNumber)+')='+"{:.2f}".format(frontCMean)+' Std(p'+str(PanelNumber)+')='+"{:.2f}".format(frontCstd);
         # frontSubTitle="--> I2S: mean= "+"{:.2f}".format(frontI2SMean)+'um  STD= '+"{:.2f}".format(frontI2Sstd)+'um'
-        frontSubTitle="--> I2S:Max-Min= "+"{:.2f}".format(maxDivfrontI2S)+'um'
+        frontSubTitle="--> I2S:Max-Min= +-"+"{:.2f}".format(maxDivfrontI2S/2)+'um'
 
         backTitle="BACK-correction sum(p"+str(PanelNumber)+")="+"{:.2f}".format(backC)+' Mean(p'+str(PanelNumber)+')='+"{:.2f}".format(backCMean)+' Std(p'+str(PanelNumber)+')='+"{:.2f}".format(backCstd);
         # backSubTitle= "--> I2S: mean= "+"{:.2f}".format(backI2SMean)+'um  STD= '+"{:.2f}".format(backI2Sstd)+'um'
-        backSubTitle= "--> I2S: Max-Min= "+"{:.2f}".format(maxDivbackI2S)+'um'
+        backSubTitle= "--> I2S: Max-Min= +-"+"{:.2f}".format(maxDivbackI2S/2)+'um'
         
         
         fig = make_subplots(rows=2, cols=1,subplot_titles=(frontTitle+frontSubTitle, backTitle+backSubTitle), vertical_spacing=0.1, shared_xaxes=True,print_grid=True)

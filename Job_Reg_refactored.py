@@ -10,7 +10,7 @@ Created on Sun Apr 24 12:35:16 2022
 #get_ipython().magic('reset -sf')
 
 #######################PARAMS#########################################
-global LoadTarget,GlobalScale,DistBetweenSets,JobLength,PanelNumber
+global LoadTarget,GlobalScale,DistBetweenSets,JobLength,PanelNumber,DataPracent_toConcider
 
 
 #For 252
@@ -33,7 +33,7 @@ else:
 
 JobLength = 0;
 PanelNumber = 1;#Panel number for calculating Mean,STD,sum   
-
+DataPracent_toConcider= 90 #in % --> for example => 90 % --> cuts Off 5 %  from top and 5 % from bottomm
 #DistBetweenSets =  126357  #102693 Duplex Drop3 = 125864,   Duplex-Drop5 126357
 #Simplex Drop3 = 125965,  Simplex Drop5 = 126256 
 LoadTarget = 0 ; #True from targets in the AQM or False - from the tabel 
@@ -64,6 +64,7 @@ from zipfile import ZipFile
 from pathlib import Path
 import zipfile 
 from io import BytesIO
+import math
 
 # Load the Pandas libraries with alias 'pd' 
 import pandas as pd 
@@ -564,7 +565,17 @@ def max_minSetS(StdataAllColors,colorDic):
             1
     return C2CMinMax,colorList;  
         
-        
+def findMinMaxDiv(Vector):
+    
+    MaxDiv = list(Vector)
+    MaxDivNotNaN = [x for x in MaxDiv if not math.isnan(x)]
+    DataPracent_toIgnor=  int((100- DataPracent_toConcider)/2)
+    percentile_99 = np.percentile(MaxDivNotNaN, DataPracent_toConcider+DataPracent_toIgnor)
+    percentile_1 = np.percentile(MaxDivNotNaN, DataPracent_toIgnor )
+    
+    filtered_data1 = [x for x in MaxDivNotNaN if  x >= percentile_1 and x <= percentile_99]
+    
+    return  max(filtered_data1)-min(filtered_data1),max(filtered_data1),min(filtered_data1)        
 ####################################################################################################
 
 
@@ -945,22 +956,29 @@ if Plot_Image_Placment:
             backCstd=0;
         
         ##I2S
+
         frontI2SMean=(np.average(ImagePlacement_ppFRONT[f][StatisticsCalcStartPage:]));
         frontI2Sstd=(np.std(ImagePlacement_ppFRONT[f][StatisticsCalcStartPage:]));
-        
+        maxDivfrontI2S,maxNfrontI2S,minNfrontI2S=  findMinMaxDiv(ImagePlacement_ppFRONT[f][StatisticsCalcStartPage:])  
+
         try:
             backI2SMean=(np.average(ImagePlacement_ppBACK[f][StatisticsCalcStartPage:]));
             backI2Sstd=(np.std(ImagePlacement_ppBACK[f][StatisticsCalcStartPage:]));
-        
+            maxDivbackI2S,maxNbackI2S,minNbackI2S=  findMinMaxDiv(ImagePlacement_ppBACK[f][StatisticsCalcStartPage:])  
+
         except:
             backI2SMean=0;
             backI2Sstd=0;
+            maxDivbackI2S,maxNbackI2S,minNbackI2S= [0,0,0]
         
             
         frontTitle="FRONT-correction sum(p"+str(PanelNumber)+")="+"{:.2f}".format(frontC)+' Mean(p'+str(PanelNumber)+')='+"{:.2f}".format(frontCMean)+' Std(p'+str(PanelNumber)+')='+"{:.2f}".format(frontCstd);
-        frontSubTitle="--> I2S: mean= "+"{:.2f}".format(frontI2SMean)+'um  STD= '+"{:.2f}".format(frontI2Sstd)+'um'
+        # frontSubTitle="--> I2S: mean= "+"{:.2f}".format(frontI2SMean)+'um  STD= '+"{:.2f}".format(frontI2Sstd)+'um'
+        frontSubTitle="--> I2S:Max-Min= "+"{:.2f}".format(maxDivfrontI2S)+'um'
+
         backTitle="BACK-correction sum(p"+str(PanelNumber)+")="+"{:.2f}".format(backC)+' Mean(p'+str(PanelNumber)+')='+"{:.2f}".format(backCMean)+' Std(p'+str(PanelNumber)+')='+"{:.2f}".format(backCstd);
-        backSubTitle= "--> I2S: mean= "+"{:.2f}".format(backI2SMean)+'um  STD= '+"{:.2f}".format(backI2Sstd)+'um'
+        # backSubTitle= "--> I2S: mean= "+"{:.2f}".format(backI2SMean)+'um  STD= '+"{:.2f}".format(backI2Sstd)+'um'
+        backSubTitle= "--> I2S: Max-Min= "+"{:.2f}".format(maxDivbackI2S)+'um'
         
         
         fig = make_subplots(rows=2, cols=1,subplot_titles=(frontTitle+frontSubTitle, backTitle+backSubTitle), vertical_spacing=0.1, shared_xaxes=True,print_grid=True)

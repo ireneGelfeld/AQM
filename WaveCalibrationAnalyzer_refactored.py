@@ -14,7 +14,7 @@ global StartCycle,StartCycle4Avr,PHpoitToIgnor,MaxWaveWindow,DistanceBtWPointMM,
 
 
 ## for plot per panel and plot per cycle and WaveData SUB Average_PerPanel_PerCycle
-plotPerPanel=0;# On/OFF plot
+plotPerPanel=1;# On/OFF plot
 plotPerCycle=0;## On/OFF plot
 WaveDataSUBAverage_PerPanel_PerCycle=0 # On/OFF plot
 CycleNumber =3 # cycle view in => plot Per Panel
@@ -27,14 +27,14 @@ Panel2Disply= [11,6]
 CIScurve=1;# On/OFF plot
 
 ## for plot registration estimation in Wave Prints (yuval)
-registrationBetweenWavePrints=0; # On/OFF plot
+registrationBetweenWavePrints=0; # On/OFF plot ERROR
 StartCycle=3
 rgistBtwPntStartCycle=StartCycle # (it is not a parameter)
 rgistBtwPntEndCycle=StartCycle+1 # for long print can change to larger number
 MainColor = "Black" #Referance Color
 
 ##  Wave plot ( before and after correction)
-BeforAndAfterCorr=1# On/OFF plot
+BeforAndAfterCorr=0# On/OFF plot
 
 
 ## DX plot - delta between wave and starvitzky filer (residue) 
@@ -259,14 +259,14 @@ class CalcRegistrationFromWaveData:
         DeltaPerCycleFromRef=pd.DataFrame();
         DeltaPerCycle=pd.DataFrame();
         
-        mainColorRef=CalcWaveFromRawData(self.pthF+'/',self.side,self.Panel).ArrangeRawDataForAnalize(self.MainColor);
+        mainColorRef=CalcWaveFromRawData(self.pthF,self.side,self.Panel).ArrangeRawDataForAnalize(self.MainColor);
         DFdicPerClr={}
         for clr in self.ColorList:
             if clr == self.MainColor:
                 continue;
             DeltaPerCycleFromRef=pd.DataFrame();
             DeltaPerCycle=pd.DataFrame();    
-            ColorWavePerCycle=CalcWaveFromRawData(self.pthF+'/',self.side,self.Panel).ArrangeRawDataForAnalize(clr);
+            ColorWavePerCycle=CalcWaveFromRawData(self.pthF,self.side,self.Panel).ArrangeRawDataForAnalize(clr);
             DeltaPerCycleFromRef= mainColorRef.loc[:,self.StartCycle:]-ColorWavePerCycle.loc[:,self.StartCycle:];
             for col in DeltaPerCycleFromRef.loc[:,StartCycle:].columns:
                 DeltaPerCycle=pd.concat([DeltaPerCycle,DeltaPerCycleFromRef[col]-DeltaPerCycleFromRef[self.StartCycle]],axis=1);
@@ -905,7 +905,7 @@ class PlotGraphPlotly(CalcWaveFromRawData):
         fig = go.Figure()
         
         for pnl in range(1,12):
-            WaveRawDataDic=CalcWaveFromRawData(pthF+'/',side,pnl).CreateDicOfWaveRawData();
+            WaveRawDataDic=CalcWaveFromRawData(pthF,side,pnl).CreateDicOfWaveRawData();
     
      
             for clr in self.ColorList:     
@@ -1111,7 +1111,7 @@ side='Front';
 ColorList= CalcWaveFromRawData(pthF,side,Panel).getColors();
 
 LocatorIndex= CalcWaveFromRawData(pthF,side,Panel).GetLocatorIndex(ColorForDisplay);
-# FlatList= CalcWaveFromRawData(pthF+'/',side,Panel,ColorForDisplay).getNumberOfFlats();
+# FlatList= CalcWaveFromRawData(pthF,side,Panel,ColorForDisplay).getNumberOfFlats();
 if CIScurve:
     cisBACK,cisFRONT=CIScurveFromRawData(pthF).GetCIScurveOldVersion()
     
@@ -1129,7 +1129,7 @@ if CIScurve:
 
 
 WaveRawDataDicFRONT=CalcWaveFromRawData(pthF,side,Panel).CreateDicOfWaveRawData();
-# WaveDataWithMaxFilterDicFRONT=CalcWaveFromRawData(pthF+'/',side,Panel).FilterWaveDataDic()
+# WaveDataWithMaxFilterDicFRONT=CalcWaveFromRawData(pthF,side,Panel).FilterWaveDataDic()
 WaveDataWithMaxFilterDicFRONT=CalcWaveFromRawData(pthF,side,Panel).FilterWaveDataDicTEST(WaveRawDataDicFRONT)
 
 PHlocFRONT= CalcWaveFromRawData(pthF,side,Panel).CalcPHlocation(ColorForDisplay)
@@ -1192,23 +1192,23 @@ if plotPerCycle:
     PlotTitle='- Left Side Offset WAVE RAW DATA --->'+f +' offSetType='+offSetType; # Can modify Plot title
     fileName=f+" Left Side WaveResult_RawDataPerCycle Panel Number "; # Can modify File nmae
     side='Front'
-    # db=CalcWaveFromRawData(pthF+'/',side,Panel).ArrangeRawDataForAnalize(ColorForDisplay);
-    figLeftsideFRONT=PlotGraphPlotly(pthF+'/',side,Panel,ColorList).ShowWaveRawData_SubOffset_PerCycle(PlotTitle,offSetType,fileName,Panel)
+    # db=CalcWaveFromRawData(pthF,side,Panel).ArrangeRawDataForAnalize(ColorForDisplay);
+    figLeftsideFRONT=PlotGraphPlotly(pthF,side,Panel,ColorList).ShowWaveRawData_SubOffset_PerCycle(PlotTitle,offSetType,fileName,Panel)
     
     
     offSetType='Average Left Right' 
     PlotTitle='- Right Side Offset WAVE RAW DATA --->'+f+' offSetType='+offSetType;# Can modify Plot title
     fileName=f+" Right Side WaveResult_RawDataPerCycle Panel Number ";# Can modify File nmae
     side='Front'
-    db=CalcWaveFromRawData(pthF+'/',side,Panel).ArrangeRawDataForAnalize(ColorForDisplay);
-    figRightsideFRONT=PlotGraphPlotly(pthF+'/',side,Panel,ColorList).ShowWaveRawData_SubOffset_PerCycle(PlotTitle,offSetType,fileName,Panel)
+    db=CalcWaveFromRawData(pthF,side,Panel).ArrangeRawDataForAnalize(ColorForDisplay);
+    figRightsideFRONT=PlotGraphPlotly(pthF,side,Panel,ColorList).ShowWaveRawData_SubOffset_PerCycle(PlotTitle,offSetType,fileName,Panel)
     
    
     
     PlotTitle='- <b>STD </b> Side Offset WAVE RAW DATA --->'+f# Can modify Plot title
     fileName=f+" STD SideOffset_ WaveResult_RawDataPerColor Panel Number "# Can modify File nmae
     side='Front'
-    figSTDFRONT=PlotGraphPlotly(pthF+'/',side,Panel,ColorList).ShowSTDforRawWaveWithOffset(PlotTitle,fileName,Panel)
+    figSTDFRONT=PlotGraphPlotly(pthF,side,Panel,ColorList).ShowSTDforRawWaveWithOffset(PlotTitle,fileName,Panel)
     
     #### Back
     try:
@@ -1216,28 +1216,28 @@ if plotPerCycle:
         PlotTitle='- Left Side Offset WAVE RAW DATA --->'+f+' offSetType='+offSetType;# Can modify Plot title
         fileName=f+" Left Side WaveResult_RawDataPerCycle Panel Number ";# Can modify File nmae
         side='Back'
-        # db=CalcWaveFromRawData(pthF+'/',side,Panel).ArrangeRawDataForAnalize(ColorForDisplay);
-        figLeftsideBACK=PlotGraphPlotly(pthF+'/',side,Panel,ColorList).ShowWaveRawData_SubOffset_PerCycle(PlotTitle,offSetType,fileName,Panel)
+        # db=CalcWaveFromRawData(pthF,side,Panel).ArrangeRawDataForAnalize(ColorForDisplay);
+        figLeftsideBACK=PlotGraphPlotly(pthF,side,Panel,ColorList).ShowWaveRawData_SubOffset_PerCycle(PlotTitle,offSetType,fileName,Panel)
         
         
         offSetType='Average Left Right' 
         PlotTitle='- Right Side Offset WAVE RAW DATA --->'+f+' offSetType='+offSetType;# Can modify Plot title
         fileName=f+" Right Side WaveResult_RawDataPerCycle Panel Number ";# Can modify File nmae
         side='Back'
-        # db=CalcWaveFromRawData(pthF+'/',side,Panel).ArrangeRawDataForAnalize(ColorForDisplay);
-        figRightsideBACK=PlotGraphPlotly(pthF+'/',side,Panel,ColorList).ShowWaveRawData_SubOffset_PerCycle(PlotTitle,offSetType,fileName,Panel)
+        # db=CalcWaveFromRawData(pthF,side,Panel).ArrangeRawDataForAnalize(ColorForDisplay);
+        figRightsideBACK=PlotGraphPlotly(pthF,side,Panel,ColorList).ShowWaveRawData_SubOffset_PerCycle(PlotTitle,offSetType,fileName,Panel)
         
         # offSetType='Middle'
         # PlotTitle='- Middle Offset WAVE RAW DATA --->'+f;# Can modify Plot title
         # fileName=f+" Middle WaveResult_RawDataPerCycle Panel Number ";# Can modify File nmae
         # side='Back'
-        # # db=CalcWaveFromRawData(pthF+'/',side,Panel).ArrangeRawDataForAnalize(ColorForDisplay);
-        # figMiddlesideBACK=PlotGraphPlotly(pthF+'/',side,Panel,ColorList).ShowWaveRawData_SubOffset_PerCycle(PlotTitle,offSetType,fileName,Panel)
+        # # db=CalcWaveFromRawData(pthF,side,Panel).ArrangeRawDataForAnalize(ColorForDisplay);
+        # figMiddlesideBACK=PlotGraphPlotly(pthF,side,Panel,ColorList).ShowWaveRawData_SubOffset_PerCycle(PlotTitle,offSetType,fileName,Panel)
         
         PlotTitle='- <b>STD </b> Side Offset WAVE RAW DATA --->'+f# Can modify Plot title
         fileName=f+" STD SideOffset_ WaveResult_RawDataPerColor Panel Number "# Can modify File nmae
         side='Back'
-        figSTDBACK=PlotGraphPlotly(pthF+'/',side,Panel,ColorList).ShowSTDforRawWaveWithOffset(PlotTitle,fileName,Panel)
+        figSTDBACK=PlotGraphPlotly(pthF,side,Panel,ColorList).ShowSTDforRawWaveWithOffset(PlotTitle,fileName,Panel)
     except:
         1
 
@@ -1249,8 +1249,8 @@ if plotPerPanel:
     PlotTitle='- offSetType='+offSetType+' WAVE RAW DATA (For one Cycle)--->'+f;
     fileName=f+'- offSetType='+offSetType+" WaveResult_RawDataPerPanel ";
     side='Front'
-    # db=CalcWaveFromRawData(pthF+'/',side,Panel).ArrangeRawDataForAnalize(ColorForDisplay);
-    figLeftsideFRONTperPanel=PlotGraphPlotly(pthF+'/',side,Panel,ColorList).ShowWaveRawData_SubOffset_PerPanel(PlotTitle,offSetType,fileName,CycleNumber)
+    # db=CalcWaveFromRawData(pthF,side,Panel).ArrangeRawDataForAnalize(ColorForDisplay);
+    figLeftsideFRONTperPanel=PlotGraphPlotly(pthF,side,Panel,ColorList).ShowWaveRawData_SubOffset_PerPanel(PlotTitle,offSetType,fileName,CycleNumber)
     
     
     
@@ -1258,15 +1258,15 @@ if plotPerPanel:
     PlotTitle='- offSetType='+offSetType+' WAVE RAW DATA (For one Cycle)--->'+f;
     fileName=f+'- offSetType='+offSetType+" WaveResult_RawDataPerPanel ";
     side='Front'
-    # db=CalcWaveFromRawData(pthF+'/',side,Panel).ArrangeRawDataForAnalize(ColorForDisplay);
-    figRightsideFRONTperPanel=PlotGraphPlotly(pthF+'/',side,Panel,ColorList).ShowWaveRawData_SubOffset_PerPanel(PlotTitle,offSetType,fileName,CycleNumber)
+    # db=CalcWaveFromRawData(pthF,side,Panel).ArrangeRawDataForAnalize(ColorForDisplay);
+    figRightsideFRONTperPanel=PlotGraphPlotly(pthF,side,Panel,ColorList).ShowWaveRawData_SubOffset_PerPanel(PlotTitle,offSetType,fileName,CycleNumber)
     
     # offSetType='Middle'
     # PlotTitle='- Middle Offset WAVE RAW DATA (For one Cycle)--->'+f;
     # fileName=f+" Right Side WaveResult_RawDataPerPanel ";
     # side='Front'
-    # # db=CalcWaveFromRawData(pthF+'/',side,Panel).ArrangeRawDataForAnalize(ColorForDisplay);
-    # figMiddlesideFRONTperPanel=PlotGraphPlotly(pthF+'/',side,Panel,ColorList).ShowWaveRawData_SubOffset_PerPanel(PlotTitle,offSetType,fileName,CycleNumber)
+    # # db=CalcWaveFromRawData(pthF,side,Panel).ArrangeRawDataForAnalize(ColorForDisplay);
+    # figMiddlesideFRONTperPanel=PlotGraphPlotly(pthF,side,Panel,ColorList).ShowWaveRawData_SubOffset_PerPanel(PlotTitle,offSetType,fileName,CycleNumber)
     
     
     #### Back
@@ -1275,8 +1275,8 @@ if plotPerPanel:
         PlotTitle='- offSetType='+offSetType+' WAVE RAW DATA (For one Cycle)--->'+f;
         fileName=f+'- offSetType='+offSetType+" WaveResult_RawDataPerPanel ";
         side='Back'
-        # db=CalcWaveFromRawData(pthF+'/',side,Panel).ArrangeRawDataForAnalize(ColorForDisplay);
-        figLeftsideBACKperPanel=PlotGraphPlotly(pthF+'/',side,Panel,ColorList).ShowWaveRawData_SubOffset_PerPanel(PlotTitle,offSetType,fileName,CycleNumber)
+        # db=CalcWaveFromRawData(pthF,side,Panel).ArrangeRawDataForAnalize(ColorForDisplay);
+        figLeftsideBACKperPanel=PlotGraphPlotly(pthF,side,Panel,ColorList).ShowWaveRawData_SubOffset_PerPanel(PlotTitle,offSetType,fileName,CycleNumber)
         
         
         
@@ -1284,15 +1284,15 @@ if plotPerPanel:
         PlotTitle='- offSetType='+offSetType+' WAVE RAW DATA (For one Cycle)--->'+f;
         fileName=f+'- offSetType='+offSetType+" WaveResult_RawDataPerPanel ";
         side='Back'
-        # db=CalcWaveFromRawData(pthF+'/',side,Panel).ArrangeRawDataForAnalize(ColorForDisplay);
-        figRightsideBACKperPanel=PlotGraphPlotly(pthF+'/',side,Panel,ColorList).ShowWaveRawData_SubOffset_PerPanel(PlotTitle,offSetType,fileName,CycleNumber)
+        # db=CalcWaveFromRawData(pthF,side,Panel).ArrangeRawDataForAnalize(ColorForDisplay);
+        figRightsideBACKperPanel=PlotGraphPlotly(pthF,side,Panel,ColorList).ShowWaveRawData_SubOffset_PerPanel(PlotTitle,offSetType,fileName,CycleNumber)
         
         # offSetType='Middle'
         # PlotTitle='- Middle Offset WAVE RAW DATA (For one Cycle)--->'+f;
         # fileName=f+" Right Side WaveResult_RawDataPerPanel ";
         # side='Back'
-        # # db=CalcWaveFromRawData(pthF+'/',side,Panel).ArrangeRawDataForAnalize(ColorForDisplay);
-        # figMiddlesideBACKperPanel=PlotGraphPlotly(pthF+'/',side,Panel,ColorList).ShowWaveRawData_SubOffset_PerPanel(PlotTitle,offSetType,fileName,CycleNumber)
+        # # db=CalcWaveFromRawData(pthF,side,Panel).ArrangeRawDataForAnalize(ColorForDisplay);
+        # figMiddlesideBACKperPanel=PlotGraphPlotly(pthF,side,Panel,ColorList).ShowWaveRawData_SubOffset_PerPanel(PlotTitle,offSetType,fileName,CycleNumber)
     
     except:
         1
@@ -1305,13 +1305,13 @@ if WaveDataSUBAverage_PerPanel_PerCycle:
     PlotTitle='- Wave Behavior- Avi  Method --->'+f+' offSetType='+offSetType;
     fileName=f+" Wave Behavior- Avi  Method Offsettype_"+offSetType;
     side='Front'
-    figWaveDataSubAveragePerPanet=PlotGraphPlotly(pthF+'/',side,Panel,ColorList).PlotWaveDataSUBAveragePerPanelPerCycle(WaveRawDataDicFRONT,offSetType,PlotTitle,fileName);
+    figWaveDataSubAveragePerPanet=PlotGraphPlotly(pthF,side,Panel,ColorList).PlotWaveDataSUBAveragePerPanelPerCycle(WaveRawDataDicFRONT,offSetType,PlotTitle,fileName);
 
     offSetType='Average Left Right' ;
     PlotTitle='- Wave Behavior- Avi  Method --->'+f+' offSetType='+offSetType;
     fileName=f+" Wave Behavior- Avi  Method Offsettype_"+offSetType;
     side='Front'
-    figWaveDataSubAveragePerPanet=PlotGraphPlotly(pthF+'/',side,Panel,ColorList).PlotWaveDataSUBAveragePerPanelPerCycle(WaveRawDataDicFRONT,offSetType,PlotTitle,fileName);
+    figWaveDataSubAveragePerPanet=PlotGraphPlotly(pthF,side,Panel,ColorList).PlotWaveDataSUBAveragePerPanelPerCycle(WaveRawDataDicFRONT,offSetType,PlotTitle,fileName);
         
     #####Back
     try:
@@ -1320,13 +1320,13 @@ if WaveDataSUBAverage_PerPanel_PerCycle:
         fileName=f+" Wave Behavior- Avi  Method Offsettype_"+offSetType;
         
         side='Back'
-        figWaveDataSubAveragePerPanet=PlotGraphPlotly(pthF+'/',side,Panel,ColorList).PlotWaveDataSUBAveragePerPanelPerCycle(WaveRawDataDicBACK,offSetType,PlotTitle,fileName);
+        figWaveDataSubAveragePerPanet=PlotGraphPlotly(pthF,side,Panel,ColorList).PlotWaveDataSUBAveragePerPanelPerCycle(WaveRawDataDicBACK,offSetType,PlotTitle,fileName);
         
         offSetType='Average Left Right' #    
         PlotTitle='- Wave Behavior- Avi  Method --->'+f+' offSetType='+offSetType;
         fileName=f+" Wave Behavior- Avi  Method Offsettype_"+offSetType;
         side='Back'
-        figWaveDataSubAveragePerPanet=PlotGraphPlotly(pthF+'/',side,Panel,ColorList).PlotWaveDataSUBAveragePerPanelPerCycle(WaveRawDataDicBACK,offSetType,PlotTitle,fileName);
+        figWaveDataSubAveragePerPanet=PlotGraphPlotly(pthF,side,Panel,ColorList).PlotWaveDataSUBAveragePerPanelPerCycle(WaveRawDataDicBACK,offSetType,PlotTitle,fileName);
 
     except:
         1
@@ -1341,7 +1341,7 @@ if CIScurve:
         fileName=f+' ';
         side='Front';
         cisCurve=cisFRONT
-        figCISFRONT=PlotGraphPlotly(pthF+'/',side,Panel,ColorList).PlotCIScurve(cisCurve,PlotTitle,fileName);
+        figCISFRONT=PlotGraphPlotly(pthF,side,Panel,ColorList).PlotCIScurve(cisCurve,PlotTitle,fileName);
     except:
         1
         
@@ -1351,7 +1351,7 @@ if CIScurve:
         fileName=f+' ';
         side='Back';
         cisCurve=cisBACK
-        figCISBACK=PlotGraphPlotly(pthF+'/',side,Panel,ColorList).PlotCIScurve(cisCurve,PlotTitle,fileName); 
+        figCISBACK=PlotGraphPlotly(pthF,side,Panel,ColorList).PlotCIScurve(cisCurve,PlotTitle,fileName); 
     except:
         1
 
@@ -1364,10 +1364,10 @@ if registrationBetweenWavePrints: ##Yuval method
     try:
         fileName=f
         side='Front'
-        figRegistrationBetweenWavePrintsFRONT=PlotGraphPlotly(pthF+'/',side,Panel,ColorList).PlotRegistrationBetweenWavePrints(DFdicPerClrFRONT,MainColor,rgistBtwPntStartCycle,rgistBtwPntEndCycle,fileName)
+        figRegistrationBetweenWavePrintsFRONT=PlotGraphPlotly(pthF,side,Panel,ColorList).PlotRegistrationBetweenWavePrints(DFdicPerClrFRONT,MainColor,rgistBtwPntStartCycle,rgistBtwPntEndCycle,fileName)
     
         side='Back'
-        figRegistrationBetweenWavePrintsBACK=PlotGraphPlotly(pthF+'/',side,Panel,ColorList).PlotRegistrationBetweenWavePrints(DFdicPerClrBACK,MainColor,rgistBtwPntStartCycle,rgistBtwPntEndCycle,fileName)
+        figRegistrationBetweenWavePrintsBACK=PlotGraphPlotly(pthF,side,Panel,ColorList).PlotRegistrationBetweenWavePrints(DFdicPerClrBACK,MainColor,rgistBtwPntStartCycle,rgistBtwPntEndCycle,fileName)
     except:
         1
 ##################################################################################
@@ -1377,7 +1377,7 @@ if BeforAndAfterCorr:
     PlotTitle=' Residue (Wave- S.Go filter) before and after correction ---> '+f;
     fileName=f+'Residue _Wave sub S.Go filter_ before and after correction_';
     side='Front';
-    figCorrAvrBeforeAndAfterFRONT=PlotGraphPlotly(pthF+'/',side,Panel,ColorList).PlotDesidueBeforAfterAndAverageCorr(WaveRawDataDicFRONT,WaveRawDataDicAfterCorrFRONT,WaveDataWithMaxFilterDicFRONT,WaveDataWithMaxFilterDicAfterCorrFRONT,CorrectionArrFRONT,PlotTitle,fileName)
+    figCorrAvrBeforeAndAfterFRONT=PlotGraphPlotly(pthF,side,Panel,ColorList).PlotDesidueBeforAfterAndAverageCorr(WaveRawDataDicFRONT,WaveRawDataDicAfterCorrFRONT,WaveDataWithMaxFilterDicFRONT,WaveDataWithMaxFilterDicAfterCorrFRONT,CorrectionArrFRONT,PlotTitle,fileName)
     
     ######BACK
     try:
@@ -1385,7 +1385,7 @@ if BeforAndAfterCorr:
         PlotTitle=' Residue (Wave- S.Go filter) before and after correction ---> '+f;
         fileName=f+'Residue _Wave sub S.Go filter_ before and after correction_';
         side='Back';
-        figCorrAvrBeforeAndAfterBACK=PlotGraphPlotly(pthF+'/',side,Panel,ColorList).PlotDesidueBeforAfterAndAverageCorr(WaveRawDataDicBACK,WaveRawDataDicAfterCorrBACK,WaveDataWithMaxFilterDicBACK,WaveDataWithMaxFilterDicAfterCorrBACK,CorrectionArrBACK,PlotTitle,fileName)
+        figCorrAvrBeforeAndAfterBACK=PlotGraphPlotly(pthF,side,Panel,ColorList).PlotDesidueBeforAfterAndAverageCorr(WaveRawDataDicBACK,WaveRawDataDicAfterCorrBACK,WaveDataWithMaxFilterDicBACK,WaveDataWithMaxFilterDicAfterCorrBACK,CorrectionArrBACK,PlotTitle,fileName)
     except:
         1
 
@@ -1396,7 +1396,7 @@ if BeforAndAfterCorr:
     PlotTitle=' wave raw data before and after correction ---> '+f;
     fileName=f+'wave raw data before and after correction_';
     side='Front';
-    figClrBeforeAndAfterFRONT=PlotGraphPlotly(pthF+'/',side,Panel,ColorList).PlotWaveDataAfterApliedAVRGCorrection(WaveRawDataDicFRONT,WaveRawDataDicAfterCorrFRONT,CorrectionArrFRONT,PlotTitle,fileName)
+    figClrBeforeAndAfterFRONT=PlotGraphPlotly(pthF,side,Panel,ColorList).PlotWaveDataAfterApliedAVRGCorrection(WaveRawDataDicFRONT,WaveRawDataDicAfterCorrFRONT,CorrectionArrFRONT,PlotTitle,fileName)
     
     ######BACK
     try:
@@ -1404,7 +1404,7 @@ if BeforAndAfterCorr:
         PlotTitle=' wave raw data before and after correction ---> '+f;
         fileName=f+'wave raw data before and after correction_';
         side='Back';
-        figClrBeforeAndAfterBACK=PlotGraphPlotly(pthF+'/',side,Panel,ColorList).PlotWaveDataAfterApliedAVRGCorrection(WaveRawDataDicBACK,WaveRawDataDicAfterCorrBACK,CorrectionArrBACK,PlotTitle,fileName)
+        figClrBeforeAndAfterBACK=PlotGraphPlotly(pthF,side,Panel,ColorList).PlotWaveDataAfterApliedAVRGCorrection(WaveRawDataDicBACK,WaveRawDataDicAfterCorrBACK,CorrectionArrBACK,PlotTitle,fileName)
     except:
         1
 
@@ -1415,13 +1415,13 @@ if WaveFilterResidue_dxPlot:
     PlotTitle=' After Correction Wave Data S.Golay = '+ str(MaxWaveWindow)+'---> '+f
     fileName=f+'  After Correction Wave Data S.Golay _'+ str(MaxWaveWindow)
     side='Front';
-    figWaveResidueAfterCorrFRONT=PlotGraphPlotly(pthF+'/',side,Panel,ColorList).PlotWaveDataResidue(WaveRawDataDicAfterCorrFRONT,WaveDataWithMaxFilterDicAfterCorrFRONT,PHlocFRONT,PHoffSetFRONTAfterCorr,PHtiltFRONTAfterCorr,PlotTitle,fileName)
+    figWaveResidueAfterCorrFRONT=PlotGraphPlotly(pthF,side,Panel,ColorList).PlotWaveDataResidue(WaveRawDataDicAfterCorrFRONT,WaveDataWithMaxFilterDicAfterCorrFRONT,PHlocFRONT,PHoffSetFRONTAfterCorr,PHtiltFRONTAfterCorr,PlotTitle,fileName)
     ########BACK
     try:
         PlotTitle=' After Correction Wave Data S.Golay = '+ str(MaxWaveWindow)+'---> '+f
         fileName=f+'  After Correction Wave Data S.Golay _'+ str(MaxWaveWindow)
         side='Back';
-        figWaveResidueAfterCorrBACK=PlotGraphPlotly(pthF+'/',side,Panel,ColorList).PlotWaveDataResidue(WaveRawDataDicAfterCorrBACK,WaveDataWithMaxFilterDicAfterCorrBACK,PHlocBACK,PHoffSetBACKAfterCorr,PHtiltBACKAfterCorr,PlotTitle,fileName)
+        figWaveResidueAfterCorrBACK=PlotGraphPlotly(pthF,side,Panel,ColorList).PlotWaveDataResidue(WaveRawDataDicAfterCorrBACK,WaveDataWithMaxFilterDicAfterCorrBACK,PHlocBACK,PHoffSetBACKAfterCorr,PHtiltBACKAfterCorr,PlotTitle,fileName)
     except:
          1     
 
@@ -1433,7 +1433,7 @@ if PlotTables:
     PlotTitle=' offset (Correction-For simplex) table S.Golay = '+ str(MaxWaveWindow)+'---> '+f
     fileName=f+" Offset Table"
     side='Front';
-    TableOffsetAfterCorrFRONT=PlotGraphPlotly(pthF+'/',side,Panel,ColorList).PlotOffsetTabel(PHoffsetPerHFRONTAfterCorr,PlotTitle,fileName)
+    TableOffsetAfterCorrFRONT=PlotGraphPlotly(pthF,side,Panel,ColorList).PlotOffsetTabel(PHoffsetPerHFRONTAfterCorr,PlotTitle,fileName)
     
     
     #####Back
@@ -1442,7 +1442,7 @@ if PlotTables:
         PlotTitle=' offset (Correction-For simplex) table S.Golay = '+ str(MaxWaveWindow)+'---> '+f
         fileName=f+" Offset Table"
         side='Back';
-        TableOffsetAfterCorrBACK=PlotGraphPlotly(pthF+'/',side,Panel,ColorList).PlotOffsetTabel(PHoffsetPerHBACKAfterCorrAfterCorr,PlotTitle,fileName)
+        TableOffsetAfterCorrBACK=PlotGraphPlotly(pthF,side,Panel,ColorList).PlotOffsetTabel(PHoffsetPerHBACKAfterCorrAfterCorr,PlotTitle,fileName)
     except:
      1     
     
@@ -1453,14 +1453,14 @@ if PlotTables:
     PlotTitle=' Tilt table S.Golay = '+ str(MaxWaveWindow)+'---> '+f
     fileName=f+" Tilt Table"
     side='Front';
-    TableTiltAfterCorrFRONT=PlotGraphPlotly(pthF+'/',side,Panel,ColorList).PlotTiltTable(PHtiltPerHFRONTAfterCorr,ColorLevelsTilt,DivideByNumTilt,PlotTitle,fileName)
+    TableTiltAfterCorrFRONT=PlotGraphPlotly(pthF,side,Panel,ColorList).PlotTiltTable(PHtiltPerHFRONTAfterCorr,ColorLevelsTilt,DivideByNumTilt,PlotTitle,fileName)
     
     #####Back
     try:
         PlotTitle=' Tilt table S.Golay = '+ str(MaxWaveWindow)+'---> '+f
         fileName=f+" Tilt Table"
         side='Back';
-        TableTiltAfterCorrBACK=PlotGraphPlotly(pthF+'/',side,Panel,ColorList).PlotTiltTable(PHtiltPerHBACKAfterCorr,ColorLevelsTilt,DivideByNumTilt,PlotTitle,fileName)
+        TableTiltAfterCorrBACK=PlotGraphPlotly(pthF,side,Panel,ColorList).PlotTiltTable(PHtiltPerHBACKAfterCorr,ColorLevelsTilt,DivideByNumTilt,PlotTitle,fileName)
     except:
         1
     
@@ -1471,7 +1471,7 @@ if PlotTables:
         PlotTitle='Delta offset table S.Golay = '+ str(MaxWaveWindow)+'---> '+f
         fileName=f+" Delta Offset Table"
         side='Front';
-        TableFRONT_BACK_AverageAfterCorrFRONT=PlotGraphPlotly(pthF+'/',side,Panel,ColorList).PlotFRONT_BACKDeltaTable(PHoffsetPerHFRONTAfterCorr,PHoffsetPerHBACKAfterCorr,DivideByNum,ColorLevels,PlotTitle,fileName);
+        TableFRONT_BACK_AverageAfterCorrFRONT=PlotGraphPlotly(pthF,side,Panel,ColorList).PlotFRONT_BACKDeltaTable(PHoffsetPerHFRONTAfterCorr,PHoffsetPerHBACKAfterCorr,DivideByNum,ColorLevels,PlotTitle,fileName);
     except:
         1
         
@@ -1481,7 +1481,7 @@ if PlotTables:
         PlotTitle='Correction table S.Golay = '+ str(MaxWaveWindow)+'---> '+f
         fileName=f+" FRONT -BACK Average Table"
         side='Front';
-        TableFRONT_BACK_AverageAfterCorrFRONT=PlotGraphPlotly(pthF+'/',side,Panel,ColorList).PlotFRONT_BACKAverageTable(PHoffsetPerHFRONTAfterCorr,PHoffsetPerHBACKAfterCorr,PlotTitle,fileName);
+        TableFRONT_BACK_AverageAfterCorrFRONT=PlotGraphPlotly(pthF,side,Panel,ColorList).PlotFRONT_BACKAverageTable(PHoffsetPerHFRONTAfterCorr,PHoffsetPerHBACKAfterCorr,PlotTitle,fileName);
     except:
         1
 

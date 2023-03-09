@@ -10,7 +10,7 @@ Created on Sun Apr 24 12:35:16 2022
 #get_ipython().magic('reset -sf')
 
 #######################PARAMS#########################################
-global LoadTarget,GlobalScale,DistBetweenSets,JobLength
+global LoadTarget,GlobalScale,DistBetweenSets,JobLength,PanelNumber
 
 
 #For 252
@@ -32,8 +32,7 @@ else:
 
 
 JobLength = 0;
-
-
+PanelNumber = 1;#Panel number for calculating Mean,STD,sum   
 
 #DistBetweenSets =  126357  #102693 Duplex Drop3 = 125864,   Duplex-Drop5 126357
 #Simplex Drop3 = 125965,  Simplex Drop5 = 126256 

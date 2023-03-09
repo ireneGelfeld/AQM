@@ -957,10 +957,10 @@ if Plot_Image_Placment:
             backI2Sstd=0;
         
             
-        frontTitle=f+" FRONT-correction sum(p"+str(PanelNumber)+")="+"{:.2f}".format(frontC)+' Mean(p'+str(PanelNumber)+')='+"{:.2f}".format(frontCMean)+' Std(p'+str(PanelNumber)+')='+"{:.2f}".format(frontCstd);
-        frontSubTitle="--> I2S mean= "+"{:.2f}".format(frontI2SMean)+'um  STD= '+"{:.2f}".format(frontI2Sstd)+'um'
-        backTitle=f+" BACK-correction sum(p"+str(PanelNumber)+")="+"{:.2f}".format(backC)+' Mean(p'+str(PanelNumber)+')='+"{:.2f}".format(backCMean)+' Std(p'+str(PanelNumber)+')='+"{:.2f}".format(backCstd);
-        backSubTitle= "--> I2S mean= "+"{:.2f}".format(backI2SMean)+'um  STD= '+"{:.2f}".format(backI2Sstd)+'um'
+        frontTitle="FRONT-correction sum(p"+str(PanelNumber)+")="+"{:.2f}".format(frontC)+' Mean(p'+str(PanelNumber)+')='+"{:.2f}".format(frontCMean)+' Std(p'+str(PanelNumber)+')='+"{:.2f}".format(frontCstd);
+        frontSubTitle="--> I2S: mean= "+"{:.2f}".format(frontI2SMean)+'um  STD= '+"{:.2f}".format(frontI2Sstd)+'um'
+        backTitle="BACK-correction sum(p"+str(PanelNumber)+")="+"{:.2f}".format(backC)+' Mean(p'+str(PanelNumber)+')='+"{:.2f}".format(backCMean)+' Std(p'+str(PanelNumber)+')='+"{:.2f}".format(backCstd);
+        backSubTitle= "--> I2S: mean= "+"{:.2f}".format(backI2SMean)+'um  STD= '+"{:.2f}".format(backI2Sstd)+'um'
         
         
         fig = make_subplots(rows=2, cols=1,subplot_titles=(frontTitle+frontSubTitle, backTitle+backSubTitle), vertical_spacing=0.1, shared_xaxes=True,print_grid=True)

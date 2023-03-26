@@ -570,45 +570,6 @@ if plot12k:
 #########################################################################################
 #########################################################################################
 #########################################################################################
-# Data385=pd.DataFrame();
-RawDataCopy = ReduceNoise(RawData).RemoveUnwantedData()
-
-DistBtwPFULL = int(( ReduceNoise(RawData).RawData[0][len( ReduceNoise(RawData).RawData[0])-1])/385)
-XvalueMeanFULL = []
-xinxFULL = []
-PxFull =  ReduceNoise(RawData).RawData[0][0]
-for i in range(385):
-    XvalueMeanFULL.append(PxFull)
-    st = np.where( ReduceNoise(RawData).RawData[0] == PxFull)
-    xinxFULL.append(st)
-    PxFull = PxFull+DistBtwPFULL
-    if PxFull >  ReduceNoise(RawData).RawData[0][len( ReduceNoise(RawData).RawData[0])-1]:
-        break
-stLoc = []
-enLoc = []
-YvalueMeanFULL = []
-
-for i in range(len(XvalueMeanFULL)-1):
-    st = np.where(RawDataCopy[0] == XvalueMeanFULL[i])
-    en = np.where(RawDataCopy[0] == XvalueMeanFULL[i+1])
-    if not (len(st[0]) == 0) and not len(en[0]) == 0:
-        stLoc.append(st[0][0])
-        enLoc.append(en[0][0])
-    if not len(enLoc) == 0:
-        YvalueMeanFULL.append(
-            np.mean(RawDataCopy[1][stLoc[len(stLoc)-1]:enLoc[len(enLoc)-1]]))
-
-YvalueMeanFULL.append(RawDataCopy[1][len(RawDataCopy[1])-1])
-# YvalueMeanFULL=YvalueMeanFULL[0:3]+YvalueMeanFULL
-if len(XvalueMeanFULL[1:]) > len(YvalueMeanFULL):
-    dlt = len(XvalueMeanFULL[1:])-len(YvalueMeanFULL)
-    YvalueMeanFULL = YvalueMeanFULL[0:dlt]+YvalueMeanFULL
-plt.figure()
-plt.plot(RawDataCopy[0], RawDataCopy[1], '-x')
-plt.plot(XvalueMeanFULL, YvalueMeanFULL, '-o')
-
-
-
 #########################################################################################
 #########################################################################################
 #########################################################################################

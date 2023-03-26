@@ -30,6 +30,10 @@ CISsavgolWindow12k=373
 FileNameCSV='CIS_B2_filter_'+str(CISsavgolWindow)+'.csv';
 FileNameCSV12k='CIS_B2_filter12k_'+str(CISsavgolWindow12k)+'.csv';
 
+plot12k=1
+plot385=1
+
+
 
 PixelSize_um=84.6666
 #######################################################
@@ -217,14 +221,15 @@ class ReduceNoise():
                 enLoc.append(en[0][0]);
             if not len(enLoc) == 0:
                 YvalueMeanFULL.append(np.mean(RawDataCopy[1][stLoc[len(stLoc)-1]:enLoc[len(enLoc)-1]])) 
-                
+        
+        YvalueMeanFULL.append(RawDataCopy[1][len(RawDataCopy[1])-1])              
         # YvalueMeanFULL=YvalueMeanFULL[0:3]+YvalueMeanFULL
         if len(XvalueMeanFULL[1:])>len(YvalueMeanFULL):
             dlt=len(XvalueMeanFULL[1:])-len(YvalueMeanFULL);
             YvalueMeanFULL=YvalueMeanFULL[0:dlt]+YvalueMeanFULL
         plt.figure()
         plt.plot(RawDataCopy[0],RawDataCopy[1],'-x')
-        plt.plot(XvalueMeanFULL[1:],YvalueMeanFULL,'-o')
+        plt.plot(XvalueMeanFULL,YvalueMeanFULL,'-o')
         
         return XvalueMeanFULL,YvalueMeanFULL,RawDataCopy;
     
@@ -232,7 +237,7 @@ class ReduceNoise():
         
         XvalueMeanFULL,YvalueMeanFULL,RawDataCopy=self.CutDataTo385Points();
         Data385=pd.DataFrame();
-        Data385[0]=XvalueMeanFULL[1:]
+        Data385[0]=XvalueMeanFULL
 
         Data385[1]=YvalueMeanFULL
         Data385[2]=(Data385[1][0]-Data385[1])*PixelSize_um
@@ -256,7 +261,6 @@ class ReduceNoise():
         
     
         
-        CIScurve[0]=[0]
         for i,yy in enumerate(y):
             CIScurve[i+1]=[yy]
             
@@ -303,12 +307,19 @@ class plotPlotly(CIScurveFromImage):
 
 
         # Add traces, one for each slider step
+        # fig.add_trace(
+        #     go.Scatter(x=list(self.xdb),y=list(self.ydb),line_color='red' , 
+        #                 name='raw Data'))
+        
+        # fig.add_trace(
+        #     go.Scatter(x=list(self.xdb),y=self.tlt,line_color='blue' , 
+        #                 name='Tilt '+'Slope(x1000)='+"{0:.3f}".format(self.z[0]*1000)))
         fig.add_trace(
-            go.Scatter(x=list(self.xdb),y=list(self.ydb),line_color='red' , 
+            go.Scatter(y=list(self.ydb),line_color='red' , 
                         name='raw Data'))
         
         fig.add_trace(
-            go.Scatter(x=list(self.xdb),y=self.tlt,line_color='blue' , 
+            go.Scatter(y=self.tlt,line_color='blue' , 
                         name='Tilt '+'Slope(x1000)='+"{0:.3f}".format(self.z[0]*1000)))
         # fig.add_trace(
         #     go.Scatter(y=list(db[ColorForDisplay]),line_color=ColorForDisplay , line=dict(dash='dash'),
@@ -320,7 +331,7 @@ class plotPlotly(CIScurveFromImage):
                 go.Scatter(
                     visible=False,
                     line=dict(color='green', width=2),
-                    name="Window Size = " + str(step),x=list(self.xdb),
+                    name="Window Size = " + str(step),
                     y=savgol_filter(self.ydb, step, SvGolPol)))
         
         
@@ -545,48 +556,55 @@ Data385,CIScurve,y,z1,tlt1,z,tlt=ReduceNoise(RawData).PrepareData4Saving(FileNam
 
 
 ###### To Implament 
-xdb=Data385[0]
-ydb=Data385[2]
-plotTitle=pthF1+'-->'+f1+' Tilt in um=' +"{0:.3f}".format(tlt1[0]-tlt1[len(tlt1)-1])+" _385 points - For CIS (for implamentation) Slider switched to Step: " # Can modify Plot title
-fileName=f1 +" CIS curve raw data and filter 385 implament"+ ".html";
 
-figCIScalc=plotPlotly(ImageGL,plotTitle,fileName,RecDimX, RecDimY,xdb,ydb,tlt1,z1).PlotCIS385_12k(MaxWaveWindow,StpWindowSize);
-print('**************************************************************************')
-print('Please Enter  WindowSize in the Dialog box')   
-CISsavgolWindow = int(simpledialog.askstring("Input", "Enter WindowSize value:", parent=root))
-print('Done');
-print('**************************************************************************')
-FileNameCSV='CIS_'+MachineName+'_filter_'+str(CISsavgolWindow)+'.csv';
-Data385,CIScurve,y,z1,tlt1,z,tlt=ReduceNoise(RawData).PrepareData4Saving(FileNameCSV,1)
+if plot385:
+    xdb=Data385[0]
+    ydb=Data385[2]
+    plotTitle=pthF1+'-->'+f1+' Tilt in um=' +"{0:.3f}".format(tlt1[0]-tlt1[len(tlt1)-1])+" _385 points - For CIS (for implamentation) Slider switched to Step: " # Can modify Plot title
+    fileName=f1 +" CIS curve raw data and filter 385 implament"+ ".html";
+    
+    figCIScalc=plotPlotly(ImageGL,plotTitle,fileName,RecDimX, RecDimY,xdb,ydb,tlt1,z1).PlotCIS385_12k(MaxWaveWindow,StpWindowSize);
+    print('**************************************************************************')
+    print('Please Enter  WindowSize in the Dialog box')   
+    CISsavgolWindow = int(simpledialog.askstring("Input", "Enter WindowSize value:", parent=root))
+    print('Done');
+    print('**************************************************************************')
+    FileNameCSV='CIS_'+MachineName+'_filter_'+str(CISsavgolWindow)+'.csv';
+    Data385,CIScurve,y,z1,tlt1,z,tlt=ReduceNoise(RawData).PrepareData4Saving(FileNameCSV,1)
+    
+    plt.figure();
+    plt.plot(CIScurve.loc[0,:])
+    plt.title('385 points'+' windowSize='+str(CISsavgolWindow))
 
 
 ########### 12k point
-xdb=RawData[0]
-ydb=RawData[1]
-plotTitle=pthF1+'-->'+f1+' Tilt in um=' +"{0:.3f}".format(tlt1[0]-tlt1[len(tlt1)-1])+" _12k points - For CIS (for implamentation) Slider switched to Step: " # Can modify Plot title
-fileName=f1 +" CIS curve raw data and filter 12k implament"+ ".html";
-
-figCIScalc=plotPlotly(ImageGL,plotTitle,fileName,RecDimX, RecDimY,xdb,ydb,tlt12k,z12k).PlotCIS385_12k(MaxWaveWindow12k,StpWindowSize12k);
-print('**************************************************************************')
-print('Please Enter  WindowSize12k in the Dialog box')   
-CISsavgolWindow12k = int(simpledialog.askstring("Input", "Enter WindowSize12k value:", parent=root))
-print('Done');
-print('**************************************************************************')
-
-FileNameCSV12k='CIS_'+MachineName+'_filter12k_'+str(CISsavgolWindow12k)+'.csv';
-CIScurve12k=ReduceNoise(RawData).PrepareData4Saving12k(FileNameCSV12k)
-
-
-plt.figure();
-plt.plot(CIScurve.loc[0,:])
-plt.title('385 points'+' windowSize='+str(CISsavgolWindow))
-
-
-
-plt.figure();
-plt.plot(CIScurve12k.loc[0,:])
-plt.title('12k points'+' windowSize='+str(CISsavgolWindow12k))        
+if plot12k:
+    xdb=RawData[0]
+    ydb=RawData[1]
+    plotTitle=pthF1+'-->'+f1+' Tilt in um=' +"{0:.3f}".format(tlt1[0]-tlt1[len(tlt1)-1])+" _12k points - For CIS (for implamentation) Slider switched to Step: " # Can modify Plot title
+    fileName=f1 +" CIS curve raw data and filter 12k implament"+ ".html";
+    
+    figCIScalc=plotPlotly(ImageGL,plotTitle,fileName,RecDimX, RecDimY,xdb,ydb,tlt12k,z12k).PlotCIS385_12k(MaxWaveWindow12k,StpWindowSize12k);
+    print('**************************************************************************')
+    print('Please Enter  WindowSize12k in the Dialog box')   
+    CISsavgolWindow12k = int(simpledialog.askstring("Input", "Enter WindowSize12k value:", parent=root))
+    print('Done');
+    print('**************************************************************************')
+    
+    FileNameCSV12k='CIS_'+MachineName+'_filter12k_'+str(CISsavgolWindow12k)+'.csv';
+    CIScurve12k=ReduceNoise(RawData).PrepareData4Saving12k(FileNameCSV12k)
+    
+    
+    
+    
+    
+    plt.figure();
+    plt.plot(CIScurve12k.loc[0,:])
+    plt.title('12k points'+' windowSize='+str(CISsavgolWindow12k))        
 
             
-            
-            
+#########################################################################################
+#########################################################################################
+#########################################################################################
+
+

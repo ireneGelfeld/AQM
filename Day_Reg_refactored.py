@@ -18,12 +18,12 @@ MarkSetVersion=252
 if MarkSetVersion==252:
 
     
-    GlobalScale = 0.9953 # Drop3 simplex = 0.9976, Duplex = 0.9984 ,,,, Drop5 Simplex = 0.9953, Duplex = 0.9945 
+    GlobalScale = 0.9983 # Drop3 simplex = 0.9976, Duplex = 0.9984 ,,,, Drop5 Simplex = 0.9953, Duplex = 0.9945 
     DistBetweenSets =  125686/GlobalScale; 
     
 else:
 #For 201
-    GlobalScale = 0.9976
+    GlobalScale = 0.9983
     DistBetweenSets =  102693; 
     
 

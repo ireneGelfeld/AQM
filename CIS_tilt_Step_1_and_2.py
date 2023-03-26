@@ -504,7 +504,7 @@ figCIScalc=plotPlotly(ImageGL,plotTitle,fileName,RecDimX, RecDimY,xdb,ydb,tlt,z)
 
 # root = Tk()
 # root.withdraw()
-T_Lum = simpledialog.askstring("Input", "Enter T_Lum value:", parent=root)
+T_Lum = simpledialog.askstring("Input", "Enter T_Lum value (range 0 - 1):", parent=root)
 RawData=pd.DataFrame();
 
 max_val,max_index = CIScurveFromImage(ImageGL).AplyFilters(float(T_Lum)+0.01, RecDimX, RecDimY)

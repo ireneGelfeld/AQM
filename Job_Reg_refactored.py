@@ -19,26 +19,26 @@ MarkSetVersion=252
 if MarkSetVersion==252:
 
     
-    GlobalScale = 0.9953 # Drop3 simplex = 0.9976, Duplex = 0.9984 ,,,, Drop5 Simplex = 0.9953, Duplex = 0.9945 
+    GlobalScale = 0.9983 # Drop3 simplex = 0.9976, Duplex = 0.9984 ,,,, Drop5 Simplex = 0.9953, Duplex = 0.9945 
     DistBetweenSets =  125686/GlobalScale; 
-    firstSetDistance=31451/GlobalScale; 
+    firstSetDistance=31053/GlobalScale; 
 
 else:
 #For 201
     GlobalScale = 0.9976
     DistBetweenSets =  102693;     
-    firstSetDistance=31451;
+    firstSetDistance=31159;
 
 
 
 JobLength = 0;
 PanelNumber = 1;#Panel number for calculating Mean,STD,sum   
-DataPracent_toConcider= 90 #in % --> for example => 90 % --> cuts Off 5 %  from top and 5 % from bottomm
+DataPracent_toConcider= 94 #in % --> for example => 90 % --> cuts Off 5 %  from top and 5 % from bottomm
 #DistBetweenSets =  126357  #102693 Duplex Drop3 = 125864,   Duplex-Drop5 126357
 #Simplex Drop3 = 125965,  Simplex Drop5 = 126256 
-LoadTarget = 0 ; #True from targets in the AQM or False - from the tabel 
+LoadTarget = 1 ; #True from targets in the AQM or False - from the tabel 
 
-StatisticsCalcStartPage = 50;
+StatisticsCalcStartPage = 100;
 
 ######## Plot Selection
 

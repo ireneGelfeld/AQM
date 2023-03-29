@@ -38,7 +38,7 @@ DataPracent_toConcider= 94 #in % --> for example => 90 % --> cuts Off 5 %  from 
 DataPracent_toConcider= 95 #in % --> for example => 90 % --> cuts Off 5 %  from top and 5 % from bottomm
 #DistBetweenSets =  126357  #102693 Duplex Drop3 = 125864,   Duplex-Drop5 126357
 #Simplex Drop3 = 125965,  Simplex Drop5 = 126256 
-LoadTarget = 1 ; #True from targets in the AQM or False - from the tabel 
+LoadTarget = 0 ; #True from targets in the AQM or False - from the tabel 
 
 StatisticsCalcStartPage = 100;
 
@@ -1540,7 +1540,7 @@ if Plot_MinMaxScale:
                         name=f+' Right'),row=2, col=1)
       
         
-        fig1.update_layout(title=f+' FRONT Sacle Max-Min')
+        fig1.update_layout(title=f+' FRONT Scale Error (estimation) in C2C ')
         
         
         fig1.update_layout(xaxis_showticklabels=True, xaxis2_showticklabels=True)
@@ -1550,7 +1550,7 @@ if Plot_MinMaxScale:
         now = datetime.now()
         # dd/mm/YY H:M:S
         dt_string = now.strftime("%d_%m_%Y_%H_%M_%S")
-        plot(fig1,filename=f+" FRONT Sacle Max-Min"+ dt_string +".html") 
+        plot(fig1,filename=f+" FRONT Scale Error (estimation) in C2C "+ dt_string +".html") 
         fig1.show() 
     
     except:
@@ -1577,7 +1577,7 @@ if Plot_MinMaxScale:
                         name=f+' Right'),row=2, col=1)
       
         
-        fig2.update_layout(title=f+' BACK Sacle Max-Min')
+        fig2.update_layout(title=f+' BACK Scale Error (estimation) in C2C ')
         
         
         fig2.update_layout(xaxis_showticklabels=True, xaxis2_showticklabels=True)
@@ -1587,7 +1587,7 @@ if Plot_MinMaxScale:
         now = datetime.now()
         # dd/mm/YY H:M:S
         dt_string = now.strftime("%d_%m_%Y_%H_%M_%S")
-        plot(fig2,filename=f+" BACK Sacle Max-Min"+ dt_string +".html") 
+        plot(fig2,filename=f+" BACK Scale Error (estimation) in C2C"+ dt_string +".html") 
         fig2.show() 
     
     except:

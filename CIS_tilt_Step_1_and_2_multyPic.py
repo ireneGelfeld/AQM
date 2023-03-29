@@ -140,51 +140,32 @@ class ReduceNoise():
 
         return RawData_Tilt, tlt, z
 
-    def CalcHistOfData(self):
-        RawData_Tilt, tlt, z = self.CalcAndRemoveTilT()
-        l = len(RawData_Tilt)
-
-        # plt.Figure()
-        m = plt.hist(abs(RawData_Tilt), BarNum)
-        # plt.show()
-
-        DataCount = m[0]
-        DataRange = m[1]
-
-        NumberOfvalidData = int((1-limitDataCount)*l)
-
-        return DataCount, DataRange, NumberOfvalidData, RawData_Tilt, tlt, z
 
     def RemoveUnwantedData(self):
 
-        DataCount, DataRange, NumberOfvalidData, RawData_Tilt, tlt, z = self.CalcHistOfData()
-        DataSum = 0
-        for i, dt in enumerate(DataCount):
-            DataSum = DataSum+dt
-            if DataSum > NumberOfvalidData:
-                break
-        inx2delete = []
-        fixedRawData = []
+       
+         RawData_Tilt, tlt, z = self.CalcAndRemoveTilT()
+ 
+         RawData_Tilt_list = list(RawData_Tilt)
+        
+         dataPracentage= (1-limitDataCount)*100
+        
+         percentile_x_1 = np.percentile(RawData_Tilt_list, dataPracentage)
+         percentile_1 = np.percentile(RawData_Tilt_list, 100-dataPracentage)
+        
+         inx2delete = [i for i, x in enumerate(RawData_Tilt_list) if x <= percentile_1 or x >= percentile_x_1]
+        
+         RawDataCopy =  self.RawData.copy()
+         RawDataCopy.drop(index=inx2delete, inplace=True)
+         RawDataCopy = RawDataCopy.reset_index(drop=True)
+        
+         plt.figure()
+        
+         plt.plot(self.RawData[0], self.RawData[1], 'o')
+         plt.plot(RawDataCopy[0], RawDataCopy[1], 'x')
+         plt.title('LimitDataCount='+str(limitDataCount))
 
-        for j, dt in enumerate(RawData_Tilt):
-            if abs(dt) < DataRange[i]:
-                fixedRawData.append(self.RawData[1][j])
-            else:
-                inx2delete.append(j)
-                fixedRawData.append(tlt[j])
-
-        # RawData[1]=fixedRawData
-
-        RawDataCopy = self.RawData.copy()
-
-        RawDataCopy.drop(index=inx2delete, inplace=True)
-        RawDataCopy = RawDataCopy.reset_index(drop=True)
-        plt.figure()
-        plt.plot(RawDataCopy[0], RawDataCopy[1], 'o')
-        plt.plot(self.RawData[0], self.RawData[1], 'x')
-        plt.title('LimitDataCount='+str(limitDataCount))
-
-        return RawDataCopy
+         return RawDataCopy
 
     def CutDataTo385Points(self):
 
@@ -221,9 +202,9 @@ class ReduceNoise():
         if len(XvalueMeanFULL) > len(YvalueMeanFULL):
             dlt = len(XvalueMeanFULL)-len(YvalueMeanFULL)
             YvalueMeanFULL = YvalueMeanFULL[0:dlt]+YvalueMeanFULL
-        plt.figure()
-        plt.plot(RawDataCopy[0], RawDataCopy[1], '-x')
-        plt.plot(XvalueMeanFULL, YvalueMeanFULL, '-o')
+        # plt.figure()
+        # plt.plot(RawDataCopy[0], RawDataCopy[1], '-x')
+        # plt.plot(XvalueMeanFULL, YvalueMeanFULL, '-o')
 
         return XvalueMeanFULL, YvalueMeanFULL, RawDataCopy
 
@@ -255,7 +236,6 @@ class ReduceNoise():
 
     def PrepareData4Saving12k(self):
 
-        CIScurve = pd.DataFrame()
 
         y = savgol_filter(self.RawData[1], CISsavgolWindow12k, SvGolPol)
 
@@ -493,7 +473,7 @@ while 1:
     print('**************************************************************************')
     print('Please Enter Data Limit in the Dialog box')
     limitDataCount = float(simpledialog.askstring(
-        "Input", "Enter Data Pracentege to ignore:", parent=root))
+        "Input", "Enter Data Pracentege to ignore(from 1- 0):", parent=root))
     print('Done')
     print('**************************************************************************')
     
@@ -511,8 +491,8 @@ while 1:
         RawData = ReduceNoise(RawData).FixRawDatFromat_OneRow()
     
     
-    DataCount, DataRange, NumberOfvalidData, RawData_Tilt, tlt12k, z12k = ReduceNoise(
-        RawData).CalcHistOfData()
+    RawData_Tilt, tlt12k, z12k = ReduceNoise(
+        RawData).CalcAndRemoveTilT()
     
     Data385,  y, z1, tlt1, z, tlt = ReduceNoise(
         RawData).PrepareData4Saving()
@@ -606,12 +586,4 @@ while 1:
     
 
 #########################################################################################
-#########################################################################################
-#########################################################################################
-#########################################################################################
-#########################################################################################
-#########################################################################################
-
-
-
 

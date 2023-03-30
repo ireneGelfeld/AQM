@@ -15,6 +15,7 @@ global StartCycle,StartCycle4Avr,PHpoitToIgnor,MaxWaveWindow,DistanceBtWPointMM,
 
 ## for plot per panel and plot per cycle and WaveData SUB Average_PerPanel_PerCycle
 plotPerPanel=1;# On/OFF plot
+plotPerPanel=0;# On/OFF plot
 plotPerCycle=0;## On/OFF plot
 WaveDataSUBAverage_PerPanel_PerCycle=0 # On/OFF plot
 CycleNumber =3 # cycle view in => plot Per Panel
@@ -25,6 +26,7 @@ Cycle2Display = 4 # defult visible cycle in plot WaveDataSUBAverage_PerPanel_Per
 Panel2Disply= [11,6]
 ## for plot CIScurve
 CIScurve=1;# On/OFF plot
+CIScurve=0;# On/OFF plot
 
 ## for plot registration estimation in Wave Prints (yuval)
 registrationBetweenWavePrints=0; # On/OFF plot ERROR

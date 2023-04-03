@@ -14,9 +14,9 @@ global StartCycle,StartCycle4Avr,PHpoitToIgnor,MaxWaveWindow,DistanceBtWPointMM,
 
 
 ## for plot per panel and plot per cycle and WaveData SUB Average_PerPanel_PerCycle
-plotPerPanel=1;# On/OFF plot
+plotPerPanel=0;# On/OFF plot
 plotPerCycle=0;## On/OFF plot
-WaveDataSUBAverage_PerPanel_PerCycle=0 # On/OFF plot
+WaveDataSUBAverage_PerPanel_PerCycle=1 # On/OFF plot (Avi method)
 CycleNumber =3 # cycle view in => plot Per Panel
 StartCycle4Avr = 2; # Start averaging for all plots defult = 2
 Panel = 6;          #view panel for plot Per cycle
@@ -34,14 +34,14 @@ rgistBtwPntEndCycle=StartCycle+1 # for long print can change to larger number
 MainColor = "Black" #Referance Color
 
 ##  Wave plot ( before and after correction)
-BeforAndAfterCorr=0# On/OFF plot
+BeforAndAfterCorr=1# On/OFF plot
 
 
 ## DX plot - delta between wave and starvitzky filer (residue) 
 WaveFilterResidue_dxPlot=0 # On/OFF plot
 PHpoitToIgnor=2; # Ponits of Print head to ignar (16 point in total) in each side
 MaxWaveWindow=51;# S.gol filter window
-S_g_Degree=2;# S.gol filter degree
+S_g_Degree=1;# S.gol filter degree
 DistanceBtWPointMM=2.734
 NieghborColorsFor7colrs=4# parameter for distortion correction (number of nighboring colors)
 
@@ -72,7 +72,7 @@ from plotly.colors import n_colors
 import zipfile
 import csv
 from io import BytesIO
-
+import plotly.express as px
 
 # Load the Pandas libraries with alias 'pd' 
 import pandas as pd 
@@ -213,6 +213,7 @@ class CalcWaveFromRawData:
         for ColorForDisplay in ColorList: 
             tmp=pd.DataFrame();
             for col in WaveRawDataDic[ColorForDisplay].columns:
+                WaveRawDataDic[ColorForDisplay][col]=WaveRawDataDic[ColorForDisplay][col].fillna(method='ffill')
                 tmp=pd.concat([tmp,pd.Series(savgol_filter(WaveRawDataDic[ColorForDisplay][col], MaxWaveWindow, S_g_Degree))],axis=1)
                 tmp=tmp.rename(columns={0:col})
             WaveDataWithMaxFilterDic[ColorForDisplay]=tmp
@@ -347,6 +348,24 @@ class CIScurveFromRawData:
         
         return cisBACK,cisFRONT;    
     
+    
+    def GetCIScurveOldVersion_SecondTry(self):
+         jobData=CIScurveFromRawData(pthF).LoadRawData()
+         sub='CisCurvatureDataBasedOnWaveFormat=';
+         indices = []
+         
+         for line_num, line in enumerate(jobData):
+             if len(line)>1:
+                 if sub in line[0]:
+                     indices.append(line_num) 
+    
+         cisFRONT = list(map(float, jobData[indices[0]][1:]))
+         if len(indices)>1:
+            cisBACK = list(map(float, jobData[indices[1]][1:]))
+
+        
+         return cisBACK,cisFRONT;    
+    
     def GetCIScurveNewVersion(self):
         jobData=self.LoadRawData()
         sub='ShouldUseCISCurvaturePerPixel=Value:True';
@@ -371,7 +390,35 @@ class CIScurveFromRawData:
                      
 
         
-        return cisBACK,cisFRONT;    
+        return cisBACK,cisFRONT;   
+    
+    def GetCIScurveNewVersion_secondTry(self):
+        jobData=CIScurveFromRawData(pthF).LoadRawData()
+        sub='CISTilt=Value';
+        
+        indices = []
+        for line_num, line in enumerate(jobData):
+            try:
+                if sub in line[0]:
+                    indices.append(line_num) 
+            except:
+                continue
+        cisFRONT=[] 
+        cisBACK=[]   
+        for s in jobData[indices[0]+1]:
+            try:
+              cisFRONT.append(float(s))  
+            except:
+                continue
+                  
+        if len(indices)>1:
+            for s in jobData[indices[1]+1]:
+                try:
+                  cisBACK.append(float(s))  
+                except:
+                    continue
+                             
+        return cisBACK,cisFRONT; 
 
 class RepareDistortions:
      def  __init__(self, WaveRawDataDic,WaveDataWithMaxFilterDic,ColorList): 
@@ -900,6 +947,72 @@ class PlotGraphPlotly(CalcWaveFromRawData):
         return fig
     
     
+     def PlotWaveDataSUBAveragePerPanelPerCycle_withMAX_MIN_diff(self,WaveRawDataDic,offSetType,PlotTitle,fileName):
+        
+        fig = go.Figure()
+        colorPNL= px.colors.sequential.Reds[:6] + px.colors.sequential.YlOrBr[3:9];
+        max_vals=pd.DataFrame()
+        min_vals=pd.DataFrame()
+        for pnl in range(1,12):
+            WaveRawDataDic=self.CreateDicOfWaveRawData();
+        
+            WaveRawDataDic_mean_offset=WaveRawDataDic;
+            max_valsCLR=pd.DataFrame()
+            min_valsCLR=pd.DataFrame()
+            for clr in self.ColorList:     
+                lineColor=clr;
+              
+                
+                if lineColor=='Yellow':
+                    lineColor='gold';
+                for col in WaveRawDataDic[clr].columns:
+                    if col == 'Mean':
+                        break;
+                    if col< StartCycle4Avr:
+                        continue;
+                    
+                    if offSetType == 'Average All':
+                        offset=np.mean(WaveRawDataDic[clr][col]-WaveRawDataDic[clr]['Mean']);
+                        
+                    if offSetType == 'Average Left Right':
+                        WaveSUBmean=WaveRawDataDic[clr][col]-WaveRawDataDic[clr]['Mean'];
+                        offset=np.mean([WaveSUBmean[0],WaveSUBmean[len(WaveSUBmean)-1]]);
+        
+                    WaveRawDataDic_mean_offset[clr][col]=WaveRawDataDic[clr][col]-WaveRawDataDic[clr]['Mean']-offset
+        
+                    fig.add_trace(
+                    go.Scatter(y=WaveRawDataDic_mean_offset[clr][col],line_color= lineColor,
+                                        name='WaveData Raw cycle '+str(col)+' - Mean'+' color '+clr+' Panel '+str(pnl)))    
+                    
+                    if not col == Cycle2Display:
+                        fig.data[len(fig.data)-1].visible = 'legendonly';
+                    if not pnl in Panel2Disply:
+                        fig.data[len(fig.data)-1].visible = 'legendonly';
+                 
+                max_valsCLR=pd.concat([max_valsCLR,WaveRawDataDic_mean_offset[clr].iloc[:, StartCycle4Avr+1:-1].max(axis=1)],axis=1).rename(columns={0: clr})
+                min_valsCLR=pd.concat([min_valsCLR,WaveRawDataDic_mean_offset[clr].iloc[:, StartCycle4Avr+1:-1].min(axis=1)],axis=1).rename(columns={0: clr})        
+          
+            max_vals =pd.concat([max_vals, max_valsCLR.max(axis=1)],axis=1).rename(columns={0: pnl}).dropna()
+            min_vals =pd.concat([min_vals, min_valsCLR.min(axis=1)],axis=1).rename(columns={0: pnl}).dropna()
+            
+            fig.add_trace(
+            go.Scatter(y=list( max_vals[pnl]- min_vals[pnl]),line=dict(color=colorPNL[pnl], width=3),
+                        name='Max - Min Per Panel= '+str(pnl)+' Mean='+"{:.3f}".format(np.mean(max_vals[pnl]- min_vals[pnl]))+' STD='+"{:.3f}".format(np.std(max_vals[pnl]- min_vals[pnl])))) 
+            if not pnl in Panel2Disply:
+                fig.data[len(fig.data)-1].visible = 'legendonly';
+            
+        fig.update_layout(
+                hoverlabel=dict(
+                    namelength=-1
+                )
+            )
+        fig.update_layout(title=self.side+' '+PlotTitle)
+            
+        
+        plot(fig,filename=self.side+' '+fileName+".html") 
+       
+        return fig    
+    
      def PlotWaveDataSUBAveragePerPanelPerCycle(self,WaveRawDataDic,offSetType,PlotTitle,fileName):
          
         fig = go.Figure()
@@ -1113,19 +1226,25 @@ ColorList= CalcWaveFromRawData(pthF,side,Panel).getColors();
 LocatorIndex= CalcWaveFromRawData(pthF,side,Panel).GetLocatorIndex(ColorForDisplay);
 # FlatList= CalcWaveFromRawData(pthF,side,Panel,ColorForDisplay).getNumberOfFlats();
 if CIScurve:
-    cisBACK,cisFRONT=CIScurveFromRawData(pthF).GetCIScurveOldVersion()
+    cisBACKold,cisFRONTold=CIScurveFromRawData(pthF).GetCIScurveOldVersion()
     
-    if len(cisFRONT) == 0:
-        cisBACK,cisFRONT=CIScurveFromRawData(pthF).GetCIScurveNewVersion()
-        
+    
+    if len(cisFRONTold) == 0:
+        cisBACKold,cisFRONTold=CIScurveFromRawData(pthF).GetCIScurveOldVersion_SecondTry()
+
+    cisBACKnew,cisFRONTnew=CIScurveFromRawData(pthF).GetCIScurveNewVersion()
+
+    if len(cisFRONTnew) == 0:
+        cisBACKnew,cisFRONTnew=CIScurveFromRawData(pthF).GetCIScurveNewVersion_secondTry()
+       
         
     
-    if registrationBetweenWavePrints:
-        DFdicPerClrFRONT =  CalcRegistrationFromWaveData(pthF,side,Panel,ColorList,MainColor,StartCycle).DeltaForCycleAndColor() 
-        try:
-            DFdicPerClrBACK =  CalcRegistrationFromWaveData(pthF,'Back',Panel,ColorList,MainColor,StartCycle).DeltaForCycleAndColor() 
-        except:
-            1
+if registrationBetweenWavePrints:
+    DFdicPerClrFRONT =  CalcRegistrationFromWaveData(pthF,side,Panel,ColorList,MainColor,StartCycle).DeltaForCycleAndColor() 
+    try:
+        DFdicPerClrBACK =  CalcRegistrationFromWaveData(pthF,'Back',Panel,ColorList,MainColor,StartCycle).DeltaForCycleAndColor() 
+    except:
+        1
 
 
 WaveRawDataDicFRONT=CalcWaveFromRawData(pthF,side,Panel).CreateDicOfWaveRawData();
@@ -1305,13 +1424,13 @@ if WaveDataSUBAverage_PerPanel_PerCycle:
     PlotTitle='- Wave Behavior- Avi  Method --->'+f+' offSetType='+offSetType;
     fileName=f+" Wave Behavior- Avi  Method Offsettype_"+offSetType;
     side='Front'
-    figWaveDataSubAveragePerPanet=PlotGraphPlotly(pthF,side,Panel,ColorList).PlotWaveDataSUBAveragePerPanelPerCycle(WaveRawDataDicFRONT,offSetType,PlotTitle,fileName);
+    figWaveDataSubAveragePerPanet=PlotGraphPlotly(pthF,side,Panel,ColorList).PlotWaveDataSUBAveragePerPanelPerCycle_withMAX_MIN_diff(WaveRawDataDicFRONT,offSetType,PlotTitle,fileName);
 
     offSetType='Average Left Right' ;
     PlotTitle='- Wave Behavior- Avi  Method --->'+f+' offSetType='+offSetType;
     fileName=f+" Wave Behavior- Avi  Method Offsettype_"+offSetType;
     side='Front'
-    figWaveDataSubAveragePerPanet=PlotGraphPlotly(pthF,side,Panel,ColorList).PlotWaveDataSUBAveragePerPanelPerCycle(WaveRawDataDicFRONT,offSetType,PlotTitle,fileName);
+    figWaveDataSubAveragePerPanet=PlotGraphPlotly(pthF,side,Panel,ColorList).PlotWaveDataSUBAveragePerPanelPerCycle_withMAX_MIN_diff(WaveRawDataDicFRONT,offSetType,PlotTitle,fileName);
         
     #####Back
     try:
@@ -1320,13 +1439,13 @@ if WaveDataSUBAverage_PerPanel_PerCycle:
         fileName=f+" Wave Behavior- Avi  Method Offsettype_"+offSetType;
         
         side='Back'
-        figWaveDataSubAveragePerPanet=PlotGraphPlotly(pthF,side,Panel,ColorList).PlotWaveDataSUBAveragePerPanelPerCycle(WaveRawDataDicBACK,offSetType,PlotTitle,fileName);
+        figWaveDataSubAveragePerPanet=PlotGraphPlotly(pthF,side,Panel,ColorList).PlotWaveDataSUBAveragePerPanelPerCycle_withMAX_MIN_diff(WaveRawDataDicBACK,offSetType,PlotTitle,fileName);
         
         offSetType='Average Left Right' #    
         PlotTitle='- Wave Behavior- Avi  Method --->'+f+' offSetType='+offSetType;
         fileName=f+" Wave Behavior- Avi  Method Offsettype_"+offSetType;
         side='Back'
-        figWaveDataSubAveragePerPanet=PlotGraphPlotly(pthF,side,Panel,ColorList).PlotWaveDataSUBAveragePerPanelPerCycle(WaveRawDataDicBACK,offSetType,PlotTitle,fileName);
+        figWaveDataSubAveragePerPanet=PlotGraphPlotly(pthF,side,Panel,ColorList).PlotWaveDataSUBAveragePerPanelPerCycle_withMAX_MIN_diff(WaveRawDataDicBACK,offSetType,PlotTitle,fileName);
 
     except:
         1
@@ -1337,25 +1456,42 @@ if WaveDataSUBAverage_PerPanel_PerCycle:
 if CIScurve:
 
     try:
-        PlotTitle='FRONT CIS curve --->'+f;
-        fileName=f+' ';
+        PlotTitle='FRONT CIS curve (old version)--->'+f;
+        fileName=f+' old ';
         side='Front';
-        cisCurve=cisFRONT
+        cisCurve=cisFRONTold
         figCISFRONT=PlotGraphPlotly(pthF,side,Panel,ColorList).PlotCIScurve(cisCurve,PlotTitle,fileName);
     except:
         1
         
     #######BACK
     try:
-        PlotTitle='BACK CIS curve --->'+f;
-        fileName=f+' ';
+        PlotTitle='BACK CIS curve (old version)--->'+f;
+        fileName=f+' old ';
         side='Back';
-        cisCurve=cisBACK
+        cisCurve=cisBACKold
         figCISBACK=PlotGraphPlotly(pthF,side,Panel,ColorList).PlotCIScurve(cisCurve,PlotTitle,fileName); 
     except:
         1
 
-
+    try:
+        PlotTitle='FRONT CIS curve (new version)--->'+f;
+        fileName=f+' new ';
+        side='Front';
+        cisCurve=cisFRONTnew
+        figCISFRONT=PlotGraphPlotly(pthF,side,Panel,ColorList).PlotCIScurve(cisCurve,PlotTitle,fileName);
+    except:
+        1
+        
+    #######BACK
+    try:
+        PlotTitle='BACK CIS curve (new version)--->'+f;
+        fileName=f+' new ';
+        side='Back';
+        cisCurve=cisBACKnew
+        figCISBACK=PlotGraphPlotly(pthF,side,Panel,ColorList).PlotCIScurve(cisCurve,PlotTitle,fileName); 
+    except:
+        1
 
 ##################################################################################
 ################################Registration Between Wave Prints
@@ -1484,4 +1620,13 @@ if PlotTables:
         TableFRONT_BACK_AverageAfterCorrFRONT=PlotGraphPlotly(pthF,side,Panel,ColorList).PlotFRONT_BACKAverageTable(PHoffsetPerHFRONTAfterCorr,PHoffsetPerHBACKAfterCorr,PlotTitle,fileName);
     except:
         1
+
+
+
+
+
+#########################################################################################
+
+
+
 

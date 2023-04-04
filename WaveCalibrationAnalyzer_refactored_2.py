@@ -356,7 +356,7 @@ class CIScurveFromRawData:
     
     
     def GetCIScurveOldVersion_SecondTry(self):
-         jobData=CIScurveFromRawData(pthF).LoadRawData()
+         jobData=self.LoadRawData()
          sub='CisCurvatureDataBasedOnWaveFormat=';
          indices = []
          
@@ -369,7 +369,19 @@ class CIScurveFromRawData:
          if len(indices)>1:
             cisBACK = list(map(float, jobData[indices[1]][1:]))
 
-        
+         flag = True  # Set flag to True by default
+
+         if len(cisFRONT) == len(cisBACK):  # Check if the lists have the same length
+            for i in range(len(cisFRONT)):
+                if cisFRONT[i] != cisBACK[i]:  # Check if the corresponding elements are different
+                    flag = False  # Set flag to False if a difference is found
+                    break
+         else:
+            flag = False
+            
+         if flag:
+             cisBACK=[]
+         
          return cisBACK,cisFRONT;    
     
     def GetCIScurveNewVersion(self):
@@ -1654,4 +1666,15 @@ if PlotTables:
 
 #########################################################################################
 
+jobData=CIScurveFromRawData(pthF).LoadRawData()
+sub='CisCurvatureDataBasedOnWaveFormat=';
+indices = []
 
+for line_num, line in enumerate(jobData):
+    if len(line)>1:
+        if sub in line[0]:
+            indices.append(line_num) 
+   
+cisFRONT = list(map(float, jobData[indices[0]][1:]))
+if len(indices)>1:
+   cisBACK = list(map(float, jobData[indices[1]][1:]))

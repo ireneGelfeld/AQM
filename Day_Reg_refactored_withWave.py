@@ -947,7 +947,8 @@ class PlotPlotly():
                                     text=value,
                                     # font_size=18,
                                     hoverinfo='text'))
-    
+            
+            fig.data[len(fig.data)-1].showlegend = False
             fig.add_vline(x=key, line_width=2, line_dash="dash", line_color="green")
            
         

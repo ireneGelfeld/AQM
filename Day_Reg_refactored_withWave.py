@@ -741,9 +741,12 @@ class CalcC2C_AvrgOfAll():
         JobNmeSORTED= list(self.SortJobsByTime(self.fldrs).values())
         
         for f in JobNmeSORTED:
-            C2Creg,indexNumberFailed = self.CalcC2CSingleSideColorPair('Registration_Left.csv','Registration_Right.csv',f,DataAllMeanColorSET1Left,DataAllMeanColorSET2Left,DataAllMeanColorSET3Left,DataAllMeanColorSET1Right,DataAllMeanColorSET2Right,DataAllMeanColorSET3Right)
-            WaveChangeList=WaveChangeList+C2Creg
-            indexJobNameDic[len(WaveChangeList)-1]=f
+            try:
+                C2Creg,indexNumberFailed = self.CalcC2CSingleSideColorPair('Registration_Left.csv','Registration_Right.csv',f,DataAllMeanColorSET1Left,DataAllMeanColorSET2Left,DataAllMeanColorSET3Left,DataAllMeanColorSET1Right,DataAllMeanColorSET2Right,DataAllMeanColorSET3Right)
+                WaveChangeList=WaveChangeList+C2Creg
+                indexJobNameDic[len(WaveChangeList)-1]=f
+            except:
+                    continue;
             
         return WaveChangeList,indexJobNameDic;
         
@@ -1196,3 +1199,7 @@ print(endFigure - startFigure)
 
 # 
 ##### TILL HERE!!!!
+
+
+
+

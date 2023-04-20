@@ -1164,7 +1164,7 @@ except:
 #################Front
 
 PlotTitle= 'WaveCange-FRONT'
-fileName= "WaveChange_FRONT_AQM.html"
+fileName= "WaveChange_FRONT_AQM"
 side='Front'
 
 try:
@@ -1177,7 +1177,7 @@ except:
 ###########Back
 
 PlotTitle= 'WaveCange-BACK'
-fileName= "WaveChange_BACK_AQM.html"
+fileName= "WaveChange_BACK_AQM"
 side='Back'
 
 try:

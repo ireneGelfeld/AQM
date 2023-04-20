@@ -346,6 +346,13 @@ class CalcC2C_AvrgOfAll():
         return MeregedDataAllMeanColor
     
     
+    def LoadMeanColorPos_PickSide(self,pageSide):
+       
+        # RecPath= pthComp[0]+'/'+pthComp[1]+'/'+pthComp[2]+'/'+pthComp[3]+'/'+pthComp[4]+'/'+pthComp[5]+'/'+pthComp[6]+'/'+pthComp[7]+'/'+pthComp[8];
+        MeregedDataAllMeanColor = pd.read_csv(self.pthF +'/'+'MeregedDataAllMeanColor_'+self.side+'_'+pageSide+'.csv')
+        
+        return MeregedDataAllMeanColor
+    
     def f(self,XYS,ink,value):
         # geometry = {'X': {'Black':0,'Blue':2,'Cyan':1,'Green':2,'Magenta':0,'Orange':3,'Yellow':1},
         #             'Y': {'Black':1,'Blue':0,'Cyan':1,'Green':1,'Magenta':0,'Orange':0,'Yellow':0}}
@@ -734,8 +741,31 @@ class CalcC2C_AvrgOfAll():
         WaveChangeList=[];
         indexJobNameDic={}
         
-        DataAllMeanColorSET1Left,DataAllMeanColorSET2Left,DataAllMeanColorSET3Left,colorDic = self.CalcMeanByColorForAllJobs('Registration_Left.csv')
-        DataAllMeanColorSET1Right,DataAllMeanColorSET2Right,DataAllMeanColorSET3Right,colorDic = self.CalcMeanByColorForAllJobs('Registration_Right.csv')
+        # DataAllMeanColorSET1Left,DataAllMeanColorSET2Left,DataAllMeanColorSET3Left,colorDic = self.CalcMeanByColorForAllJobs('Registration_Left.csv')
+        # DataAllMeanColorSET1Right,DataAllMeanColorSET2Right,DataAllMeanColorSET3Right,colorDic = self.CalcMeanByColorForAllJobs('Registration_Right.csv')
+
+
+
+
+        MeregedDataAllMeanColorLeft= self.LoadMeanColorPos_PickSide('Left');
+        MeregedDataAllMeanColorRight= self.LoadMeanColorPos_PickSide('Right');
+        
+        
+        colorDic={}
+        
+        for i in MeregedDataAllMeanColorLeft.index:
+           colorDic[i]= MeregedDataAllMeanColorLeft['Ink\Sets'][i]
+        
+        DataAllMeanColorSET1Left=MeregedDataAllMeanColorLeft[['Ink\Sets','Set #1 X']].rename(index=colorDic)
+        DataAllMeanColorSET2Left=MeregedDataAllMeanColorLeft[['Ink\Sets','Set #2 X']].rename(index=colorDic)
+        DataAllMeanColorSET3Left=MeregedDataAllMeanColorLeft[['Ink\Sets','Set #3 X']].rename(index=colorDic)
+
+
+        DataAllMeanColorSET1Right=MeregedDataAllMeanColorRight[['Ink\Sets','Set #1 X']].rename(index=colorDic)
+        DataAllMeanColorSET2Right=MeregedDataAllMeanColorRight[['Ink\Sets','Set #2 X']].rename(index=colorDic)
+        DataAllMeanColorSET3Right=MeregedDataAllMeanColorRight[['Ink\Sets','Set #3 X']].rename(index=colorDic)
+
+        # MeregedDataAllMeanColor= self.LoadMeanColorPos();
 
         
         JobNmeSORTED= list(self.SortJobsByTime(self.fldrs).values())
@@ -1199,7 +1229,6 @@ print(endFigure - startFigure)
 
 # 
 ##### TILL HERE!!!!
-
 
 
 

@@ -15,7 +15,7 @@ global DistBetweenSets,GlobalScale,PanelLengthInMM,JobLengthתcolor_combinations
 
 # For setting the min job length for Change Wave plot- this parameter should be used for setting the allowble moving avarage- for example set JobLengthWave= 100, MoveAveWave=20;
 JobLengthWave=100;
-MoveAveWave=20;
+MoveAveWave=10;
 #For 252
 MarkSetVersion=252
 
@@ -820,6 +820,7 @@ class CalcC2C_AvrgOfAll(DispImagePlacment):
         
         JobNmeSORTED= list(self.SortJobsByTime(self.fldrs).values())
         WaveFilesInx=self.find_indexes_with_substring(JobNmeSORTED, 'WaveCalibration')
+        WaveJobPrintedDic={}
         k=0
         for i,f in enumerate(JobNmeSORTED):
             try:
@@ -831,6 +832,7 @@ class CalcC2C_AvrgOfAll(DispImagePlacment):
                         
                         indexJobNameDic[len(WaveChangeList)-1]=[f,JobNmeSORTED[WaveFilesInx[k]]]
                         if i>WaveFilesInx[k]:
+                            WaveJobPrintedDic[len(WaveChangeList)-1]=JobNmeSORTED[WaveFilesInx[k]]
                             k=k+1;
                     else:
                         indexJobNameDic[len(WaveChangeList)-1]=[f,lngth]
@@ -838,7 +840,7 @@ class CalcC2C_AvrgOfAll(DispImagePlacment):
             except:
                     continue;
             
-        return WaveChangeList,indexJobNameDic;
+        return WaveChangeList,indexJobNameDic,WaveJobPrintedDic;
         
     def find_indexes_with_substring(self,lst, substring):
         indexes = []
@@ -1040,7 +1042,7 @@ class PlotPlotly():
            
            
            # ymax=max(WaveRawDataDic[ColorList[0]]-WaveDataWithMaxFilterDic[self.ColorList[0]])
-       ymax=np.max(WaveChangeDF[clr])+200
+       ymax=np.max(WaveChangeDF[clr])+100
         
        for key, value in indexJobNameDic.items():
             fig.add_trace(go.Scatter(x=[key], y=[ymax],
@@ -1066,7 +1068,7 @@ class PlotPlotly():
        
        return fig
     
-    def PlotWaveChange_WithMovingAVRG(self,WaveChangeDF,indexJobNameDic,MoveAveWave, PlotTitle,fileName):
+    def PlotWaveChange_WithMovingAVRG(self,WaveChangeDF,indexJobNameDic,WaveJobPrintedDic,MoveAveWave, PlotTitle,fileName):
         
        fig = go.Figure()
        
@@ -1089,18 +1091,30 @@ class PlotPlotly():
            
            
            # ymax=max(WaveRawDataDic[ColorList[0]]-WaveDataWithMaxFilterDic[self.ColorList[0]])
-       ymax=np.max(WaveChangeDF[clr])+200
+       ymax=np.mean(WaveChangeDF[clr])+300
+       ymaxWaveJob=np.mean(WaveChangeDF[clr])+250
         
        for key, value in indexJobNameDic.items():
             fig.add_trace(go.Scatter(x=[key], y=[ymax],
                                     marker=dict(color="green", size=6),
                                     mode="markers",
-                                    text=value[0]+','+value[1],
+                                    text=value[0],
                                     # font_size=18,
                                     hoverinfo='text'))
             
             fig.data[len(fig.data)-1].showlegend = False
             fig.add_vline(x=key, line_width=2, line_dash="dash", line_color="green")
+            
+       for key, value in WaveJobPrintedDic.items():
+             fig.add_trace(go.Scatter(x=[key-(1+int(JobLengthWave/10))], y=[ymaxWaveJob],
+                                     marker=dict(color="red", size=6),
+                                     mode="markers",
+                                     text=value,
+                                     # font_size=18,
+                                     hoverinfo='text'))
+             
+             fig.data[len(fig.data)-1].showlegend = False
+             fig.add_vline(x=key-(1+int(JobLengthWave/10)), line_width=2,  line_color="red")
            
         
        fig.update_layout(
@@ -1114,6 +1128,7 @@ class PlotPlotly():
        plot(fig,filename=self.side+' '+fileName+".html") 
        
        return fig
+
 # ################################### 
 from tkinter import filedialog
 from tkinter import *
@@ -1200,11 +1215,11 @@ except:
 
 #################################Wave Prograss Over Time ######################
 
-WaveChangeListFRONT,indexJobNameDicFRONT=CalcC2C_AvrgOfAll(pthF,folder,'Front',JobLength,PanelLengthInMM,'Left').CreateWaveChangeData(JobLengthWave);
+WaveChangeListFRONT,indexJobNameDicFRONT,WaveJobPrintedDicFRONT=CalcC2C_AvrgOfAll(pthF,folder,'Front',JobLength,PanelLengthInMM,'Left').CreateWaveChangeData(JobLengthWave);
 WaveChangeDF_FRONT=pd.DataFrame(WaveChangeListFRONT)
 
 try:
-   WaveChangeListBACK,indexJobNameDicBACK=CalcC2C_AvrgOfAll(pthF,folder,'Back',JobLength,PanelLengthInMM,'Left').CreateWaveChangeData(JobLengthWave);
+   WaveChangeListBACK,indexJobNameDicBACK,WaveJobPrintedDicBACK=CalcC2C_AvrgOfAll(pthF,folder,'Back',JobLength,PanelLengthInMM,'Left').CreateWaveChangeData(JobLengthWave);
    WaveChangeDF_BACK=pd.DataFrame(WaveChangeListBACK)
 
 except:
@@ -1317,7 +1332,7 @@ fileName= "WaveChange_FRONT_AQM"
 side='Front'
 
 try:
-    waveChangeFRONT=PlotPlotly(pthF, side).PlotWaveChange_WithMovingAVRG(WaveChangeDF_FRONT,indexJobNameDicFRONT,MoveAveWave, PlotTitle,fileName);
+    waveChangeFRONT=PlotPlotly(pthF, side).PlotWaveChange_WithMovingAVRG(WaveChangeDF_FRONT,indexJobNameDicFRONT,WaveJobPrintedDicFRONT,MoveAveWave, PlotTitle,fileName);
     # waveChangeFRONT=PlotPlotly(pthF, side).PlotWaveChange(WaveChangeDF_FRONT,indexJobNameDicFRONT,PlotTitle,fileName);
 
 except:
@@ -1331,7 +1346,7 @@ fileName= "WaveChange_BACK_AQM"
 side='Back'
 
 try:
-    waveChangeBACK=PlotPlotly(pthF, side).PlotWaveChange_WithMovingAVRG(WaveChangeDF_BACK,indexJobNameDicBACK,MoveAveWave, PlotTitle,fileName);
+    waveChangeBACK=PlotPlotly(pthF, side).PlotWaveChange_WithMovingAVRG(WaveChangeDF_BACK,indexJobNameDicBACK,WaveJobPrintedDicBACK,MoveAveWave, PlotTitle,fileName);
     # waveChangeBACK=PlotPlotly(pthF, side).PlotWaveChange(WaveChangeDF_BACK,indexJobNameDicBACK,PlotTitle,fileName);
 
 except:
@@ -1349,4 +1364,65 @@ print(endFigure - startFigure)
 ##### TILL HERE!!!!
 
 
+# WaveChangeDF=WaveChangeDF_FRONT
+# indexJobNameDic=indexJobNameDicFRONT
+# WaveJobPrintedDic=WaveJobPrintedDicFRONT
+
+
+# fig = go.Figure()
+
+# ColorList= list(WaveChangeDF.columns)
+
+# for clr in ColorList:     
+#     lineColor=clr;
+  
+    
+#     if lineColor=='Yellow':
+#         lineColor='gold';
+    
+#     fig.add_trace(
+#     go.Scatter(y=WaveChangeDF[clr],line_color= lineColor,
+#                 name='Wave Differance Left-Right '+' color '+clr))
+    
+#     fig.add_trace(
+#     go.Scatter(y=WaveChangeDF[clr].rolling(MoveAveWave).mean(),line_color= lineColor,
+#                 name='Wave Differance Left-Right- moving average of '+str(MoveAveWave)+' color '+clr))
+    
+    
+#     # ymax=max(WaveRawDataDic[ColorList[0]]-WaveDataWithMaxFilterDic[self.ColorList[0]])
+# ymax=np.max(WaveChangeDF[clr])+100
+# ymaxWaveJob=np.max(WaveChangeDF[clr])+50
+ 
+# for key, value in indexJobNameDic.items():
+#      fig.add_trace(go.Scatter(x=[key], y=[ymax],
+#                              marker=dict(color="green", size=6),
+#                              mode="markers",
+#                              text=value[0],
+#                              # font_size=18,
+#                              hoverinfo='text'))
+     
+#      fig.data[len(fig.data)-1].showlegend = False
+#      fig.add_vline(x=key, line_width=2, line_dash="dash", line_color="green")
+     
+# for key, value in WaveJobPrintedDic.items():
+#       fig.add_trace(go.Scatter(x=[key+1+int(JobLengthWave/10)], y=[ymaxWaveJob],
+#                               marker=dict(color="red", size=6),
+#                               mode="markers",
+#                               text=value,
+#                               # font_size=18,
+#                               hoverinfo='text'))
+      
+#       fig.data[len(fig.data)-1].showlegend = False
+#       fig.add_vline(x=key+1+int(JobLengthWave/10), line_width=2,  line_color="red")
+    
+ 
+# fig.update_layout(
+#          hoverlabel=dict(
+#              namelength=-1
+#          )
+#      )
+# fig.update_layout(title=PlotPlotly(pthF, side).side+' '+PlotTitle)
+    
+ 
+# plot(fig,filename=PlotPlotly(pthF, side).side+' '+fileName+".html") 
 

@@ -11,7 +11,11 @@ Created on Wed Jun 16 16:30:46 2021
 # pio.renderers
 # pio.renderers.default='browser'
 ##############################################################################
-global DistBetweenSets,GlobalScale,PanelLengthInMM,JobLengthתcolor_combinations,FullColorList
+global DistBetweenSets,GlobalScale,PanelLengthInMM,JobLengthתcolor_combinations,FullColorList,JobLengthWave;
+
+# For setting the min job length for Change Wave plot- this parameter should be used for setting the allowble moving avarage- for example set JobLengthWave= 100, MoveAveWave=20;
+JobLengthWave=100;
+MoveAveWave=20;
 #For 252
 MarkSetVersion=252
 
@@ -202,14 +206,10 @@ class DispImagePlacment():
 
                        
 
-class CalcC2C_AvrgOfAll():
+class CalcC2C_AvrgOfAll(DispImagePlacment):
     def  __init__(self, pthF,fldrs,side,JobLength,PanelLengthInMM,pageSide): 
-        self.pthF = pthF;
-        self.fldrs = fldrs;
-        self.side = side;
-        self.JobLength = JobLength;
+        super().__init__(pthF,fldrs,side,pageSide,JobLength)
         self.PanelLengthInMM = PanelLengthInMM;
-        self.pageSide = pageSide;
   
     def LoadRawDataOLD(self,fname,f):
         RawData=pd.read_csv(self.pthF+f+'/'+self.side+'/'+'RawResults'+'/'+fname);
@@ -736,7 +736,8 @@ class CalcC2C_AvrgOfAll():
         JobNmeSORTED = OrderedDict(sorted(JobNmeDic.items()))    
         return JobNmeSORTED;   
     
-    def CreateWaveChangeData(self):
+    
+    def CreateWaveChangeDataOld(self,JobLengthWave):
         
         WaveChangeList=[];
         indexJobNameDic={}
@@ -766,37 +767,105 @@ class CalcC2C_AvrgOfAll():
         DataAllMeanColorSET3Right=MeregedDataAllMeanColorRight[['Ink\Sets','Set #3 X']].rename(index=colorDic)
 
         # MeregedDataAllMeanColor= self.LoadMeanColorPos();
-
+        
+        
         
         JobNmeSORTED= list(self.SortJobsByTime(self.fldrs).values())
-        
+   
         for f in JobNmeSORTED:
             try:
-                C2Creg,indexNumberFailed = self.CalcC2CSingleSideColorPair('Registration_Left.csv','Registration_Right.csv',f,DataAllMeanColorSET1Left,DataAllMeanColorSET2Left,DataAllMeanColorSET3Left,DataAllMeanColorSET1Right,DataAllMeanColorSET2Right,DataAllMeanColorSET3Right)
-                WaveChangeList=WaveChangeList+C2Creg
-                indexJobNameDic[len(WaveChangeList)-1]=f
+                vlid,lngth=self.CheckIfFileValid_forWave(f,JobLengthWave)
+                if vlid:
+                    C2Creg,indexNumberFailed = self.CalcC2CSingleSideColorPair('Registration_Left.csv','Registration_Right.csv',f,DataAllMeanColorSET1Left,DataAllMeanColorSET2Left,DataAllMeanColorSET3Left,DataAllMeanColorSET1Right,DataAllMeanColorSET2Right,DataAllMeanColorSET3Right)
+                    WaveChangeList=WaveChangeList+C2Creg
+
+                    indexJobNameDic[len(WaveChangeList)-1]=[f,str(lngth)]
+
+            except:
+                    continue;
+            
+        return WaveChangeList,indexJobNameDic;
+    def CreateWaveChangeData(self,JobLengthWave):
+        
+        WaveChangeList=[];
+        indexJobNameDic={}
+        
+        # DataAllMeanColorSET1Left,DataAllMeanColorSET2Left,DataAllMeanColorSET3Left,colorDic = self.CalcMeanByColorForAllJobs('Registration_Left.csv')
+        # DataAllMeanColorSET1Right,DataAllMeanColorSET2Right,DataAllMeanColorSET3Right,colorDic = self.CalcMeanByColorForAllJobs('Registration_Right.csv')
+
+
+
+
+        MeregedDataAllMeanColorLeft= self.LoadMeanColorPos_PickSide('Left');
+        MeregedDataAllMeanColorRight= self.LoadMeanColorPos_PickSide('Right');
+        
+        
+        colorDic={}
+        
+        for i in MeregedDataAllMeanColorLeft.index:
+           colorDic[i]= MeregedDataAllMeanColorLeft['Ink\Sets'][i]
+        
+        DataAllMeanColorSET1Left=MeregedDataAllMeanColorLeft[['Ink\Sets','Set #1 X']].rename(index=colorDic)
+        DataAllMeanColorSET2Left=MeregedDataAllMeanColorLeft[['Ink\Sets','Set #2 X']].rename(index=colorDic)
+        DataAllMeanColorSET3Left=MeregedDataAllMeanColorLeft[['Ink\Sets','Set #3 X']].rename(index=colorDic)
+
+
+        DataAllMeanColorSET1Right=MeregedDataAllMeanColorRight[['Ink\Sets','Set #1 X']].rename(index=colorDic)
+        DataAllMeanColorSET2Right=MeregedDataAllMeanColorRight[['Ink\Sets','Set #2 X']].rename(index=colorDic)
+        DataAllMeanColorSET3Right=MeregedDataAllMeanColorRight[['Ink\Sets','Set #3 X']].rename(index=colorDic)
+
+        # MeregedDataAllMeanColor= self.LoadMeanColorPos();
+        
+        
+        
+        JobNmeSORTED= list(self.SortJobsByTime(self.fldrs).values())
+        WaveFilesInx=self.find_indexes_with_substring(JobNmeSORTED, 'WaveCalibration')
+        k=0
+        for i,f in enumerate(JobNmeSORTED):
+            try:
+                vlid,lngth=self.CheckIfFileValid_forWave(f,JobLengthWave)
+                if vlid:
+                    C2Creg,indexNumberFailed = self.CalcC2CSingleSideColorPair('Registration_Left.csv','Registration_Right.csv',f,DataAllMeanColorSET1Left,DataAllMeanColorSET2Left,DataAllMeanColorSET3Left,DataAllMeanColorSET1Right,DataAllMeanColorSET2Right,DataAllMeanColorSET3Right)
+                    WaveChangeList=WaveChangeList+C2Creg
+                    if len(WaveFilesInx)>0:
+                        
+                        indexJobNameDic[len(WaveChangeList)-1]=[f,JobNmeSORTED[WaveFilesInx[k]]]
+                        if i>WaveFilesInx[k]:
+                            k=k+1;
+                    else:
+                        indexJobNameDic[len(WaveChangeList)-1]=[f,lngth]
+
             except:
                     continue;
             
         return WaveChangeList,indexJobNameDic;
         
-    def CheckIfFileValid(self,f):
+    def find_indexes_with_substring(self,lst, substring):
+        indexes = []
+        for i, string in enumerate(lst):
+            if substring in string:
+                indexes.append(i)
+        return indexes
+    
+    def CheckIfFileValid_forWave(self,f,JobLengthWave):
         vlid=False;
+        lngth=0;
         dbtmp=pd.DataFrame();
         # pthFf=self.pthF+f+'/'+self.side+'/'+'RawResults';
         
         zip_file_path = self.pthF+f
         subdir_name_in_zip = self.side+'/'+'RawResults';
-        file_name_in_zip='Registration_Left.csv';
+        file_name_in_zip='ImagePlacement_Left.csv';
         
         try:
             dbtmp=self.GetFileFromZip(zip_file_path,subdir_name_in_zip,file_name_in_zip);
-            if len(dbtmp['Job Id'])>self.JobLength:
+            if len(dbtmp['Flat Id'])>JobLengthWave:
                 vlid= True;
+            lngth=len(dbtmp['Flat Id'])
         except:
             vlid=False;
-      
-        return vlid;
+            
+        return vlid,lngth;
 
     def CalcC2CregForLeftRight(self):
         ImagePlacement_pp=pd.DataFrame()
@@ -977,7 +1046,7 @@ class PlotPlotly():
             fig.add_trace(go.Scatter(x=[key], y=[ymax],
                                     marker=dict(color="green", size=6),
                                     mode="markers",
-                                    text=value,
+                                    text=value[0]+','+value[1],
                                     # font_size=18,
                                     hoverinfo='text'))
             
@@ -997,7 +1066,54 @@ class PlotPlotly():
        
        return fig
     
-
+    def PlotWaveChange_WithMovingAVRG(self,WaveChangeDF,indexJobNameDic,MoveAveWave, PlotTitle,fileName):
+        
+       fig = go.Figure()
+       
+       ColorList= list(WaveChangeDF.columns)
+       
+       for clr in ColorList:     
+           lineColor=clr;
+         
+           
+           if lineColor=='Yellow':
+               lineColor='gold';
+           
+           fig.add_trace(
+           go.Scatter(y=WaveChangeDF[clr],line_color= lineColor,
+                       name='Wave Differance Left-Right '+' color '+clr))
+           
+           fig.add_trace(
+           go.Scatter(y=WaveChangeDF[clr].rolling(MoveAveWave).mean(),line_color= lineColor,
+                       name='Wave Differance Left-Right- moving average of '+str(MoveAveWave)+' color '+clr))
+           
+           
+           # ymax=max(WaveRawDataDic[ColorList[0]]-WaveDataWithMaxFilterDic[self.ColorList[0]])
+       ymax=np.max(WaveChangeDF[clr])+200
+        
+       for key, value in indexJobNameDic.items():
+            fig.add_trace(go.Scatter(x=[key], y=[ymax],
+                                    marker=dict(color="green", size=6),
+                                    mode="markers",
+                                    text=value[0]+','+value[1],
+                                    # font_size=18,
+                                    hoverinfo='text'))
+            
+            fig.data[len(fig.data)-1].showlegend = False
+            fig.add_vline(x=key, line_width=2, line_dash="dash", line_color="green")
+           
+        
+       fig.update_layout(
+                hoverlabel=dict(
+                    namelength=-1
+                )
+            )
+       fig.update_layout(title=self.side+' '+PlotTitle)
+           
+    
+       plot(fig,filename=self.side+' '+fileName+".html") 
+       
+       return fig
 # ################################### 
 from tkinter import filedialog
 from tkinter import *
@@ -1084,12 +1200,11 @@ except:
 
 #################################Wave Prograss Over Time ######################
 
-
-WaveChangeListFRONT,indexJobNameDicFRONT=CalcC2C_AvrgOfAll(pthF,folder,'Front',JobLength,PanelLengthInMM,'Left').CreateWaveChangeData();
+WaveChangeListFRONT,indexJobNameDicFRONT=CalcC2C_AvrgOfAll(pthF,folder,'Front',JobLength,PanelLengthInMM,'Left').CreateWaveChangeData(JobLengthWave);
 WaveChangeDF_FRONT=pd.DataFrame(WaveChangeListFRONT)
 
 try:
-   WaveChangeListBACK,indexJobNameDicBACK=CalcC2C_AvrgOfAll(pthF,folder,'Back',JobLength,PanelLengthInMM,'Left').CreateWaveChangeData();
+   WaveChangeListBACK,indexJobNameDicBACK=CalcC2C_AvrgOfAll(pthF,folder,'Back',JobLength,PanelLengthInMM,'Left').CreateWaveChangeData(JobLengthWave);
    WaveChangeDF_BACK=pd.DataFrame(WaveChangeListBACK)
 
 except:
@@ -1202,7 +1317,8 @@ fileName= "WaveChange_FRONT_AQM"
 side='Front'
 
 try:
-    waveChangeFRONT=PlotPlotly(pthF, side).PlotWaveChange(WaveChangeDF_FRONT,indexJobNameDicFRONT, PlotTitle,fileName);
+    waveChangeFRONT=PlotPlotly(pthF, side).PlotWaveChange_WithMovingAVRG(WaveChangeDF_FRONT,indexJobNameDicFRONT,MoveAveWave, PlotTitle,fileName);
+    # waveChangeFRONT=PlotPlotly(pthF, side).PlotWaveChange(WaveChangeDF_FRONT,indexJobNameDicFRONT,PlotTitle,fileName);
 
 except:
     1
@@ -1215,7 +1331,9 @@ fileName= "WaveChange_BACK_AQM"
 side='Back'
 
 try:
-    waveChangeBACK=PlotPlotly(pthF, side).PlotWaveChange(WaveChangeDF_BACK,indexJobNameDicBACK, PlotTitle,fileName);
+    waveChangeBACK=PlotPlotly(pthF, side).PlotWaveChange_WithMovingAVRG(WaveChangeDF_BACK,indexJobNameDicBACK,MoveAveWave, PlotTitle,fileName);
+    # waveChangeBACK=PlotPlotly(pthF, side).PlotWaveChange(WaveChangeDF_BACK,indexJobNameDicBACK,PlotTitle,fileName);
+
 except:
     1
 

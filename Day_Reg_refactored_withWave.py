@@ -832,7 +832,8 @@ class CalcC2C_AvrgOfAll(DispImagePlacment):
                         
                         indexJobNameDic[len(WaveChangeList)-1]=[f,JobNmeSORTED[WaveFilesInx[k]]]
                         if i>WaveFilesInx[k]:
-                            WaveJobPrintedDic[len(WaveChangeList)-1]=JobNmeSORTED[WaveFilesInx[k]]
+                            indexJobNameDic_List=list(indexJobNameDic.keys())
+                            WaveJobPrintedDic[indexJobNameDic_List[len(indexJobNameDic_List)-2]]=JobNmeSORTED[WaveFilesInx[k]]
                             k=k+1;
                     else:
                         indexJobNameDic[len(WaveChangeList)-1]=[f,lngth]
@@ -1091,8 +1092,8 @@ class PlotPlotly():
            
            
            # ymax=max(WaveRawDataDic[ColorList[0]]-WaveDataWithMaxFilterDic[self.ColorList[0]])
-       ymax=np.mean(WaveChangeDF[clr])+300
-       ymaxWaveJob=np.mean(WaveChangeDF[clr])+250
+       ymax=np.mean(WaveChangeDF[clr])+100
+       ymaxWaveJob=np.mean(WaveChangeDF[clr])+50
         
        for key, value in indexJobNameDic.items():
             fig.add_trace(go.Scatter(x=[key], y=[ymax],
@@ -1104,17 +1105,22 @@ class PlotPlotly():
             
             fig.data[len(fig.data)-1].showlegend = False
             fig.add_vline(x=key, line_width=2, line_dash="dash", line_color="green")
+       pxWave=0     
+       for i ,(key, value) in enumerate(WaveJobPrintedDic.items()):
+            xWave=key+(1+int(JobLengthWave/10))
+            if i>0:
+               if abs(list(WaveJobPrintedDic.keys())[i-1]- list(WaveJobPrintedDic.keys())[i])<2:
+                   xWave=pxWave + 1
+            fig.add_trace(go.Scatter(x=[xWave], y=[ymaxWaveJob],
+                                    marker=dict(color="red", size=6),
+                                    mode="markers",
+                                    text=value,
+                                    # font_size=18,
+                                    hoverinfo='text'))
             
-       for key, value in WaveJobPrintedDic.items():
-             fig.add_trace(go.Scatter(x=[key-(1+int(JobLengthWave/10))], y=[ymaxWaveJob],
-                                     marker=dict(color="red", size=6),
-                                     mode="markers",
-                                     text=value,
-                                     # font_size=18,
-                                     hoverinfo='text'))
-             
-             fig.data[len(fig.data)-1].showlegend = False
-             fig.add_vline(x=key-(1+int(JobLengthWave/10)), line_width=2,  line_color="red")
+            fig.data[len(fig.data)-1].showlegend = False
+            fig.add_vline(x=xWave, line_width=2,  line_color="red")
+            pxWave=xWave
            
         
        fig.update_layout(
@@ -1390,8 +1396,8 @@ print(endFigure - startFigure)
     
     
 #     # ymax=max(WaveRawDataDic[ColorList[0]]-WaveDataWithMaxFilterDic[self.ColorList[0]])
-# ymax=np.max(WaveChangeDF[clr])+100
-# ymaxWaveJob=np.max(WaveChangeDF[clr])+50
+# ymax=np.mean(WaveChangeDF[clr])+100
+# ymaxWaveJob=np.mean(WaveChangeDF[clr])+50
  
 # for key, value in indexJobNameDic.items():
 #      fig.add_trace(go.Scatter(x=[key], y=[ymax],
@@ -1404,25 +1410,89 @@ print(endFigure - startFigure)
 #      fig.data[len(fig.data)-1].showlegend = False
 #      fig.add_vline(x=key, line_width=2, line_dash="dash", line_color="green")
      
-# for key, value in WaveJobPrintedDic.items():
-#       fig.add_trace(go.Scatter(x=[key+1+int(JobLengthWave/10)], y=[ymaxWaveJob],
-#                               marker=dict(color="red", size=6),
-#                               mode="markers",
-#                               text=value,
-#                               # font_size=18,
-#                               hoverinfo='text'))
-      
-#       fig.data[len(fig.data)-1].showlegend = False
-#       fig.add_vline(x=key+1+int(JobLengthWave/10), line_width=2,  line_color="red")
+# for i ,(key, value) in enumerate(WaveJobPrintedDic.items()):
+#      xWave=key-(1+int(JobLengthWave/10))
+#      if i>0:
+#         if abs(list(WaveJobPrintedDic.keys())[i-1]- list(WaveJobPrintedDic.keys())[i])<2:
+#             xWave=pxWave + 1
+#      fig.add_trace(go.Scatter(x=[xWave], y=[ymaxWaveJob],
+#                              marker=dict(color="red", size=6),
+#                              mode="markers",
+#                              text=value,
+#                              # font_size=18,
+#                              hoverinfo='text'))
+     
+#      fig.data[len(fig.data)-1].showlegend = False
+#      fig.add_vline(x=xWave, line_width=2,  line_color="red")
+#      pxWave=xWave
+          
     
  
 # fig.update_layout(
-#          hoverlabel=dict(
-#              namelength=-1
-#          )
-#      )
+#           hoverlabel=dict(
+#               namelength=-1
+#           )
+#       )
 # fig.update_layout(title=PlotPlotly(pthF, side).side+' '+PlotTitle)
     
  
 # plot(fig,filename=PlotPlotly(pthF, side).side+' '+fileName+".html") 
 
+# ###################################################################
+
+
+
+# WaveChangeList=[];
+# indexJobNameDic={}
+
+# # DataAllMeanColorSET1Left,DataAllMeanColorSET2Left,DataAllMeanColorSET3Left,colorDic = self.CalcMeanByColorForAllJobs('Registration_Left.csv')
+# # DataAllMeanColorSET1Right,DataAllMeanColorSET2Right,DataAllMeanColorSET3Right,colorDic = self.CalcMeanByColorForAllJobs('Registration_Right.csv')
+
+
+
+
+# MeregedDataAllMeanColorLeft= CalcC2C_AvrgOfAll(pthF,folder,'Front',JobLength,PanelLengthInMM,'Left').LoadMeanColorPos_PickSide('Left');
+# MeregedDataAllMeanColorRight= CalcC2C_AvrgOfAll(pthF,folder,'Front',JobLength,PanelLengthInMM,'Left').LoadMeanColorPos_PickSide('Right');
+
+
+# colorDic={}
+
+# for i in MeregedDataAllMeanColorLeft.index:
+#    colorDic[i]= MeregedDataAllMeanColorLeft['Ink\Sets'][i]
+
+# DataAllMeanColorSET1Left=MeregedDataAllMeanColorLeft[['Ink\Sets','Set #1 X']].rename(index=colorDic)
+# DataAllMeanColorSET2Left=MeregedDataAllMeanColorLeft[['Ink\Sets','Set #2 X']].rename(index=colorDic)
+# DataAllMeanColorSET3Left=MeregedDataAllMeanColorLeft[['Ink\Sets','Set #3 X']].rename(index=colorDic)
+
+
+# DataAllMeanColorSET1Right=MeregedDataAllMeanColorRight[['Ink\Sets','Set #1 X']].rename(index=colorDic)
+# DataAllMeanColorSET2Right=MeregedDataAllMeanColorRight[['Ink\Sets','Set #2 X']].rename(index=colorDic)
+# DataAllMeanColorSET3Right=MeregedDataAllMeanColorRight[['Ink\Sets','Set #3 X']].rename(index=colorDic)
+
+# # MeregedDataAllMeanColor= self.LoadMeanColorPos();
+
+
+
+# JobNmeSORTED= list(CalcC2C_AvrgOfAll(pthF,folder,'Front',JobLength,PanelLengthInMM,'Left').SortJobsByTime(CalcC2C_AvrgOfAll(pthF,folder,'Front',JobLength,PanelLengthInMM,'Left').fldrs).values())
+# WaveFilesInx=CalcC2C_AvrgOfAll(pthF,folder,'Front',JobLength,PanelLengthInMM,'Left').find_indexes_with_substring(JobNmeSORTED, 'WaveCalibration')
+# WaveJobPrintedDic={}
+# k=0
+# for i,f in enumerate(JobNmeSORTED):
+#     try:
+#         vlid,lngth=CalcC2C_AvrgOfAll(pthF,folder,'Front',JobLength,PanelLengthInMM,'Left').CheckIfFileValid_forWave(f,JobLengthWave)
+#         if vlid:
+#             C2Creg,indexNumberFailed = CalcC2C_AvrgOfAll(pthF,folder,'Front',JobLength,PanelLengthInMM,'Left').CalcC2CSingleSideColorPair('Registration_Left.csv','Registration_Right.csv',f,DataAllMeanColorSET1Left,DataAllMeanColorSET2Left,DataAllMeanColorSET3Left,DataAllMeanColorSET1Right,DataAllMeanColorSET2Right,DataAllMeanColorSET3Right)
+#             WaveChangeList=WaveChangeList+C2Creg
+#             if len(WaveFilesInx)>0:
+                
+#                 indexJobNameDic[len(WaveChangeList)-1]=[f,JobNmeSORTED[WaveFilesInx[k]]]
+#                 if i>WaveFilesInx[k]:
+#                     indexJobNameDic_List=list(indexJobNameDic.keys())
+#                     WaveJobPrintedDic[indexJobNameDic_List[len(indexJobNameDic_List)-2]]=JobNmeSORTED[WaveFilesInx[k]]
+#                     k=k+1;
+#             else:
+#                 indexJobNameDic[len(WaveChangeList)-1]=[f,lngth]
+
+#     except:
+#             continue;
+    

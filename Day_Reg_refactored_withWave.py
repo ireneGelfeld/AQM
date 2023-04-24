@@ -785,6 +785,7 @@ class CalcC2C_AvrgOfAll(DispImagePlacment):
                     continue;
             
         return WaveChangeList,indexJobNameDic;
+    
     def CreateWaveChangeData(self,JobLengthWave):
         
         WaveChangeList=[];
@@ -817,29 +818,39 @@ class CalcC2C_AvrgOfAll(DispImagePlacment):
         # MeregedDataAllMeanColor= self.LoadMeanColorPos();
         
         
-        
         JobNmeSORTED= list(self.SortJobsByTime(self.fldrs).values())
-        WaveFilesInx=self.find_indexes_with_substring(JobNmeSORTED, 'WaveCalibration')
+
+        ValidSortedJobListWithWave=[]
+
+        for f in JobNmeSORTED:
+            vlid,lngth=self.CheckIfFileValid_forWave(f,JobLengthWave)
+            if vlid or ('WaveCalibration' in f):
+                    ValidSortedJobListWithWave.append(f)
+                    
+                    
+        WaveFilesInx=self.find_indexes_with_substring(ValidSortedJobListWithWave, 'WaveCalibration')
         WaveJobPrintedDic={}
+
+
         k=0
-        for i,f in enumerate(JobNmeSORTED):
+        for i,f in enumerate(ValidSortedJobListWithWave):
             try:
-                vlid,lngth=self.CheckIfFileValid_forWave(f,JobLengthWave)
-                if vlid:
-                    C2Creg,indexNumberFailed = self.CalcC2CSingleSideColorPair('Registration_Left.csv','Registration_Right.csv',f,DataAllMeanColorSET1Left,DataAllMeanColorSET2Left,DataAllMeanColorSET3Left,DataAllMeanColorSET1Right,DataAllMeanColorSET2Right,DataAllMeanColorSET3Right)
-                    WaveChangeList=WaveChangeList+C2Creg
-                    if len(WaveFilesInx)>0:
-                        
-                        indexJobNameDic[len(WaveChangeList)-1]=[f,JobNmeSORTED[WaveFilesInx[k]]]
-                        if i>WaveFilesInx[k]:
-                            inxForW=list(indexJobNameDic.keys())[len(list(indexJobNameDic.keys()))-2]
-                            WaveJobPrintedDic[inxForW]=[JobNmeSORTED[WaveFilesInx[k]],i]
-                            k=k+1;
-                    else:
-                        indexJobNameDic[len(WaveChangeList)-1]=[f,lngth]
+            
+                C2Creg,indexNumberFailed = self.CalcC2CSingleSideColorPair('Registration_Left.csv','Registration_Right.csv',f,DataAllMeanColorSET1Left,DataAllMeanColorSET2Left,DataAllMeanColorSET3Left,DataAllMeanColorSET1Right,DataAllMeanColorSET2Right,DataAllMeanColorSET3Right)
+                WaveChangeList=WaveChangeList+C2Creg
+                if len(WaveFilesInx)>0:
+                    
+                    indexJobNameDic[len(WaveChangeList)-1]=[f,ValidSortedJobListWithWave[WaveFilesInx[k]]]
+                    if i>WaveFilesInx[k]:
+                        inxForW=list(indexJobNameDic.keys())[len(list(indexJobNameDic.keys()))-2]
+                        WaveJobPrintedDic[inxForW]=[ValidSortedJobListWithWave[WaveFilesInx[k]],i]
+                        k=k+1;
+                else:
+                    indexJobNameDic[len(WaveChangeList)-1]=[f,lngth]
 
             except:
                     continue;
+            
             
         return WaveChangeList,indexJobNameDic,WaveJobPrintedDic;
         
@@ -1474,24 +1485,34 @@ print(endFigure - startFigure)
 
 
 # JobNmeSORTED= list(CalcC2C_AvrgOfAll(pthF,folder,'Front',JobLength,PanelLengthInMM,'Left').SortJobsByTime(CalcC2C_AvrgOfAll(pthF,folder,'Front',JobLength,PanelLengthInMM,'Left').fldrs).values())
-# WaveFilesInx=CalcC2C_AvrgOfAll(pthF,folder,'Front',JobLength,PanelLengthInMM,'Left').find_indexes_with_substring(JobNmeSORTED, 'WaveCalibration')
+
+# ValidSortedJobListWithWave=[]
+
+# for f in JobNmeSORTED:
+#     vlid,lngth=CalcC2C_AvrgOfAll(pthF,folder,'Front',JobLength,PanelLengthInMM,'Left').CheckIfFileValid_forWave(f,JobLengthWave)
+#     if vlid or ('WaveCalibration' in f):
+#             ValidSortedJobListWithWave.append(f)
+            
+            
+# WaveFilesInx=CalcC2C_AvrgOfAll(pthF,folder,'Front',JobLength,PanelLengthInMM,'Left').find_indexes_with_substring(ValidSortedJobListWithWave, 'WaveCalibration')
 # WaveJobPrintedDic={}
+
+
 # k=0
-# for i,f in enumerate(JobNmeSORTED):
+# for i,f in enumerate(ValidSortedJobListWithWave):
 #     try:
-#         vlid,lngth=CalcC2C_AvrgOfAll(pthF,folder,'Front',JobLength,PanelLengthInMM,'Left').CheckIfFileValid_forWave(f,JobLengthWave)
-#         if vlid:
-#             C2Creg,indexNumberFailed = CalcC2C_AvrgOfAll(pthF,folder,'Front',JobLength,PanelLengthInMM,'Left').CalcC2CSingleSideColorPair('Registration_Left.csv','Registration_Right.csv',f,DataAllMeanColorSET1Left,DataAllMeanColorSET2Left,DataAllMeanColorSET3Left,DataAllMeanColorSET1Right,DataAllMeanColorSET2Right,DataAllMeanColorSET3Right)
-#             WaveChangeList=WaveChangeList+C2Creg
-#             if len(WaveFilesInx)>0:
-                
-#                 indexJobNameDic[len(WaveChangeList)-1]=[f,JobNmeSORTED[WaveFilesInx[k]]]
-#                 if i>WaveFilesInx[k]:
-#                     inxForW=list(indexJobNameDic.keys())[len(list(indexJobNameDic.keys()))-2]
-#                     WaveJobPrintedDic[inxForW]=[JobNmeSORTED[WaveFilesInx[k]],i]
-#                     k=k+1;
-#             else:
-#                 indexJobNameDic[len(WaveChangeList)-1]=[f,lngth]
+    
+#         C2Creg,indexNumberFailed = CalcC2C_AvrgOfAll(pthF,folder,'Front',JobLength,PanelLengthInMM,'Left').CalcC2CSingleSideColorPair('Registration_Left.csv','Registration_Right.csv',f,DataAllMeanColorSET1Left,DataAllMeanColorSET2Left,DataAllMeanColorSET3Left,DataAllMeanColorSET1Right,DataAllMeanColorSET2Right,DataAllMeanColorSET3Right)
+#         WaveChangeList=WaveChangeList+C2Creg
+#         if len(WaveFilesInx)>0:
+            
+#             indexJobNameDic[len(WaveChangeList)-1]=[f,ValidSortedJobListWithWave[WaveFilesInx[k]]]
+#             if i>WaveFilesInx[k]:
+#                 inxForW=list(indexJobNameDic.keys())[len(list(indexJobNameDic.keys()))-2]
+#                 WaveJobPrintedDic[inxForW]=[ValidSortedJobListWithWave[WaveFilesInx[k]],i]
+#                 k=k+1;
+#         else:
+#             indexJobNameDic[len(WaveChangeList)-1]=[f,lngth]
 
 #     except:
 #             continue;

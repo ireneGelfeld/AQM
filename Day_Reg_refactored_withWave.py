@@ -15,7 +15,7 @@ global DistBetweenSets,GlobalScale,PanelLengthInMM,JobLengthתcolor_combinations
 
 # For setting the min job length for Change Wave plot- this parameter should be used for setting the allowble moving avarage- for example set JobLengthWave= 100, MoveAveWave=20;
 JobLengthWave=100;
-MoveAveWave=10;
+MoveAveWave=30;
 #For 252
 MarkSetVersion=252
 
@@ -710,7 +710,9 @@ class CalcC2C_AvrgOfAll(DispImagePlacment):
                 
                 MaxLeftRightDiff={}
                 for clr in St1dataLeft.keys():
-                    tmp=[St1dataLeft[clr]-St1dataRight[clr],St2dataLeft[clr]-St2dataRight[clr],St3dataLeft[clr]-St3dataRight[clr]]
+                    # tmp=[St1dataLeft[clr]-St1dataRight[clr],St2dataLeft[clr]-St2dataRight[clr],St3dataLeft[clr]-St3dataRight[clr]]
+                    tmp=[St1dataLeft[clr]-St1dataRight[clr]]
+
                     MaxLeftRightDiff[clr]=np.max(tmp)
                 C2Creg.append(MaxLeftRightDiff);
                 # C2Creg.append(tmp[np.argmax([abs((np.max(St1data)-np.min(St1data))),abs((np.max(St2data)-np.min(St2data))),abs((np.max(St2data)-np.min(St2data)))])]);

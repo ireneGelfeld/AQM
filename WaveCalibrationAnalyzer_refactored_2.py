@@ -366,6 +366,7 @@ class CIScurveFromRawData:
                      indices.append(line_num) 
     
          cisFRONT = list(map(float, jobData[indices[0]][1:]))
+         cisBACK=[]
          if len(indices)>1:
             cisBACK = list(map(float, jobData[indices[1]][1:]))
 

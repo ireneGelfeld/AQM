@@ -35,6 +35,13 @@ PanelLengthInMM = 650;
 JobLength = 0;
 
 
+#### Plots
+I2Splot=0 # Plot I2S 
+C2Cplot=1 # Plot C2C
+ScalePlot=0 # Plot Scale
+WaveChangePlot=1 # Plot Wave Change
+
+
 
 color_combinations = [    ['Black', 'Yellow'],
     ['Black', 'Cyan'],
@@ -1191,8 +1198,8 @@ ImagePlacement_Rightpp_BACK=pd.DataFrame();
 
 threadList=[]
 
-
-threadList.append(myThread(1,"Thread-C2C",folder))
+if C2Cplot:
+    threadList.append(myThread(1,"Thread-C2C",folder))
 
 
 # threadList.append(myThread(2, "Thread-Scale",folder))
@@ -1201,7 +1208,8 @@ threadList.append(myThread(1,"Thread-C2C",folder))
 # for f in folder:
 #     threadList.append(myThread(3, "Thread-I2S",f))    
         
-threadList.append(myThread(3, "Thread-I2S",folder))    
+if I2Splot:
+    threadList.append(myThread(3, "Thread-I2S",folder))    
 
 
 for itm in threadList:
@@ -1223,27 +1231,28 @@ print(endCalc - startCalc)
 
 
 ####################Thread###################################
-ScaleMaxMinDF_FRONTFLeft=CalcC2C_AvrgOfAll(pthF,folder,'Front',JobLength,PanelLengthInMM,'Left').CalcScaleForAllJOBS();
-ScaleMaxMinDF_FRONTRight=CalcC2C_AvrgOfAll(pthF,folder,'Front',JobLength,PanelLengthInMM,'Right').CalcScaleForAllJOBS();
-  
-  
-try:
-  ScaleMaxMinDF_BACKFLeft=CalcC2C_AvrgOfAll(pthF,folder,'Back',JobLength,PanelLengthInMM,'Left').CalcScaleForAllJOBS();
-  ScaleMaxMinDF_BACKRight=CalcC2C_AvrgOfAll(pthF,folder,'Back',JobLength,PanelLengthInMM,'Right').CalcScaleForAllJOBS();
-except:
-  1;
+if ScalePlot:
+    ScaleMaxMinDF_FRONTFLeft=CalcC2C_AvrgOfAll(pthF,folder,'Front',JobLength,PanelLengthInMM,'Left').CalcScaleForAllJOBS();
+    ScaleMaxMinDF_FRONTRight=CalcC2C_AvrgOfAll(pthF,folder,'Front',JobLength,PanelLengthInMM,'Right').CalcScaleForAllJOBS();
+      
+      
+    try:
+      ScaleMaxMinDF_BACKFLeft=CalcC2C_AvrgOfAll(pthF,folder,'Back',JobLength,PanelLengthInMM,'Left').CalcScaleForAllJOBS();
+      ScaleMaxMinDF_BACKRight=CalcC2C_AvrgOfAll(pthF,folder,'Back',JobLength,PanelLengthInMM,'Right').CalcScaleForAllJOBS();
+    except:
+      1;
 
 #################################Wave Prograss Over Time ######################
-
-WaveChangeListFRONT,indexJobNameDicFRONT,WaveJobPrintedDicFRONT=CalcC2C_AvrgOfAll(pthF,folder,'Front',JobLength,PanelLengthInMM,'Left').CreateWaveChangeData(JobLengthWave);
-WaveChangeDF_FRONT=pd.DataFrame(WaveChangeListFRONT)
-
-try:
-   WaveChangeListBACK,indexJobNameDicBACK,WaveJobPrintedDicBACK=CalcC2C_AvrgOfAll(pthF,folder,'Back',JobLength,PanelLengthInMM,'Left').CreateWaveChangeData(JobLengthWave);
-   WaveChangeDF_BACK=pd.DataFrame(WaveChangeListBACK)
-
-except:
-  1; 
+if WaveChangePlot:
+    WaveChangeListFRONT,indexJobNameDicFRONT,WaveJobPrintedDicFRONT=CalcC2C_AvrgOfAll(pthF,folder,'Front',JobLength,PanelLengthInMM,'Left').CreateWaveChangeData(JobLengthWave);
+    WaveChangeDF_FRONT=pd.DataFrame(WaveChangeListFRONT)
+    
+    try:
+       WaveChangeListBACK,indexJobNameDicBACK,WaveJobPrintedDicBACK=CalcC2C_AvrgOfAll(pthF,folder,'Back',JobLength,PanelLengthInMM,'Left').CreateWaveChangeData(JobLengthWave);
+       WaveChangeDF_BACK=pd.DataFrame(WaveChangeListBACK)
+    
+    except:
+      1; 
 
 
 
@@ -1257,120 +1266,121 @@ startFigure = time.time()
 
 ############################Plot I2S #################################
 ###########Front
-
-subplot_titles1="LEFT"
-subplot_titles2="RIGHT"
-PlotTitle= 'I2S- FRONT'
-db1= ImagePlacement_Leftpp
-db2= ImagePlacement_Rightpp
-fileName= "I2S_FRONT_AQM.html"
-side='Front'
-dbName1=''
-dbName2=''
-figI2Sfront=PlotPlotly(pthF, side).Plot2subPlots(subplot_titles1, subplot_titles2, PlotTitle, db1, db2,dbName1,dbName2,fileName);
-
-###########Back
-
-subplot_titles1="LEFT"
-subplot_titles2="RIGHT"
-PlotTitle= 'I2S- BACK'
-fileName= "I2S_BACK_AQM.html"
-side='Back'
-dbName1=''
-dbName2=''
-try:
-    db1= ImagePlacement_Leftpp_BACK
-    db2= ImagePlacement_Rightpp_BACK
-    figI2SBack=PlotPlotly(pthF, side).Plot2subPlots(subplot_titles1, subplot_titles2, PlotTitle, db1, db2,dbName1,dbName2,fileName);
-except:
-    1
+if I2Splot:
+    subplot_titles1="LEFT"
+    subplot_titles2="RIGHT"
+    PlotTitle= 'I2S- FRONT'
+    db1= ImagePlacement_Leftpp
+    db2= ImagePlacement_Rightpp
+    fileName= "I2S_FRONT_AQM.html"
+    side='Front'
+    dbName1=''
+    dbName2=''
+    figI2Sfront=PlotPlotly(pthF, side).Plot2subPlots(subplot_titles1, subplot_titles2, PlotTitle, db1, db2,dbName1,dbName2,fileName);
+    
+    ###########Back
+    
+    subplot_titles1="LEFT"
+    subplot_titles2="RIGHT"
+    PlotTitle= 'I2S- BACK'
+    fileName= "I2S_BACK_AQM.html"
+    side='Back'
+    dbName1=''
+    dbName2=''
+    try:
+        db1= ImagePlacement_Leftpp_BACK
+        db2= ImagePlacement_Rightpp_BACK
+        figI2SBack=PlotPlotly(pthF, side).Plot2subPlots(subplot_titles1, subplot_titles2, PlotTitle, db1, db2,dbName1,dbName2,fileName);
+    except:
+        1
     
     
     
 ############################Plot C2C #################################
 ###########Front & Back
 
-
-subplot_titles1="FRONT"
-subplot_titles2="BACK"
-PlotTitle= 'C2C'
-fileName= "C2C_AQM.html"
-side='Front'
-dbName1='FRONT'
-dbName2='BACK'
-db1= DataPivotFront
-db2= pd.DataFrame()
-try:
-    db2= DataPivotBack
-except:
-    1
-figC2C=  PlotPlotly(pthF, side).Plot2subPlots(subplot_titles1, subplot_titles2, PlotTitle, db1, db2,dbName1,dbName2,fileName);
-
-
-
+if C2Cplot:
+    subplot_titles1="FRONT"
+    subplot_titles2="BACK"
+    PlotTitle= 'C2C'
+    fileName= "C2C_AQM.html"
+    side='Front'
+    dbName1='FRONT'
+    dbName2='BACK'
+    db1= DataPivotFront
+    db2= pd.DataFrame()
+    try:
+        db2= DataPivotBack
+    except:
+        1
+    figC2C=  PlotPlotly(pthF, side).Plot2subPlots(subplot_titles1, subplot_titles2, PlotTitle, db1, db2,dbName1,dbName2,fileName);
+    
+    
+    
 #############################################Scale ####################################################
 #################Front
-subplot_titles1="LEFT"
-subplot_titles2="RIGHT"
-PlotTitle= 'Scale-FRONT'
-db1= ScaleMaxMinDF_FRONTFLeft
-db2= ScaleMaxMinDF_FRONTRight
-fileName= "Scale_FRONT_AQM.html"
-side='Front'
-dbName1=''
-dbName2=''
-try:
-    figScaleFRONT=PlotPlotly(pthF, side).Plot2subPlots(subplot_titles1, subplot_titles2, PlotTitle, db1, db2,dbName1,dbName2,fileName);
-
-except:
-    1
+if ScalePlot:
+    subplot_titles1="LEFT"
+    subplot_titles2="RIGHT"
+    PlotTitle= 'Scale-FRONT'
+    db1= ScaleMaxMinDF_FRONTFLeft
+    db2= ScaleMaxMinDF_FRONTRight
+    fileName= "Scale_FRONT_AQM.html"
+    side='Front'
+    dbName1=''
+    dbName2=''
+    try:
+        figScaleFRONT=PlotPlotly(pthF, side).Plot2subPlots(subplot_titles1, subplot_titles2, PlotTitle, db1, db2,dbName1,dbName2,fileName);
+    
+    except:
+        1
     
     
-###########Back
-
-subplot_titles1="LEFT"
-subplot_titles2="RIGHT"
-PlotTitle= 'Scale- BACK'
-fileName= "Scale_BACK_AQM.html"
-side='Back'
-dbName1=''
-dbName2=''
-try:
-    db1= ScaleMaxMinDF_BACKFLeft
-    db2= ScaleMaxMinDF_BACKRight
-    figScaleBACK=PlotPlotly(pthF, side).Plot2subPlots(subplot_titles1, subplot_titles2, PlotTitle, db1, db2,dbName1,dbName2,fileName);
-except:
-    1
+    ###########Back
+    
+    subplot_titles1="LEFT"
+    subplot_titles2="RIGHT"
+    PlotTitle= 'Scale- BACK'
+    fileName= "Scale_BACK_AQM.html"
+    side='Back'
+    dbName1=''
+    dbName2=''
+    try:
+        db1= ScaleMaxMinDF_BACKFLeft
+        db2= ScaleMaxMinDF_BACKRight
+        figScaleBACK=PlotPlotly(pthF, side).Plot2subPlots(subplot_titles1, subplot_titles2, PlotTitle, db1, db2,dbName1,dbName2,fileName);
+    except:
+        1
 
 
 
 #############################################WaveCahnge ####################################################
 #################Front
-
-PlotTitle= 'WaveCange-FRONT'
-fileName= "WaveChange_FRONT_AQM"
-side='Front'
-
-try:
-    waveChangeFRONT=PlotPlotly(pthF, side).PlotWaveChange_WithMovingAVRG(WaveChangeDF_FRONT,indexJobNameDicFRONT,WaveJobPrintedDicFRONT,MoveAveWave, PlotTitle,fileName);
-    # waveChangeFRONT=PlotPlotly(pthF, side).PlotWaveChange(WaveChangeDF_FRONT,indexJobNameDicFRONT,PlotTitle,fileName);
-
-except:
-    1
+if WaveChangePlot:
+    PlotTitle= 'WaveCange-FRONT'
+    fileName= "WaveChange_FRONT_AQM"
+    side='Front'
     
+    try:
+        waveChangeFRONT=PlotPlotly(pthF, side).PlotWaveChange_WithMovingAVRG(WaveChangeDF_FRONT,indexJobNameDicFRONT,WaveJobPrintedDicFRONT,MoveAveWave, PlotTitle,fileName);
+        # waveChangeFRONT=PlotPlotly(pthF, side).PlotWaveChange(WaveChangeDF_FRONT,indexJobNameDicFRONT,PlotTitle,fileName);
     
-###########Back
-
-PlotTitle= 'WaveCange-BACK'
-fileName= "WaveChange_BACK_AQM"
-side='Back'
-
-try:
-    waveChangeBACK=PlotPlotly(pthF, side).PlotWaveChange_WithMovingAVRG(WaveChangeDF_BACK,indexJobNameDicBACK,WaveJobPrintedDicBACK,MoveAveWave, PlotTitle,fileName);
-    # waveChangeBACK=PlotPlotly(pthF, side).PlotWaveChange(WaveChangeDF_BACK,indexJobNameDicBACK,PlotTitle,fileName);
-
-except:
-    1
+    except:
+        1
+        
+        
+    ###########Back
+    
+    PlotTitle= 'WaveCange-BACK'
+    fileName= "WaveChange_BACK_AQM"
+    side='Back'
+    
+    try:
+        waveChangeBACK=PlotPlotly(pthF, side).PlotWaveChange_WithMovingAVRG(WaveChangeDF_BACK,indexJobNameDicBACK,WaveJobPrintedDicBACK,MoveAveWave, PlotTitle,fileName);
+        # waveChangeBACK=PlotPlotly(pthF, side).PlotWaveChange(WaveChangeDF_BACK,indexJobNameDicBACK,PlotTitle,fileName);
+    
+    except:
+        1
 
 
 

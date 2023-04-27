@@ -838,15 +838,14 @@ class CalcC2C_AvrgOfAll(DispImagePlacment):
             
                 C2Creg,indexNumberFailed = self.CalcC2CSingleSideColorPair('Registration_Left.csv','Registration_Right.csv',f,DataAllMeanColorSET1Left,DataAllMeanColorSET2Left,DataAllMeanColorSET3Left,DataAllMeanColorSET1Right,DataAllMeanColorSET2Right,DataAllMeanColorSET3Right)
                 WaveChangeList=WaveChangeList+C2Creg
+                indexJobNameDic[len(WaveChangeList)-1]=[f,lngth]
+
                 if len(WaveFilesInx)>0:
-                    
-                    indexJobNameDic[len(WaveChangeList)-1]=[f,ValidSortedJobListWithWave[WaveFilesInx[k]]]
                     if i>WaveFilesInx[k]:
                         inxForW=list(indexJobNameDic.keys())[len(list(indexJobNameDic.keys()))-2]
                         WaveJobPrintedDic[inxForW]=[ValidSortedJobListWithWave[WaveFilesInx[k]],i]
                         k=k+1;
-                else:
-                    indexJobNameDic[len(WaveChangeList)-1]=[f,lngth]
+                
 
             except:
                     continue;
@@ -1096,6 +1095,8 @@ class PlotPlotly():
            fig.add_trace(
            go.Scatter(y=WaveChangeDF[clr],line_color= lineColor,
                        name='Wave Differance Left-Right '+' color '+clr))
+           fig.data[len(fig.data)-1].visible = 'legendonly';
+
            
            fig.add_trace(
            go.Scatter(y=WaveChangeDF[clr].rolling(MoveAveWave).mean(),line_color= lineColor,
@@ -1449,7 +1450,7 @@ print(endFigure - startFigure)
  
 # plot(fig,filename=PlotPlotly(pthF, side).side+' '+fileName+".html") 
 
-# # ###################################################################
+# # # ###################################################################
 
 
 
@@ -1504,15 +1505,15 @@ print(endFigure - startFigure)
     
 #         C2Creg,indexNumberFailed = CalcC2C_AvrgOfAll(pthF,folder,'Front',JobLength,PanelLengthInMM,'Left').CalcC2CSingleSideColorPair('Registration_Left.csv','Registration_Right.csv',f,DataAllMeanColorSET1Left,DataAllMeanColorSET2Left,DataAllMeanColorSET3Left,DataAllMeanColorSET1Right,DataAllMeanColorSET2Right,DataAllMeanColorSET3Right)
 #         WaveChangeList=WaveChangeList+C2Creg
+#         indexJobNameDic[len(WaveChangeList)-1]=[f,lngth]
+
 #         if len(WaveFilesInx)>0:
             
-#             indexJobNameDic[len(WaveChangeList)-1]=[f,ValidSortedJobListWithWave[WaveFilesInx[k]]]
+#             # indexJobNameDic[len(WaveChangeList)-1]=[f,ValidSortedJobListWithWave[WaveFilesInx[k]]]
 #             if i>WaveFilesInx[k]:
 #                 inxForW=list(indexJobNameDic.keys())[len(list(indexJobNameDic.keys()))-2]
 #                 WaveJobPrintedDic[inxForW]=[ValidSortedJobListWithWave[WaveFilesInx[k]],i]
 #                 k=k+1;
-#         else:
-#             indexJobNameDic[len(WaveChangeList)-1]=[f,lngth]
 
 #     except:
 #             continue;

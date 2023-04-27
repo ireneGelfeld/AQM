@@ -843,7 +843,7 @@ class CalcC2C_AvrgOfAll(DispImagePlacment):
                 indexJobNameDic[len(WaveChangeList)-1]=[f,lngth]
 
                 if len(WaveFilesInx)>0:
-                    if i>WaveFilesInx[k]:
+                    if i>WaveFilesInx[k] or WaveFilesInx[k] == 0:
                         inxForW=list(indexJobNameDic.keys())[len(list(indexJobNameDic.keys()))-2]
                         WaveJobPrintedDic[inxForW]=[ValidSortedJobListWithWave[WaveFilesInx[k]],i]
                         k=k+1;

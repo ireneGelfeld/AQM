@@ -1047,6 +1047,8 @@ class PlotPlotly():
         
        fig = go.Figure()
        
+       WaveChangeDF = WaveChangeDF.dropna(axis=1)
+
        ColorList= list(WaveChangeDF.columns)
        
        for clr in ColorList:     
@@ -1091,6 +1093,9 @@ class PlotPlotly():
     def PlotWaveChange_WithMovingAVRG(self,WaveChangeDF,indexJobNameDic,WaveJobPrintedDic,MoveAveWave, PlotTitle,fileName):
         
        fig = go.Figure()
+       
+       WaveChangeDF = WaveChangeDF.dropna(axis=1)
+
        
        ColorList= list(WaveChangeDF.columns)
        
@@ -1401,6 +1406,8 @@ print(endFigure - startFigure)
 
 # fig = go.Figure()
 
+# WaveChangeDF = WaveChangeDF.dropna(axis=1)
+
 # ColorList= list(WaveChangeDF.columns)
 
 # for clr in ColorList:     
@@ -1413,6 +1420,8 @@ print(endFigure - startFigure)
 #     fig.add_trace(
 #     go.Scatter(y=WaveChangeDF[clr],line_color= lineColor,
 #                 name='Wave Differance Left-Right '+' color '+clr))
+#     fig.data[len(fig.data)-1].visible = 'legendonly';
+
     
 #     fig.add_trace(
 #     go.Scatter(y=WaveChangeDF[clr].rolling(MoveAveWave).mean(),line_color= lineColor,
@@ -1420,43 +1429,42 @@ print(endFigure - startFigure)
     
     
 #     # ymax=max(WaveRawDataDic[ColorList[0]]-WaveDataWithMaxFilterDic[self.ColorList[0]])
-# ymax=np.mean(WaveChangeDF[clr])+100
-# ymaxWaveJob=np.mean(WaveChangeDF[clr])+50
+# ymax=np.max(WaveChangeDF[clr].rolling(MoveAveWave).mean())+20
+# ymaxWaveJob=np.max(WaveChangeDF[clr].rolling(MoveAveWave).mean())
  
 # for key, value in indexJobNameDic.items():
-#       fig.add_trace(go.Scatter(x=[key], y=[ymax],
-#                               marker=dict(color="green", size=6),
-#                               mode="markers",
-#                               text=value[0],
-#                               # font_size=18,
-#                               hoverinfo='text'))
+#      fig.add_trace(go.Scatter(x=[key], y=[ymax],
+#                              marker=dict(color="green", size=10),
+#                              mode="markers",
+#                              text=value[0],
+#                              # font_size=18,
+#                              hoverinfo='text'))
      
-#       fig.data[len(fig.data)-1].showlegend = False
-#       fig.add_vline(x=key, line_width=2, line_dash="dash", line_color="green")
-     
+#      fig.data[len(fig.data)-1].showlegend = False
+#      fig.add_vline(x=key, line_width=2, line_dash="dash", line_color="green")
+# pxWave=0     
 # for i ,(key, value) in enumerate(WaveJobPrintedDic.items()):
-#       xWave=key-(1+int(JobLengthWave/10))
-#       if i>0:
+#      xWave=key+(1+int(JobLengthWave/10))
+#      if i>0:
 #         if abs(list(WaveJobPrintedDic.values())[i-1][1]- list(WaveJobPrintedDic.values())[i][1])<2:
 #             xWave=pxWave + 1
-#       fig.add_trace(go.Scatter(x=[xWave], y=[ymaxWaveJob],
-#                               marker=dict(color="red", size=6),
-#                               mode="markers",
-#                               text=value,
-#                               # font_size=18,
-#                               hoverinfo='text'))
+#      fig.add_trace(go.Scatter(x=[xWave], y=[ymaxWaveJob],
+#                              marker=dict(color="red", size=10),
+#                              mode="markers",
+#                              text=value,
+#                              # font_size=18,
+#                              hoverinfo='text'))
      
-#       fig.data[len(fig.data)-1].showlegend = False
-#       fig.add_vline(x=xWave, line_width=2,  line_color="red")
-#       pxWave=xWave
-          
+#      fig.data[len(fig.data)-1].showlegend = False
+#      fig.add_vline(x=xWave, line_width=2,  line_color="red")
+#      pxWave=xWave
     
  
 # fig.update_layout(
-#           hoverlabel=dict(
-#               namelength=-1
-#           )
-#       )
+#          hoverlabel=dict(
+#              namelength=-1
+#          )
+#      )
 # fig.update_layout(title=PlotPlotly(pthF, side).side+' '+PlotTitle)
     
  

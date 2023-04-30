@@ -1118,7 +1118,7 @@ class PlotPlotly():
         
        for key, value in indexJobNameDic.items():
             fig.add_trace(go.Scatter(x=[key], y=[ymax],
-                                    marker=dict(color="green", size=6),
+                                    marker=dict(color="green", size=10),
                                     mode="markers",
                                     text=value[0],
                                     # font_size=18,
@@ -1133,7 +1133,7 @@ class PlotPlotly():
                if abs(list(WaveJobPrintedDic.values())[i-1][1]- list(WaveJobPrintedDic.values())[i][1])<2:
                    xWave=pxWave + 1
             fig.add_trace(go.Scatter(x=[xWave], y=[ymaxWaveJob],
-                                    marker=dict(color="red", size=6),
+                                    marker=dict(color="red", size=10),
                                     mode="markers",
                                     text=value,
                                     # font_size=18,

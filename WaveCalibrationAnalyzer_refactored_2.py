@@ -364,8 +364,11 @@ class CIScurveFromRawData:
              if len(line)>1:
                  if sub in line[0]:
                      indices.append(line_num) 
-    
-         cisFRONT = list(map(float, jobData[indices[0]][1:]))
+         cisFRONT=[]      
+         try:
+             cisFRONT = list(map(float, jobData[indices[0]][1:]))
+         except:
+             1
          cisBACK=[]
          if len(indices)>1:
             cisBACK = list(map(float, jobData[indices[1]][1:]))
@@ -412,7 +415,7 @@ class CIScurveFromRawData:
         return cisBACK,cisFRONT;   
     
     def GetCIScurveNewVersion_secondTry(self):
-        jobData=CIScurveFromRawData(pthF).LoadRawData()
+        jobData=self.LoadRawData()
         sub='CISTilt=Value';
         
         indices = []
@@ -1667,15 +1670,15 @@ if PlotTables:
 
 #########################################################################################
 
-jobData=CIScurveFromRawData(pthF).LoadRawData()
-sub='CisCurvatureDataBasedOnWaveFormat=';
-indices = []
+# jobData=CIScurveFromRawData(pthF).LoadRawData()
+# sub='CisCurvatureDataBasedOnWaveFormat=';
+# indices = []
 
-for line_num, line in enumerate(jobData):
-    if len(line)>1:
-        if sub in line[0]:
-            indices.append(line_num) 
+# for line_num, line in enumerate(jobData):
+#     if len(line)>1:
+#         if sub in line[0]:
+#             indices.append(line_num) 
    
-cisFRONT = list(map(float, jobData[indices[0]][1:]))
-if len(indices)>1:
-   cisBACK = list(map(float, jobData[indices[1]][1:]))
+# cisFRONT = list(map(float, jobData[indices[0]][1:]))
+# if len(indices)>1:
+#     cisBACK = list(map(float, jobData[indices[1]][1:]))

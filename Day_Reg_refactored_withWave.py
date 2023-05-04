@@ -40,7 +40,7 @@ I2Splot=0 # Plot I2S
 C2Cplot=1 # Plot C2C
 ScalePlot=0 # Plot Scale
 WaveChangePlot=1 # Plot Wave Change
-c2cChangePlot=1 # Plot c2c Change
+c2cChangePlot = WaveChangePlot # Plot c2c Change MUST be align with Plot Wave Change
 
 
 color_combinations = [    ['Black', 'Yellow'],
@@ -1126,13 +1126,14 @@ class PlotPlotly():
        
        return fig
     
-    def PlotWaveChange_WithMovingAVRG(self,WaveChangeDF,indexJobNameDic,WaveJobPrintedDic,MoveAveWave, PlotTitle,fileName):
+    def PlotWaveChange_WithMovingAVRG(self,c2cChangeDF,WaveChangeDF,indexJobNameDic,WaveJobPrintedDic,MoveAveWave, PlotTitle,fileName):
         
        fig = go.Figure()
        
        WaveChangeDF = WaveChangeDF.dropna(axis=1)
 
-       
+       c2cChangeDF = c2cChangeDF.dropna(axis=1)
+
        ColorList= list(WaveChangeDF.columns)
        
        for clr in ColorList:     
@@ -1154,6 +1155,18 @@ class PlotPlotly():
            
            
            # ymax=max(WaveRawDataDic[ColorList[0]]-WaveDataWithMaxFilterDic[self.ColorList[0]])
+      
+       fig.add_trace(
+       go.Scatter(y=list(c2cChangeDF[0]),
+                    name='C2C '))
+       fig.data[len(fig.data)-1].visible = 'legendonly';
+
+        
+       fig.add_trace(
+       go.Scatter(y=list(c2cChangeDF[0].rolling(MoveAveWave).mean()),
+                    name='C2C moving average ')) 
+      
+        
        ymax=np.max(WaveChangeDF[clr].rolling(MoveAveWave).mean())+20
        ymaxWaveJob=np.max(WaveChangeDF[clr].rolling(MoveAveWave).mean())
         
@@ -1486,7 +1499,7 @@ if WaveChangePlot:
     side='Front'
     
     try:
-        waveChangeFRONT=PlotPlotly(pthF, side).PlotWaveChange_WithMovingAVRG(WaveChangeDF_FRONT,indexJobNameDicFRONT,WaveJobPrintedDicFRONT,MoveAveWave, PlotTitle,fileName);
+        waveChangeFRONT=PlotPlotly(pthF, side).PlotWaveChange_WithMovingAVRG(c2cChangeDF_FRONT,WaveChangeDF_FRONT,indexJobNameDicFRONT,WaveJobPrintedDicFRONT,MoveAveWave, PlotTitle,fileName);
         # waveChangeFRONT=PlotPlotly(pthF, side).PlotWaveChange(WaveChangeDF_FRONT,indexJobNameDicFRONT,PlotTitle,fileName);
     
     except:
@@ -1500,7 +1513,7 @@ if WaveChangePlot:
     side='Back'
     
     try:
-        waveChangeBACK=PlotPlotly(pthF, side).PlotWaveChange_WithMovingAVRG(WaveChangeDF_BACK,indexJobNameDicBACK,WaveJobPrintedDicBACK,MoveAveWave, PlotTitle,fileName);
+        waveChangeBACK=PlotPlotly(pthF, side).PlotWaveChange_WithMovingAVRG(c2cChangeDF_BACK,WaveChangeDF_BACK,indexJobNameDicBACK,WaveJobPrintedDicBACK,MoveAveWave, PlotTitle,fileName);
         # waveChangeBACK=PlotPlotly(pthF, side).PlotWaveChange(WaveChangeDF_BACK,indexJobNameDicBACK,PlotTitle,fileName);
     
     except:

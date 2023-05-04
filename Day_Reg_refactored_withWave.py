@@ -40,7 +40,7 @@ I2Splot=0 # Plot I2S
 C2Cplot=1 # Plot C2C
 ScalePlot=0 # Plot Scale
 WaveChangePlot=1 # Plot Wave Change
-
+c2cChangePlot=1 # Plot c2c Change
 
 
 color_combinations = [    ['Black', 'Yellow'],
@@ -861,7 +861,43 @@ class CalcC2C_AvrgOfAll(DispImagePlacment):
             
             
         return WaveChangeList,indexJobNameDic,WaveJobPrintedDic;
+    
+    def CreateC2CchangeData(self,c2c,JobLengthWave):
         
+        c2cChangeList=[];
+        indexJobNameDic={}
+    
+        ValidSortedJobListWithWave=[]
+        
+        for f in c2c.columns:
+             vlid,lngth=self.CheckIfFileValid_forWave(f,JobLengthWave)
+             if vlid or ('WaveCalibration' in f):
+                     ValidSortedJobListWithWave.append(f)
+             
+              
+                    
+        WaveFilesInx=self.find_indexes_with_substring(ValidSortedJobListWithWave, 'WaveCalibration')
+        WaveJobPrintedDic={}
+        
+        k=0
+        for i,f in enumerate(ValidSortedJobListWithWave):
+            try:
+            
+                c2cChangeList=c2cChangeList+list(c2c[f].dropna())
+                indexJobNameDic[len(c2cChangeList)-1]=[f,lngth]
+
+                if len(WaveFilesInx)>0:
+                    if i>WaveFilesInx[k] or WaveFilesInx[k] == 0:
+                        inxForW=list(indexJobNameDic.keys())[len(list(indexJobNameDic.keys()))-2]
+                        WaveJobPrintedDic[inxForW]=[ValidSortedJobListWithWave[WaveFilesInx[k]],i]
+                        k=k+1;
+            except:
+                      continue;
+              
+              
+        return c2cChangeList,indexJobNameDic,WaveJobPrintedDic;
+        
+    
     def find_indexes_with_substring(self,lst, substring):
         indexes = []
         for i, string in enumerate(lst):
@@ -1161,6 +1197,75 @@ class PlotPlotly():
        
        return fig
 
+
+    def Plotc2cChange_WithMovingAVRG(self,c2cChangeDF,indexJobNameDic,WaveJobPrintedDic,MoveAveWave, PlotTitle,fileName):
+        
+        fig = go.Figure()
+       
+        c2cChangeDF = c2cChangeDF.dropna(axis=1)
+
+       
+       
+     
+           
+        fig.add_trace(
+        go.Scatter(y=list(c2cChangeDF[0]),
+                    name='C2C '))
+        fig.data[len(fig.data)-1].visible = 'legendonly';
+
+        
+        fig.add_trace(
+        go.Scatter(y=list(c2cChangeDF[0].rolling(MoveAveWave).mean()),
+                    name='C2C moving average '))
+           
+           
+           # ymax=max(WaveRawDataDic[ColorList[0]]-WaveDataWithMaxFilterDic[self.ColorList[0]])
+        ymax=np.max(list(c2cChangeDF[0].rolling(MoveAveWave).mean())[MoveAveWave+10:])+20
+        ymaxWaveJob=np.max(list(c2cChangeDF[0].rolling(MoveAveWave).mean())[MoveAveWave+10:])
+        
+        for key, value in indexJobNameDic.items():
+            fig.add_trace(go.Scatter(x=[key], y=[ymax],
+                                    marker=dict(color="green", size=10),
+                                    mode="markers",
+                                    text=value[0],
+                                    # font_size=18,
+                                    hoverinfo='text'))
+            
+            fig.data[len(fig.data)-1].showlegend = False
+            fig.add_vline(x=key, line_width=2, line_dash="dash", line_color="green")
+        pxWave=0     
+        for i ,(key, value) in enumerate(WaveJobPrintedDic.items()):
+            xWave=key+(1+int(JobLengthWave/10))
+            if i>0:
+               if abs(list(WaveJobPrintedDic.values())[i-1][1]- list(WaveJobPrintedDic.values())[i][1])<2:
+                   xWave=pxWave + 1
+            fig.add_trace(go.Scatter(x=[xWave], y=[ymaxWaveJob],
+                                    marker=dict(color="red", size=10),
+                                    mode="markers",
+                                    text=value,
+                                    # font_size=18,
+                                    hoverinfo='text'))
+            
+            fig.data[len(fig.data)-1].showlegend = False
+            fig.add_vline(x=xWave, line_width=2,  line_color="red")
+            pxWave=xWave
+           
+        
+        fig.update_layout(
+                hoverlabel=dict(
+                    namelength=-1
+                )
+            )
+        fig.update_layout(title=self.side+' '+PlotTitle)
+           
+    
+        plot(fig,filename=self.side+' '+fileName+".html") 
+       
+        return fig
+
+
+
+
 # ################################### 
 from tkinter import filedialog
 from tkinter import *
@@ -1258,6 +1363,20 @@ if WaveChangePlot:
     
     except:
       1; 
+
+######################C2C Prograss Over Time ######################
+
+if c2cChangePlot:
+    c2cChangeListFRONT,indexJobNameDicFRONT,WaveJobPrintedDicFRONT=CalcC2C_AvrgOfAll(pthF,folder,'Front',JobLength,PanelLengthInMM,'Left').CreateC2CchangeData(DataPivotFront, JobLengthWave);
+    c2cChangeDF_FRONT=pd.DataFrame(c2cChangeListFRONT)
+    
+    try:
+        c2cChangeListBACK,indexJobNameDicBACK,WaveJobPrintedDicBACK=CalcC2C_AvrgOfAll(pthF,folder,'Back',JobLength,PanelLengthInMM,'Left').CreateC2CchangeData(DataPivotBack, JobLengthWave);
+        c2cChangeDF_BACK=pd.DataFrame(c2cChangeListBACK)
+        
+    except:
+      1; 
+
 
 
 
@@ -1387,6 +1506,33 @@ if WaveChangePlot:
     except:
         1
 
+#############################################c2cCahnge ####################################################
+#################Front
+if c2cChangePlot:
+    PlotTitle= 'c2cCange-FRONT'
+    fileName= "c2cChange_FRONT_AQM"
+    side='Front'
+    
+    try:
+        c2cChangeFRONT=PlotPlotly(pthF, side).Plotc2cChange_WithMovingAVRG(c2cChangeDF_FRONT,indexJobNameDicFRONT,WaveJobPrintedDicFRONT,MoveAveWave, PlotTitle,fileName);
+        # waveChangeFRONT=PlotPlotly(pthF, side).PlotWaveChange(WaveChangeDF_FRONT,indexJobNameDicFRONT,PlotTitle,fileName);
+    
+    except:
+        1
+        
+        
+    ###########Back
+    
+    PlotTitle= 'c2cCange-BACK'
+    fileName= "c2cChange_BACK_AQM"
+    side='Back'
+    
+    try:
+        c2cChangeBACK=PlotPlotly(pthF, side).Plotc2cChange_WithMovingAVRG(c2cChangeDF_BACK,indexJobNameDicBACK,WaveJobPrintedDicBACK,MoveAveWave, PlotTitle,fileName);
+        # waveChangeBACK=PlotPlotly(pthF, side).PlotWaveChange(WaveChangeDF_BACK,indexJobNameDicBACK,PlotTitle,fileName);
+    
+    except:
+        1
 
 
 
@@ -1399,9 +1545,112 @@ print(endFigure - startFigure)
 ##### TILL HERE!!!!
 
 
-# WaveChangeDF=WaveChangeDF_FRONT
+# c2cChangeDF=c2cChangeDF_FRONT
 # indexJobNameDic=indexJobNameDicFRONT
 # WaveJobPrintedDic=WaveJobPrintedDicFRONT
+
+
+# fig = go.Figure()
+   
+# c2cChangeDF = c2cChangeDF.dropna(axis=1)
+
+   
+   
+ 
+   
+# fig.add_trace(
+# go.Scatter(y=list(c2cChangeDF[0]),
+#             name='C2C '))
+# fig.data[len(fig.data)-1].visible = 'legendonly';
+
+
+# fig.add_trace(
+# go.Scatter(y=list(c2cChangeDF[0].rolling(MoveAveWave).mean()),
+#             name='C2C moving average '))
+   
+# # xx=  list(c2cChangeDF[0].rolling(30).mean() )
+#     # ymax=max(WaveRawDataDic[ColorList[0]]-WaveDataWithMaxFilterDic[self.ColorList[0]])
+# ymax=np.max(list(c2cChangeDF[0].rolling(MoveAveWave).mean())[MoveAveWave+10:])+20
+# ymaxWaveJob=np.max(list(c2cChangeDF[0].rolling(MoveAveWave).mean())[MoveAveWave+10:])
+
+# for key, value in indexJobNameDic.items():
+#     fig.add_trace(go.Scatter(x=[key], y=[ymax],
+#                             marker=dict(color="green", size=10),
+#                             mode="markers",
+#                             text=value[0],
+#                             # font_size=18,
+#                             hoverinfo='text'))
+    
+#     fig.data[len(fig.data)-1].showlegend = False
+#     fig.add_vline(x=key, line_width=2, line_dash="dash", line_color="green")
+# pxWave=0     
+# for i ,(key, value) in enumerate(WaveJobPrintedDic.items()):
+#     xWave=key+(1+int(JobLengthWave/10))
+#     if i>0:
+#         if abs(list(WaveJobPrintedDic.values())[i-1][1]- list(WaveJobPrintedDic.values())[i][1])<2:
+#             xWave=pxWave + 1
+#     fig.add_trace(go.Scatter(x=[xWave], y=[ymaxWaveJob],
+#                             marker=dict(color="red", size=10),
+#                             mode="markers",
+#                             text=value,
+#                             # font_size=18,
+#                             hoverinfo='text'))
+    
+#     fig.data[len(fig.data)-1].showlegend = False
+#     fig.add_vline(x=xWave, line_width=2,  line_color="red")
+#     pxWave=xWave
+   
+
+# fig.update_layout(
+#         hoverlabel=dict(
+#             namelength=-1
+#         )
+#     )
+# fig.update_layout(title=PlotPlotly(pthF, side).side+' '+PlotTitle)
+   
+
+# plot(fig,filename=PlotPlotly(pthF, side).side+' '+fileName+".html") 
+
+# #########################################################
+
+# c2c=DataPivotFront
+
+# c2cChangeList=[];
+# indexJobNameDic={}
+
+# # JobNmeSORTED= list(CalcC2C_AvrgOfAll(pthF,folder,'Front',JobLength,PanelLengthInMM,'Left').SortJobsByTime(CalcC2C_AvrgOfAll(pthF,folder,'Front',JobLength,PanelLengthInMM,'Left').fldrs).values())
+
+# ValidSortedJobListWithWave=[]
+
+# for f in c2c.columns:
+#     vlid,lngth=CalcC2C_AvrgOfAll(pthF,folder,'Front',JobLength,PanelLengthInMM,'Left').CheckIfFileValid_forWave(f,JobLengthWave)
+#     if vlid or ('WaveCalibration' in f):
+#             ValidSortedJobListWithWave.append(f)
+            
+            
+# WaveFilesInx=CalcC2C_AvrgOfAll(pthF,folder,'Front',JobLength,PanelLengthInMM,'Left').find_indexes_with_substring(ValidSortedJobListWithWave, 'WaveCalibration')
+# WaveJobPrintedDic={}
+
+# k=0
+# for i,f in enumerate(ValidSortedJobListWithWave):
+#     try:
+    
+#         c2cChangeList=c2cChangeList+list(c2c[f].dropna())
+#         indexJobNameDic[len(c2cChangeList)-1]=[f,lngth]
+
+#         if len(WaveFilesInx)>0:
+#             if i>WaveFilesInx[k] or WaveFilesInx[k] == 0:
+#                 inxForW=list(indexJobNameDic.keys())[len(list(indexJobNameDic.keys()))-2]
+#                 WaveJobPrintedDic[inxForW]=[ValidSortedJobListWithWave[WaveFilesInx[k]],i]
+#                 k=k+1;
+#     except:
+#               continue;
+# # WaveChangeDF=WaveChangeDF_FRONT
+# indexJobNameDic=indexJobNameDicFRONT
+# WaveJobPrintedDic=WaveJobPrintedDicFRONT
+
+# plt.figure()
+# plt.plot(c2cChangeList)
 
 
 # fig = go.Figure()
@@ -1537,4 +1786,12 @@ print(endFigure - startFigure)
 
 #     except:
 #             continue;
-    
+
+
+
+
+
+# C2CregDF=pd.DataFrame(C2Creg)
+
+# plt.figure()
+# plt.plot(C2CregDF['Orange'])    

@@ -34,7 +34,7 @@ colorPNL=px.colors.sequential.Reds[2:]+px.colors.sequential.Viridis;
 CIScurve=1;# On/OFF plot
 
 ## for plot registration estimation in Wave Prints (yuval)
-registrationBetweenWavePrints=0; # On/OFF plot ERROR
+registrationBetweenWavePrints=1; # On/OFF plot ERROR
 StartCycle=3
 rgistBtwPntStartCycle=StartCycle # (it is not a parameter)
 rgistBtwPntEndCycle=StartCycle+1 # for long print can change to larger number

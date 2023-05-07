@@ -36,10 +36,10 @@ JobLength = 0;
 
 
 #### Plots
-I2Splot=0 # Plot I2S 
+I2Splot=1 # Plot I2S 
 C2Cplot=1 # Plot C2C
-ScalePlot=0 # Plot Scale
-WaveChangePlot=1 # Plot Wave Change
+ScalePlot=1 # Plot Scale
+WaveChangePlot=C2Cplot # Plot Wave Change
 c2cChangePlot = WaveChangePlot # Plot c2c Change MUST be align with Plot Wave Change
 
 
@@ -869,33 +869,30 @@ class CalcC2C_AvrgOfAll(DispImagePlacment):
     
         ValidSortedJobListWithWave=[]
         
-        for f in c2c.columns:
+        
+        JobNmeSORTED= list(self.SortJobsByTime( c2c.columns).values())
+
+        
+        for f in JobNmeSORTED:
              vlid,lngth=self.CheckIfFileValid_forWave(f,JobLengthWave)
-             if vlid or ('WaveCalibration' in f):
-                     ValidSortedJobListWithWave.append(f)
+             if vlid :
+                 ValidSortedJobListWithWave.append(f)
              
               
                     
-        WaveFilesInx=self.find_indexes_with_substring(ValidSortedJobListWithWave, 'WaveCalibration')
-        WaveJobPrintedDic={}
         
-        k=0
+        
         for i,f in enumerate(ValidSortedJobListWithWave):
             try:
             
                 c2cChangeList=c2cChangeList+list(c2c[f].dropna())
                 indexJobNameDic[len(c2cChangeList)-1]=[f,lngth]
 
-                if len(WaveFilesInx)>0:
-                    if i>WaveFilesInx[k] or WaveFilesInx[k] == 0:
-                        inxForW=list(indexJobNameDic.keys())[len(list(indexJobNameDic.keys()))-2]
-                        WaveJobPrintedDic[inxForW]=[ValidSortedJobListWithWave[WaveFilesInx[k]],i]
-                        k=k+1;
             except:
                       continue;
               
               
-        return c2cChangeList,indexJobNameDic,WaveJobPrintedDic;
+        return c2cChangeList,indexJobNameDic;
         
     
     def find_indexes_with_substring(self,lst, substring):
@@ -1233,8 +1230,8 @@ class PlotPlotly():
            
            
            # ymax=max(WaveRawDataDic[ColorList[0]]-WaveDataWithMaxFilterDic[self.ColorList[0]])
-        ymax=np.max(list(c2cChangeDF[0].rolling(MoveAveWave).mean())[MoveAveWave+10:])+20
-        ymaxWaveJob=np.max(list(c2cChangeDF[0].rolling(MoveAveWave).mean())[MoveAveWave+10:])
+        ymax=np.mean(list(c2cChangeDF[0].rolling(MoveAveWave).mean())[MoveAveWave+10:])+20
+        ymaxWaveJob=np.mean(list(c2cChangeDF[0].rolling(MoveAveWave).mean())[MoveAveWave+10:])
         
         for key, value in indexJobNameDic.items():
             fig.add_trace(go.Scatter(x=[key], y=[ymax],
@@ -1297,6 +1294,8 @@ folder=PreapareData(pthF).ExtractFilesFromZip();
 
 
 ###################################################################################################################
+
+
 import time
 
 startCalc = time.time()
@@ -1353,6 +1352,10 @@ print(endCalc - startCalc)
 
 
 
+
+
+
+
 ####################Thread###################################
 if ScalePlot:
     ScaleMaxMinDF_FRONTFLeft=CalcC2C_AvrgOfAll(pthF,folder,'Front',JobLength,PanelLengthInMM,'Left').CalcScaleForAllJOBS();
@@ -1365,6 +1368,9 @@ if ScalePlot:
     except:
       1;
 
+
+os.chdir(pthF)
+# #########################################################################################################################
 #################################Wave Prograss Over Time ######################
 if WaveChangePlot:
     WaveChangeListFRONT,indexJobNameDicFRONT,WaveJobPrintedDicFRONT=CalcC2C_AvrgOfAll(pthF,folder,'Front',JobLength,PanelLengthInMM,'Left').CreateWaveChangeData(JobLengthWave);
@@ -1380,22 +1386,18 @@ if WaveChangePlot:
 ######################C2C Prograss Over Time ######################
 
 if c2cChangePlot:
-    c2cChangeListFRONT,indexJobNameDicFRONT,WaveJobPrintedDicFRONT=CalcC2C_AvrgOfAll(pthF,folder,'Front',JobLength,PanelLengthInMM,'Left').CreateC2CchangeData(DataPivotFront, JobLengthWave);
+    c2cChangeListFRONT,indexJobNameDicC2CFRONT=CalcC2C_AvrgOfAll(pthF,folder,'Front',JobLength,PanelLengthInMM,'Left').CreateC2CchangeData(DataPivotFront, JobLengthWave);
     c2cChangeDF_FRONT=pd.DataFrame(c2cChangeListFRONT)
     
     try:
-        c2cChangeListBACK,indexJobNameDicBACK,WaveJobPrintedDicBACK=CalcC2C_AvrgOfAll(pthF,folder,'Back',JobLength,PanelLengthInMM,'Left').CreateC2CchangeData(DataPivotBack, JobLengthWave);
+        c2cChangeListBACK,indexJobNameDicC2CBACK=CalcC2C_AvrgOfAll(pthF,folder,'Back',JobLength,PanelLengthInMM,'Left').CreateC2CchangeData(DataPivotBack, JobLengthWave);
         c2cChangeDF_BACK=pd.DataFrame(c2cChangeListBACK)
         
     except:
       1; 
 
 
-
-
-os.chdir(pthF)
-# #########################################################################################################################
-
+####################################################################################################################
 ###FOR DEBUG
 
 ################### PLOT SIGNALS ############################################
@@ -1527,7 +1529,7 @@ if c2cChangePlot:
     side='Front'
     
     try:
-        c2cChangeFRONT=PlotPlotly(pthF, side).Plotc2cChange_WithMovingAVRG(c2cChangeDF_FRONT,indexJobNameDicFRONT,WaveJobPrintedDicFRONT,MoveAveWave, PlotTitle,fileName);
+        c2cChangeFRONT=PlotPlotly(pthF, side).Plotc2cChange_WithMovingAVRG(c2cChangeDF_FRONT,indexJobNameDicC2CFRONT,WaveJobPrintedDicFRONT,MoveAveWave, PlotTitle,fileName);
         # waveChangeFRONT=PlotPlotly(pthF, side).PlotWaveChange(WaveChangeDF_FRONT,indexJobNameDicFRONT,PlotTitle,fileName);
     
     except:
@@ -1541,7 +1543,7 @@ if c2cChangePlot:
     side='Back'
     
     try:
-        c2cChangeBACK=PlotPlotly(pthF, side).Plotc2cChange_WithMovingAVRG(c2cChangeDF_BACK,indexJobNameDicBACK,WaveJobPrintedDicBACK,MoveAveWave, PlotTitle,fileName);
+        c2cChangeBACK=PlotPlotly(pthF, side).Plotc2cChange_WithMovingAVRG(c2cChangeDF_BACK,indexJobNameDicC2CBACK,WaveJobPrintedDicBACK,MoveAveWave, PlotTitle,fileName);
         # waveChangeBACK=PlotPlotly(pthF, side).PlotWaveChange(WaveChangeDF_BACK,indexJobNameDicBACK,PlotTitle,fileName);
     
     except:

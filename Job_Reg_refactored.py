@@ -882,8 +882,10 @@ for i,pt in enumerate(pthComp):
 end = time.time()
 print(end - start)
 
+# os.chdir(RecPath)
+os.chdir(pthF)
 
-os.chdir(RecPath)
+
 
                     
 ############################################################################################################
@@ -1140,6 +1142,7 @@ if Plot_RegForAllColors_Left:
                             text='Flat Id='+str(dbtmpSentCrrFRONT['Flat Id'][i])+' '+pctext,
                             # font_size=18,
                             hoverinfo='text'))
+                fig.data[len(fig.data)-1].showlegend = False
                 ymin=ymin-50;
             
             
@@ -1281,6 +1284,8 @@ if Plot_RegForAllColors_Right:
                                 text='Flat Id='+str(dbtmpSentCrrBACK['Flat Id'][i])+' '+pctext,
                                 # font_size=18,
                                 hoverinfo='text'))
+                    fig.data[len(fig.data)-1].showlegend = False
+
                     ymin=ymin-50;   
             except:
                 continue;                 
@@ -1412,6 +1417,8 @@ if Plot_Scale:
                             text='Flat Id='+str(dbtmpSentCrrFRONT['Flat Id'][i])+' '+pctext,
                             # font_size=18,
                             hoverinfo='text'))
+                fig.data[len(fig.data)-1].showlegend = False
+
                 ymin=ymin-50;
             
             
@@ -1487,6 +1494,8 @@ if Plot_Scale:
                                     text='Flat Id='+str(dbtmpSentCrrBACK['Flat Id'][i])+' '+pctext,
                                     # font_size=18,
                                     hoverinfo='text'))
+                        fig.data[len(fig.data)-1].showlegend = False
+
                         ymin=ymin-50;   
                         
     

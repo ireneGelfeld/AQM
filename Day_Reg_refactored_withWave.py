@@ -1182,7 +1182,7 @@ class PlotPlotly():
                                      hoverinfo='text'))
              
              fig.data[len(fig.data)-1].showlegend = False
-             fig.add_vline(x=key, line_width=1, line_dash="dash", line_color="green")
+             fig.add_vline(x=key, line_width=0.5, line_dash="dash", line_color="green")
         pxWave=0     
         for i ,(key, value) in enumerate(WaveJobPrintedDic.items()):
              xWave=key+(1+int(JobLengthWave/10))
@@ -1284,8 +1284,10 @@ class PlotPlotly():
        #              name='Scale Left moving average '))
       
         
-       ymax=np.max(WaveChangeDF[clr].rolling(MoveAveWave).mean())+20
-       ymaxWaveJob=np.max(WaveChangeDF[clr].rolling(MoveAveWave).mean())
+       # ymax=np.max(WaveChangeDF[clr].rolling(MoveAveWave).mean())+20
+       # ymaxWaveJob=np.max(WaveChangeDF[clr].rolling(MoveAveWave).mean())
+       ymax=200
+       ymaxWaveJob=180
         
        fig= self.PlotJobNameAndWaveJob(fig, ymax, ymaxWaveJob, indexJobNameDic, WaveJobPrintedDic)
            
@@ -1329,8 +1331,11 @@ class PlotPlotly():
            
            
            # ymax=max(WaveRawDataDic[ColorList[0]]-WaveDataWithMaxFilterDic[self.ColorList[0]])
-        ymax=np.mean(list(c2cChangeDF[0].rolling(MoveAveWave).mean())[MoveAveWave+10:])+20
-        ymaxWaveJob=np.mean(list(c2cChangeDF[0].rolling(MoveAveWave).mean())[MoveAveWave+10:])
+        # ymax=np.mean(list(c2cChangeDF[0].rolling(MoveAveWave).mean())[MoveAveWave+10:])+20
+        # ymaxWaveJob=np.mean(list(c2cChangeDF[0].rolling(MoveAveWave).mean())[MoveAveWave+10:])
+        
+        ymax=200
+        ymaxWaveJob=180
         
         fig= self.PlotJobNameAndWaveJob(fig, ymax, ymaxWaveJob, indexJobNameDic, WaveJobPrintedDic)
 
@@ -1398,8 +1403,10 @@ class PlotPlotly():
 
            
            # ymax=max(WaveRawDataDic[ColorList[0]]-WaveDataWithMaxFilterDic[self.ColorList[0]])
-        ymax=np.mean(list(ScaleChangeDFRight[0].rolling(MoveAveWave).mean())[MoveAveWave+10:])+20
-        ymaxWaveJob=np.mean(list(ScaleChangeDFRight[0].rolling(MoveAveWave).mean())[MoveAveWave+10:])
+        # ymax=np.mean(list(ScaleChangeDFRight[0].rolling(MoveAveWave).mean())[MoveAveWave+10:])+20
+        # ymaxWaveJob=np.mean(list(ScaleChangeDFRight[0].rolling(MoveAveWave).mean())[MoveAveWave+10:])
+        ymax=200
+        ymaxWaveJob=180
         
         fig= self.PlotJobNameAndWaveJob(fig, ymax, ymaxWaveJob, indexJobNameDic, WaveJobPrintedDic)
 
@@ -1431,8 +1438,11 @@ class PlotPlotly():
                         name=ListName[i]+' moving average window='+str(MoveAveWave)))
             
         
-        ymax=np.mean(list(df.rolling(MoveAveWave).mean())[MoveAveWave+10:])+20
-        ymaxWaveJob=np.mean(list(df.rolling(MoveAveWave).mean())[MoveAveWave+10:])
+        # ymax=np.mean(list(df.rolling(MoveAveWave).mean())[MoveAveWave+10:])+20
+        # ymaxWaveJob=np.mean(list(df.rolling(MoveAveWave).mean())[MoveAveWave+10:])
+        
+        ymax=200
+        ymaxWaveJob=180
         
         fig= self.PlotJobNameAndWaveJob(fig, ymax, ymaxWaveJob, indexJobNameDic, WaveJobPrintedDic)
 

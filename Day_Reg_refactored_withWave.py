@@ -1182,7 +1182,7 @@ class PlotPlotly():
                                      hoverinfo='text'))
              
              fig.data[len(fig.data)-1].showlegend = False
-             fig.add_vline(x=key, line_width=2, line_dash="dash", line_color="green")
+             fig.add_vline(x=key, line_width=1, line_dash="dash", line_color="green")
         pxWave=0     
         for i ,(key, value) in enumerate(WaveJobPrintedDic.items()):
              xWave=key+(1+int(JobLengthWave/10))
@@ -1197,7 +1197,7 @@ class PlotPlotly():
                                      hoverinfo='text'))
              
              fig.data[len(fig.data)-1].showlegend = False
-             fig.add_vline(x=xWave, line_width=2,  line_color="red")
+             fig.add_vline(x=xWave, line_width=1,  line_color="red")
              pxWave=xWave
              
         return fig

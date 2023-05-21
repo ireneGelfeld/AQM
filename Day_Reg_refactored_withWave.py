@@ -1474,7 +1474,7 @@ class PlotPlotly():
        
         return fig    
 
-   def PlotScaleChange_WithMovingAVRG_OBG_CMYK(self,ScaleChangeDFCMYK,ScaleChangeDFOBG,ScaleChangeDFLeft,ScaleChangeDFRight,indexJobNameDic,WaveJobPrintedDic,MoveAveWaveScale, PlotTitle,fileName):
+    def PlotScaleChange_WithMovingAVRG_OBG_CMYK(self,ScaleChangeDFOBG,ScaleChangeDFCMYK,ScaleChangeDFLeft,ScaleChangeDFRight,indexJobNameDic,WaveJobPrintedDic,MoveAveWaveScale, PlotTitle,fileName):
        
       
        fig = go.Figure()
@@ -1503,7 +1503,7 @@ class PlotPlotly():
     
            
            fig.add_trace(
-           go.Scatter(y=list(ScaleChangeDFCMYK.rolling(MoveAveWaveScale).mean()), line_color = '#FFCBA4',# peach
+           go.Scatter(y=list(ScaleChangeDFCMYK.rolling(MoveAveWaveScale).mean()), line_color = '#FF7F50',# warm oraneg pink
                        name='Scale Average moving average CMYK= '+str(MoveAveWaveScale)))         
            
            
@@ -1514,7 +1514,7 @@ class PlotPlotly():
     
            
            fig.add_trace(
-           go.Scatter(y=list(ScaleChangeDFOBG.rolling(MoveAveWaveScale).mean()), line_color = '#00FFFF',  # Aqua color code
+           go.Scatter(y=list(ScaleChangeDFOBG.rolling(MoveAveWaveScale).mean()), line_color = '#008080',  # Aqua color code
                        name='Scale Average moving average OBG= '+str(MoveAveWaveScale))) 
            
        except:
@@ -1746,9 +1746,9 @@ if scaleChangePlot:
     try:
         
         scaleChangeListBACKleft,indexJobNameDicScaleBACK=CalcC2C_AvrgOfAll(pthF,folder,'Back',JobLength,PanelLengthInMM,'Left').CreateScalechangeData(ScaleMaxMinDF_BACKFLeft, JobLengthWave);
-        scaleChangeDF_BACKleft=pd.DataFrame(ScaleMaxMinDF_BACKFLeft)
+        scaleChangeDF_BACKleft=pd.DataFrame(scaleChangeListBACKleft)
         scaleChangeListBACKright,indexJobNameDicScaleBACK=CalcC2C_AvrgOfAll(pthF,folder,'Back',JobLength,PanelLengthInMM,'Right').CreateScalechangeData(ScaleMaxMinDF_BACKRight, JobLengthWave);
-        scaleChangeDF_BACKright=pd.DataFrame(ScaleMaxMinDF_BACKRight)
+        scaleChangeDF_BACKright=pd.DataFrame(scaleChangeListBACKright)
         
         scaleChangeListBACKleftOBG,indexJobNameDicScaleBACK=CalcC2C_AvrgOfAll(pthF,folder,'Back',JobLength,PanelLengthInMM,'Left').CreateScalechangeData(ScaleMaxMinDFOBG_BACKFLeft, JobLengthWave);
         scaleChangeDF_BACKleftOBG=pd.DataFrame(scaleChangeListBACKleftOBG)
@@ -1941,13 +1941,13 @@ if scaleChangePlot:
        ScaleChangeDFAverageOBG = pd.concat([scaleChangeDF_FRONTleftOBG, scaleChangeDF_FRONTrightOBG], axis=1).mean(axis=1)
        
        
-       scaleChangeDF_FRONTleftMCYK = scaleChangeDF_FRONTleftMCYK.dropna(axis=1)
-       scaleChangeDF_FRONTrightMCYK = scaleChangeDF_FRONTrightMCYK.dropna(axis=1)
-       ScaleChangeDFAverageMCYK = pd.concat([scaleChangeDF_FRONTleftMCYK, scaleChangeDF_FRONTrightMCYK], axis=1).mean(axis=1)
+       scaleChangeDF_FRONTleftCMYK = scaleChangeDF_FRONTleftCMYK.dropna(axis=1)
+       scaleChangeDF_FRONTrightCMYK = scaleChangeDF_FRONTrightCMYK.dropna(axis=1)
+       ScaleChangeDFAverageCMYK = pd.concat([scaleChangeDF_FRONTleftCMYK, scaleChangeDF_FRONTrightCMYK], axis=1).mean(axis=1)
 
        
        # scaleChangeFRONT=PlotPlotly(pthF, side).PlotScaleChange_WithMovingAVRG(scaleChangeDF_FRONTleft,scaleChangeDF_FRONTright,indexJobNameDicScaleFRONT,WaveJobPrintedDicFRONT,MoveAveWaveScale, PlotTitle,fileName);
-       scaleChangeFRONT=PlotPlotly(pthF, side).PlotScaleChange_WithMovingAVRG(scaleChangeDF_FRONTleft,scaleChangeDF_FRONTright,indexJobNameDicScaleFRONT,WaveJobPrintedDicFRONT,MoveAveWaveScale, PlotTitle,fileName);
+       scaleChangeFRONT=PlotPlotly(pthF, side).PlotScaleChange_WithMovingAVRG_OBG_CMYK(ScaleChangeDFAverageOBG,ScaleChangeDFAverageCMYK,scaleChangeDF_FRONTleft,scaleChangeDF_FRONTright,indexJobNameDicFRONT,WaveJobPrintedDicFRONT,MoveAveWaveScale, PlotTitle,fileName);
  
        # waveChangeFRONT=PlotPlotly(pthF, side).PlotWaveChange(WaveChangeDF_FRONT,indexJobNameDicFRONT,PlotTitle,fileName);
     
@@ -1962,9 +1962,22 @@ if scaleChangePlot:
     side='Back'
     
     try:
-        scaleChangeBACK=PlotPlotly(pthF, side).PlotScaleChange_WithMovingAVRG(scaleChangeDF_BACKleft,scaleChangeDF_BACKright,indexJobNameDicScaleBACK,WaveJobPrintedDicBACK,MoveAveWaveScale, PlotTitle,fileName);
+        
+        scaleChangeDF_BACKleftOBG = scaleChangeDF_BACKleftOBG.dropna(axis=1)
+        scaleChangeDF_BACKrightOBG = scaleChangeDF_BACKrightOBG.dropna(axis=1)
+        ScaleChangeDFAverageBACKOBG = pd.concat([scaleChangeDF_BACKleftOBG, scaleChangeDF_BACKrightOBG], axis=1).mean(axis=1)
+        
+        
+        scaleChangeDF_BACKleftCMYK = scaleChangeDF_BACKleftCMYK.dropna(axis=1)
+        scaleChangeDF_BACKrightCMYK = scaleChangeDF_BACKrightCMYK.dropna(axis=1)
+        ScaleChangeDFAverageBACKCMYK = pd.concat([scaleChangeDF_BACKleftCMYK, scaleChangeDF_BACKrightCMYK], axis=1).mean(axis=1)
+
+
+        
+        
+        scaleChangeBACK=PlotPlotly(pthF, side).PlotScaleChange_WithMovingAVRG_OBG_CMYK(ScaleChangeDFAverageBACKOBG,ScaleChangeDFAverageBACKCMYK,scaleChangeDF_BACKleft,scaleChangeDF_BACKright,indexJobNameDicBACK,WaveJobPrintedDicBACK,MoveAveWaveScale, PlotTitle,fileName);
         # waveChangeBACK=PlotPlotly(pthF, side).PlotWaveChange(WaveChangeDF_BACK,indexJobNameDicBACK,PlotTitle,fileName);
-    
+
     except:
         1
 ############################################################################################
@@ -1983,96 +1996,3 @@ print(endFigure - startFigure)
 
 # 
 ##### TILL HERE!!!!
-
-
-# (DataAllMeanColorSET1,DataAllMeanColorSET2,DataAllMeanColorSET3,colorDic,RefSETloc,fname,f)
-
-# f='QCS Production_100 Archive 13-05-2023 00-11-20.zip'
-
-# fname= 'Registration_'+CalcC2C_AvrgOfAll(pthF,folder,'Front',JobLength,PanelLengthInMM,'Left').pageSide+'.csv';
-
-# DataAllMeanColorSET1,DataAllMeanColorSET2,DataAllMeanColorSET3,colorDic,RefSETloc = CalcC2C_AvrgOfAll(pthF,folder,'Front',JobLength,PanelLengthInMM,'Left').CalcScaleFromTarget();
-
-# colorDic = colorDicOBG
-# RawDataSuccess,flatNumberFailed,l1= CalcC2C_AvrgOfAll(pthF,folder,'Front',JobLength,PanelLengthInMM,'Left').LoadRawData(fname,f);
-
-# RawDataSuccess=CalcC2C_AvrgOfAll(pthF,folder,'Front',JobLength,PanelLengthInMM,'Left').ConvertRowsToInt(RawDataSuccess);
-
-# indexNumberFailed=[]
-# col=[];
-# [col.append(str(j)) for j in range(len(l1))];
-# St1dataAllColors=pd.DataFrame(columns=col,index=colorDic.values());
-# St2dataAllColors=pd.DataFrame(columns=col,index=colorDic.values());
-# St3dataAllColors=pd.DataFrame(columns=col,index=colorDic.values());
-
-
-# for j,l in enumerate(l1):
-#     if not(l in flatNumberFailed):
-#         FlatIDdata=RawDataSuccess[RawDataSuccess['Flat Id']==l].reset_index();
-        
-#         for i,x in enumerate(FlatIDdata['Set #1 X']):
-#             St1dataAllColors[str(j)][FlatIDdata['Ink\Sets'][i]]=int(x);
-#         for i,x in enumerate(FlatIDdata['Set #2 X']):
-#             St2dataAllColors[str(j)][FlatIDdata['Ink\Sets'][i]]=int(x);
-#         for i,x in enumerate(FlatIDdata['Set #3 X']):
-#             St3dataAllColors[str(j)][FlatIDdata['Ink\Sets'][i]]=int(x);
-        
-#     else:
-#         indexNumberFailed.append(j)
-#         if j>0:
-#             St1dataAllColors[str(j)]=St1dataAllColors[str(j-1)]
-#             St2dataAllColors[str(j)]=St2dataAllColors[str(j-1)]
-#             St3dataAllColors[str(j)]=St3dataAllColors[str(j-1)]
-#         else:
-#             St1dataAllColors[str(j)]=0
-#             St2dataAllColors[str(j)]=0
-#             St3dataAllColors[str(j)]=0
-
-  
-# ## 3 Point
-# ## Create Panel Set per color - Actual color position
-# PanelColorSet={};
-# ListColorDict={};
-
-# for c in St1dataAllColors.columns:
-#      for inx in St1dataAllColors.index:
-#          ListColorDict[inx]=[St1dataAllColors[c][inx],St2dataAllColors[c][inx],St3dataAllColors[c][inx]]
-#      PanelColorSet[c]=ListColorDict
-#      ListColorDict={}
-
-   
-
-   
-
-#  ## Calc Scale per Color 
-
-# x=[0,1,2];
-
-
-
-# Scale=St1dataAllColors;
-
-
-# for c in St1dataAllColors.columns:
-#      for inx in St1dataAllColors.index:
-#          y= PanelColorSet[c][inx]
-#          z = np.polyfit(x, y, 1)
-#          p = np.poly1d(z)
-#          try:
-#              Scale[c][inx]=(RefSETloc['Slop'][inx]/list(p)[0]-1)*self.PanelLengthInMM*1000
-#          except:
-#              continue;
-
-   
-
-   
-# ## Calc Scale Max - Min        
-# ScaleMaxMin=[]
-# for c in Scale.columns:
-#     ScaleMaxMin.append(np.max(Scale[c])-np.min(Scale[c]));
-    
-
- 
- 
-
-

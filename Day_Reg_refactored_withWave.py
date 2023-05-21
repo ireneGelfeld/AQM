@@ -20,6 +20,11 @@ MoveAveWaveScale=100;
 #For 252
 MarkSetVersion=252
 
+
+### Job name markers location
+ymax=200 # Job name location
+ymaxWaveJob=180 # Wave job location
+
 if MarkSetVersion==252:
 
     
@@ -1286,8 +1291,8 @@ class PlotPlotly():
         
        # ymax=np.max(WaveChangeDF[clr].rolling(MoveAveWave).mean())+20
        # ymaxWaveJob=np.max(WaveChangeDF[clr].rolling(MoveAveWave).mean())
-       ymax=200
-       ymaxWaveJob=180
+       # ymax=200
+       # ymaxWaveJob=180
         
        fig= self.PlotJobNameAndWaveJob(fig, ymax, ymaxWaveJob, indexJobNameDic, WaveJobPrintedDic)
            
@@ -1334,8 +1339,8 @@ class PlotPlotly():
         # ymax=np.mean(list(c2cChangeDF[0].rolling(MoveAveWave).mean())[MoveAveWave+10:])+20
         # ymaxWaveJob=np.mean(list(c2cChangeDF[0].rolling(MoveAveWave).mean())[MoveAveWave+10:])
         
-        ymax=200
-        ymaxWaveJob=180
+        # ymax=200
+        # ymaxWaveJob=180
         
         fig= self.PlotJobNameAndWaveJob(fig, ymax, ymaxWaveJob, indexJobNameDic, WaveJobPrintedDic)
 
@@ -1405,8 +1410,8 @@ class PlotPlotly():
            # ymax=max(WaveRawDataDic[ColorList[0]]-WaveDataWithMaxFilterDic[self.ColorList[0]])
         # ymax=np.mean(list(ScaleChangeDFRight[0].rolling(MoveAveWave).mean())[MoveAveWave+10:])+20
         # ymaxWaveJob=np.mean(list(ScaleChangeDFRight[0].rolling(MoveAveWave).mean())[MoveAveWave+10:])
-        ymax=200
-        ymaxWaveJob=180
+        # ymax=200
+        # ymaxWaveJob=180
         
         fig= self.PlotJobNameAndWaveJob(fig, ymax, ymaxWaveJob, indexJobNameDic, WaveJobPrintedDic)
 
@@ -1441,8 +1446,8 @@ class PlotPlotly():
         # ymax=np.mean(list(df.rolling(MoveAveWave).mean())[MoveAveWave+10:])+20
         # ymaxWaveJob=np.mean(list(df.rolling(MoveAveWave).mean())[MoveAveWave+10:])
         
-        ymax=200
-        ymaxWaveJob=180
+        # ymax=200
+        # ymaxWaveJob=180
         
         fig= self.PlotJobNameAndWaveJob(fig, ymax, ymaxWaveJob, indexJobNameDic, WaveJobPrintedDic)
 

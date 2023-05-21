@@ -647,7 +647,52 @@ class CalcC2C_AvrgOfAll(DispImagePlacment):
            except:
                continue;
         return ScaleMaxMinDF
-                
+ 
+
+    def CalcScaleForAllJOBS_OBG_CMYK(self):
+        
+        ScaleMaxMinDF=pd.DataFrame();
+        ScaleMaxMinDFOBG=pd.DataFrame();
+        ScaleMaxMinDFCMYK=pd.DataFrame();
+        
+        Obg=['Blue','Orange','Green']
+        colorDicOBG={}
+        colorDicCMYK={}
+        
+        fname= 'Registration_'+self.pageSide+'.csv';
+        
+        DataAllMeanColorSET1,DataAllMeanColorSET2,DataAllMeanColorSET3,colorDic,RefSETloc = self.CalcScaleFromTarget();
+        
+        
+        # colorDic={1:'Magenta',2:'Black',3:'Yellow',4:'Cyan',5:'Blue',6:'Orange',7:'Green'}
+        
+        if len(colorDic.keys())>4:
+            for key,value in colorDic.items():
+                if value in Obg:
+                    colorDicOBG[key]=value;
+                else:                     
+                    colorDicCMYK[key]=value;
+
+
+        
+
+        for f in self.fldrs:
+           # stP=pd.DataFrame();
+
+
+           try:
+               St1dataAllColors,St2dataAllColors,St3dataAllColors,RefSETloc,Scale,ScaleMaxMin,colorDic=self.DataForCalcSCALE_FromData(DataAllMeanColorSET1,DataAllMeanColorSET2,DataAllMeanColorSET3,colorDic,RefSETloc,fname,f);
+               ScaleMaxMinDF = pd.concat([ScaleMaxMinDF, pd.Series(ScaleMaxMin, name=f)], axis=1)
+
+               St1dataAllColors,St2dataAllColors,St3dataAllColors,RefSETloc,Scale,ScaleMaxMinOBG,colorDicOBG=self.DataForCalcSCALE_FromData(DataAllMeanColorSET1,DataAllMeanColorSET2,DataAllMeanColorSET3,colorDicOBG,RefSETloc,fname,f);
+               ScaleMaxMinDFOBG = pd.concat([ScaleMaxMinDFOBG, pd.Series(ScaleMaxMinOBG, name=f)], axis=1)
+               St1dataAllColors,St2dataAllColors,St3dataAllColors,RefSETloc,Scale,ScaleMaxMinCMYK,colorDicCMYK=self.DataForCalcSCALE_FromData(DataAllMeanColorSET1,DataAllMeanColorSET2,DataAllMeanColorSET3,colorDicCMYK,RefSETloc,fname,f);
+               ScaleMaxMinDFCMYK = pd.concat([ScaleMaxMinDFCMYK, pd.Series(ScaleMaxMinCMYK, name=f)], axis=1)
+               # stP[f]=ScaleMaxMin;
+               # ScaleMaxMinDF=pd.concat([ScaleMaxMinDF, stP[f]],axis=1);
+           except:
+               continue;
+        return ScaleMaxMinDF,ScaleMaxMinDFOBG, ScaleMaxMinDFCMYK          
         
     def CalcC2CSingleSide(self,fname,f,DataAllMeanColorSET1,DataAllMeanColorSET2,DataAllMeanColorSET3):
         RawDataSuccess,flatNumberFailed,l1= self.LoadRawData(fname,f);
@@ -1429,7 +1474,96 @@ class PlotPlotly():
        
         return fig    
 
+   def PlotScaleChange_WithMovingAVRG_OBG_CMYK(self,ScaleChangeDFCMYK,ScaleChangeDFOBG,ScaleChangeDFLeft,ScaleChangeDFRight,indexJobNameDic,WaveJobPrintedDic,MoveAveWaveScale, PlotTitle,fileName):
+       
+      
+       fig = go.Figure()
 
+      
+       ScaleChangeDFRight = ScaleChangeDFRight.dropna(axis=1)
+       ScaleChangeDFLeft = ScaleChangeDFLeft.dropna(axis=1)
+       
+       ScaleChangeDFAverage = pd.concat([ScaleChangeDFRight, ScaleChangeDFLeft], axis=1).mean(axis=1)
+
+       fig.add_trace(
+       go.Scatter(y=list(ScaleChangeDFAverage),
+                   name='Scale Average'))
+       fig.data[len(fig.data)-1].visible = 'legendonly';
+
+       
+       fig.add_trace(
+       go.Scatter(y=list(ScaleChangeDFAverage.rolling(MoveAveWaveScale).mean()), line_color = '#9370DB',# MediumPurple
+                   name='Scale Average moving average = '+str(MoveAveWaveScale)))         
+    
+       try:
+           fig.add_trace(
+           go.Scatter(y=list(ScaleChangeDFCMYK),
+                       name='Scale Average CMYK'))
+           fig.data[len(fig.data)-1].visible = 'legendonly';
+    
+           
+           fig.add_trace(
+           go.Scatter(y=list(ScaleChangeDFCMYK.rolling(MoveAveWaveScale).mean()), line_color = '#FFCBA4',# peach
+                       name='Scale Average moving average CMYK= '+str(MoveAveWaveScale)))         
+           
+           
+           fig.add_trace(
+           go.Scatter(y=list(ScaleChangeDFOBG),
+                       name='Scale Average OBG'))
+           fig.data[len(fig.data)-1].visible = 'legendonly';
+    
+           
+           fig.add_trace(
+           go.Scatter(y=list(ScaleChangeDFOBG.rolling(MoveAveWaveScale).mean()), line_color = '#00FFFF',  # Aqua color code
+                       name='Scale Average moving average OBG= '+str(MoveAveWaveScale))) 
+           
+       except:
+           1
+     
+       # fig.add_trace(
+       # go.Scatter(y=list(ScaleChangeDFRight[0]),
+       #             name='Scale Right'))
+       # fig.data[len(fig.data)-1].visible = 'legendonly';
+
+       
+       # fig.add_trace(
+       # go.Scatter(y=list(ScaleChangeDFRight[0].rolling(MoveAveWave).mean()),
+       #             name='Scale Right moving average '))
+          
+
+       # fig.add_trace(
+       # go.Scatter(y=list(ScaleChangeDFLeft[0]),
+       #             name='Scale Left'))
+       # fig.data[len(fig.data)-1].visible = 'legendonly';
+
+       
+       # fig.add_trace(
+       # go.Scatter(y=list(ScaleChangeDFLeft[0].rolling(MoveAveWave).mean()),
+       #             name='Scale Left moving average '))
+
+
+          
+          # ymax=max(WaveRawDataDic[ColorList[0]]-WaveDataWithMaxFilterDic[self.ColorList[0]])
+       # ymax=np.mean(list(ScaleChangeDFRight[0].rolling(MoveAveWave).mean())[MoveAveWave+10:])+20
+       # ymaxWaveJob=np.mean(list(ScaleChangeDFRight[0].rolling(MoveAveWave).mean())[MoveAveWave+10:])
+       # ymax=200
+       # ymaxWaveJob=180
+       
+       fig= self.PlotJobNameAndWaveJob(fig, ymax, ymaxWaveJob, indexJobNameDic, WaveJobPrintedDic)
+
+          
+       
+       fig.update_layout(
+               hoverlabel=dict(
+                   namelength=-1
+               )
+           )
+       fig.update_layout(title=self.side+' '+PlotTitle)
+          
+   
+       plot(fig,filename=self.side+' '+fileName+".html") 
+      
+       return fig  
 
     
     def Plot_YuriMethod(self,dfList,ListName,indexJobNameDic,WaveJobPrintedDic,MoveAveWave,PlotTitle,fileName):
@@ -1541,13 +1675,21 @@ print(endCalc - startCalc)
 
 ####################Thread###################################
 
-ScaleMaxMinDF_FRONTFLeft=CalcC2C_AvrgOfAll(pthF,folder,'Front',JobLength,PanelLengthInMM,'Left').CalcScaleForAllJOBS();
-ScaleMaxMinDF_FRONTRight=CalcC2C_AvrgOfAll(pthF,folder,'Front',JobLength,PanelLengthInMM,'Right').CalcScaleForAllJOBS();
+# ScaleMaxMinDF_FRONTFLeft=CalcC2C_AvrgOfAll(pthF,folder,'Front',JobLength,PanelLengthInMM,'Left').CalcScaleForAllJOBS();
+
+ScaleMaxMinDF_FRONTFLeft,ScaleMaxMinDFOBG_FRONTFLeft, ScaleMaxMinDFCMYK_FRONTFLeft=CalcC2C_AvrgOfAll(pthF,folder,'Front',JobLength,PanelLengthInMM,'Left').CalcScaleForAllJOBS_OBG_CMYK();
+
+ScaleMaxMinDF_FRONTRight,ScaleMaxMinDFOBG_FRONTFRight, ScaleMaxMinDFCMYK_FRONTFRight=CalcC2C_AvrgOfAll(pthF,folder,'Front',JobLength,PanelLengthInMM,'Right').CalcScaleForAllJOBS_OBG_CMYK();
   
   
 try:
-  ScaleMaxMinDF_BACKFLeft=CalcC2C_AvrgOfAll(pthF,folder,'Back',JobLength,PanelLengthInMM,'Left').CalcScaleForAllJOBS();
-  ScaleMaxMinDF_BACKRight=CalcC2C_AvrgOfAll(pthF,folder,'Back',JobLength,PanelLengthInMM,'Right').CalcScaleForAllJOBS();
+  # ScaleMaxMinDF_BACKFLeft=CalcC2C_AvrgOfAll(pthF,folder,'Back',JobLength,PanelLengthInMM,'Left').CalcScaleForAllJOBS();
+  # ScaleMaxMinDF_BACKRight=CalcC2C_AvrgOfAll(pthF,folder,'Back',JobLength,PanelLengthInMM,'Right').CalcScaleForAllJOBS();
+  
+  ScaleMaxMinDF_BACKFLeft,ScaleMaxMinDFOBG_BACKFLeft, ScaleMaxMinDFCMYK_BACKFLeft=CalcC2C_AvrgOfAll(pthF,folder,'Back',JobLength,PanelLengthInMM,'Left').CalcScaleForAllJOBS_OBG_CMYK();
+
+  ScaleMaxMinDF_BACKRight,ScaleMaxMinDFOBG_BACKFRight, ScaleMaxMinDFCMYK_BACKFRight=CalcC2C_AvrgOfAll(pthF,folder,'Back',JobLength,PanelLengthInMM,'Right').CalcScaleForAllJOBS_OBG_CMYK();
+   
 except:
   1;
 
@@ -1584,15 +1726,41 @@ if c2cChangePlot:
 if scaleChangePlot:
     scaleChangeListFRONTleft,indexJobNameDicScaleFRONT=CalcC2C_AvrgOfAll(pthF,folder,'Front',JobLength,PanelLengthInMM,'Left').CreateScalechangeData(ScaleMaxMinDF_FRONTFLeft, JobLengthWave);
     scaleChangeDF_FRONTleft=pd.DataFrame(scaleChangeListFRONTleft)
-    scaleChangeListFRONTright,indexJobNameDicScaleFRONT=CalcC2C_AvrgOfAll(pthF,folder,'Front',JobLength,PanelLengthInMM,'Left').CreateScalechangeData(ScaleMaxMinDF_FRONTRight, JobLengthWave);
+    scaleChangeListFRONTright,indexJobNameDicScaleFRONT=CalcC2C_AvrgOfAll(pthF,folder,'Front',JobLength,PanelLengthInMM,'Right').CreateScalechangeData(ScaleMaxMinDF_FRONTRight, JobLengthWave);
     scaleChangeDF_FRONTright=pd.DataFrame(scaleChangeListFRONTright)
     
+    try:
+        scaleChangeListFRONTleftOBG,indexJobNameDicScaleFRONT=CalcC2C_AvrgOfAll(pthF,folder,'Front',JobLength,PanelLengthInMM,'Left').CreateScalechangeData(ScaleMaxMinDFOBG_FRONTFLeft, JobLengthWave);
+        scaleChangeDF_FRONTleftOBG=pd.DataFrame(scaleChangeListFRONTleftOBG)
+        scaleChangeListFRONTrightOBG,indexJobNameDicScaleFRONT=CalcC2C_AvrgOfAll(pthF,folder,'Front',JobLength,PanelLengthInMM,'Right').CreateScalechangeData(ScaleMaxMinDFOBG_FRONTFRight, JobLengthWave);
+        scaleChangeDF_FRONTrightOBG=pd.DataFrame(scaleChangeListFRONTrightOBG)
+
+        scaleChangeListFRONTleftCMYK,indexJobNameDicScaleFRONT=CalcC2C_AvrgOfAll(pthF,folder,'Front',JobLength,PanelLengthInMM,'Left').CreateScalechangeData(ScaleMaxMinDFCMYK_FRONTFLeft, JobLengthWave);
+        scaleChangeDF_FRONTleftCMYK=pd.DataFrame(scaleChangeListFRONTleftCMYK)
+        scaleChangeListFRONTrightCMYK,indexJobNameDicScaleFRONT=CalcC2C_AvrgOfAll(pthF,folder,'Front',JobLength,PanelLengthInMM,'Right').CreateScalechangeData(ScaleMaxMinDFCMYK_FRONTFRight, JobLengthWave);
+        scaleChangeDF_FRONTrightCMYK=pd.DataFrame(scaleChangeListFRONTrightCMYK)
+
+    except:
+        1
+
     try:
         
         scaleChangeListBACKleft,indexJobNameDicScaleBACK=CalcC2C_AvrgOfAll(pthF,folder,'Back',JobLength,PanelLengthInMM,'Left').CreateScalechangeData(ScaleMaxMinDF_BACKFLeft, JobLengthWave);
         scaleChangeDF_BACKleft=pd.DataFrame(ScaleMaxMinDF_BACKFLeft)
-        scaleChangeListBACKright,indexJobNameDicScaleBACK=CalcC2C_AvrgOfAll(pthF,folder,'Back',JobLength,PanelLengthInMM,'Left').CreateScalechangeData(ScaleMaxMinDF_BACKRight, JobLengthWave);
+        scaleChangeListBACKright,indexJobNameDicScaleBACK=CalcC2C_AvrgOfAll(pthF,folder,'Back',JobLength,PanelLengthInMM,'Right').CreateScalechangeData(ScaleMaxMinDF_BACKRight, JobLengthWave);
         scaleChangeDF_BACKright=pd.DataFrame(ScaleMaxMinDF_BACKRight)
+        
+        scaleChangeListBACKleftOBG,indexJobNameDicScaleBACK=CalcC2C_AvrgOfAll(pthF,folder,'Back',JobLength,PanelLengthInMM,'Left').CreateScalechangeData(ScaleMaxMinDFOBG_BACKFLeft, JobLengthWave);
+        scaleChangeDF_BACKleftOBG=pd.DataFrame(scaleChangeListBACKleftOBG)
+        scaleChangeListBACKrightOBG,indexJobNameDicScaleBACK=CalcC2C_AvrgOfAll(pthF,folder,'Back',JobLength,PanelLengthInMM,'Right').CreateScalechangeData(ScaleMaxMinDFOBG_BACKFRight, JobLengthWave);
+        scaleChangeDF_BACKrightOBG=pd.DataFrame(scaleChangeListBACKrightOBG)
+
+        scaleChangeListBACKleftCMYK,indexJobNameDicScaleBACK=CalcC2C_AvrgOfAll(pthF,folder,'Back',JobLength,PanelLengthInMM,'Left').CreateScalechangeData(ScaleMaxMinDFCMYK_BACKFLeft, JobLengthWave);
+        scaleChangeDF_BACKleftCMYK=pd.DataFrame(scaleChangeListBACKleftCMYK)
+        scaleChangeListBACKrightCMYK,indexJobNameDicScaleBACK=CalcC2C_AvrgOfAll(pthF,folder,'Back',JobLength,PanelLengthInMM,'Right').CreateScalechangeData(ScaleMaxMinDFCMYK_BACKFRight, JobLengthWave);
+        scaleChangeDF_BACKrightCMYK=pd.DataFrame(scaleChangeListBACKrightCMYK)
+
+        
                
     except:
       1; 
@@ -1768,8 +1936,20 @@ if scaleChangePlot:
     side='Front'
     
     try:
-        scaleChangeFRONT=PlotPlotly(pthF, side).PlotScaleChange_WithMovingAVRG(scaleChangeDF_FRONTleft,scaleChangeDF_FRONTright,indexJobNameDicScaleFRONT,WaveJobPrintedDicFRONT,MoveAveWaveScale, PlotTitle,fileName);
-        # waveChangeFRONT=PlotPlotly(pthF, side).PlotWaveChange(WaveChangeDF_FRONT,indexJobNameDicFRONT,PlotTitle,fileName);
+       scaleChangeDF_FRONTleftOBG = scaleChangeDF_FRONTleftOBG.dropna(axis=1)
+       scaleChangeDF_FRONTrightOBG = scaleChangeDF_FRONTrightOBG.dropna(axis=1)
+       ScaleChangeDFAverageOBG = pd.concat([scaleChangeDF_FRONTleftOBG, scaleChangeDF_FRONTrightOBG], axis=1).mean(axis=1)
+       
+       
+       scaleChangeDF_FRONTleftMCYK = scaleChangeDF_FRONTleftMCYK.dropna(axis=1)
+       scaleChangeDF_FRONTrightMCYK = scaleChangeDF_FRONTrightMCYK.dropna(axis=1)
+       ScaleChangeDFAverageMCYK = pd.concat([scaleChangeDF_FRONTleftMCYK, scaleChangeDF_FRONTrightMCYK], axis=1).mean(axis=1)
+
+       
+       # scaleChangeFRONT=PlotPlotly(pthF, side).PlotScaleChange_WithMovingAVRG(scaleChangeDF_FRONTleft,scaleChangeDF_FRONTright,indexJobNameDicScaleFRONT,WaveJobPrintedDicFRONT,MoveAveWaveScale, PlotTitle,fileName);
+       scaleChangeFRONT=PlotPlotly(pthF, side).PlotScaleChange_WithMovingAVRG(scaleChangeDF_FRONTleft,scaleChangeDF_FRONTright,indexJobNameDicScaleFRONT,WaveJobPrintedDicFRONT,MoveAveWaveScale, PlotTitle,fileName);
+ 
+       # waveChangeFRONT=PlotPlotly(pthF, side).PlotWaveChange(WaveChangeDF_FRONT,indexJobNameDicFRONT,PlotTitle,fileName);
     
     except:
         1
@@ -1805,261 +1985,94 @@ print(endFigure - startFigure)
 ##### TILL HERE!!!!
 
 
-# c2cChangeDF=c2cChangeDF_FRONT
-# indexJobNameDic=indexJobNameDicFRONT
-# WaveJobPrintedDic=WaveJobPrintedDicFRONT
+# (DataAllMeanColorSET1,DataAllMeanColorSET2,DataAllMeanColorSET3,colorDic,RefSETloc,fname,f)
+
+# f='QCS Production_100 Archive 13-05-2023 00-11-20.zip'
+
+# fname= 'Registration_'+CalcC2C_AvrgOfAll(pthF,folder,'Front',JobLength,PanelLengthInMM,'Left').pageSide+'.csv';
+
+# DataAllMeanColorSET1,DataAllMeanColorSET2,DataAllMeanColorSET3,colorDic,RefSETloc = CalcC2C_AvrgOfAll(pthF,folder,'Front',JobLength,PanelLengthInMM,'Left').CalcScaleFromTarget();
+
+# colorDic = colorDicOBG
+# RawDataSuccess,flatNumberFailed,l1= CalcC2C_AvrgOfAll(pthF,folder,'Front',JobLength,PanelLengthInMM,'Left').LoadRawData(fname,f);
+
+# RawDataSuccess=CalcC2C_AvrgOfAll(pthF,folder,'Front',JobLength,PanelLengthInMM,'Left').ConvertRowsToInt(RawDataSuccess);
+
+# indexNumberFailed=[]
+# col=[];
+# [col.append(str(j)) for j in range(len(l1))];
+# St1dataAllColors=pd.DataFrame(columns=col,index=colorDic.values());
+# St2dataAllColors=pd.DataFrame(columns=col,index=colorDic.values());
+# St3dataAllColors=pd.DataFrame(columns=col,index=colorDic.values());
 
 
-# fig = go.Figure()
-   
-# c2cChangeDF = c2cChangeDF.dropna(axis=1)
+# for j,l in enumerate(l1):
+#     if not(l in flatNumberFailed):
+#         FlatIDdata=RawDataSuccess[RawDataSuccess['Flat Id']==l].reset_index();
+        
+#         for i,x in enumerate(FlatIDdata['Set #1 X']):
+#             St1dataAllColors[str(j)][FlatIDdata['Ink\Sets'][i]]=int(x);
+#         for i,x in enumerate(FlatIDdata['Set #2 X']):
+#             St2dataAllColors[str(j)][FlatIDdata['Ink\Sets'][i]]=int(x);
+#         for i,x in enumerate(FlatIDdata['Set #3 X']):
+#             St3dataAllColors[str(j)][FlatIDdata['Ink\Sets'][i]]=int(x);
+        
+#     else:
+#         indexNumberFailed.append(j)
+#         if j>0:
+#             St1dataAllColors[str(j)]=St1dataAllColors[str(j-1)]
+#             St2dataAllColors[str(j)]=St2dataAllColors[str(j-1)]
+#             St3dataAllColors[str(j)]=St3dataAllColors[str(j-1)]
+#         else:
+#             St1dataAllColors[str(j)]=0
+#             St2dataAllColors[str(j)]=0
+#             St3dataAllColors[str(j)]=0
 
-   
-   
- 
-   
-# fig.add_trace(
-# go.Scatter(y=list(c2cChangeDF[0]),
-#             name='C2C '))
-# fig.data[len(fig.data)-1].visible = 'legendonly';
-
-
-# fig.add_trace(
-# go.Scatter(y=list(c2cChangeDF[0].rolling(MoveAveWave).mean()),
-#             name='C2C moving average '))
-   
-# # xx=  list(c2cChangeDF[0].rolling(30).mean() )
-#     # ymax=max(WaveRawDataDic[ColorList[0]]-WaveDataWithMaxFilterDic[self.ColorList[0]])
-# ymax=np.max(list(c2cChangeDF[0].rolling(MoveAveWave).mean())[MoveAveWave+10:])+20
-# ymaxWaveJob=np.max(list(c2cChangeDF[0].rolling(MoveAveWave).mean())[MoveAveWave+10:])
-
-# for key, value in indexJobNameDic.items():
-#     fig.add_trace(go.Scatter(x=[key], y=[ymax],
-#                             marker=dict(color="green", size=10),
-#                             mode="markers",
-#                             text=value[0],
-#                             # font_size=18,
-#                             hoverinfo='text'))
-    
-#     fig.data[len(fig.data)-1].showlegend = False
-#     fig.add_vline(x=key, line_width=2, line_dash="dash", line_color="green")
-# pxWave=0     
-# for i ,(key, value) in enumerate(WaveJobPrintedDic.items()):
-#     xWave=key+(1+int(JobLengthWave/10))
-#     if i>0:
-#         if abs(list(WaveJobPrintedDic.values())[i-1][1]- list(WaveJobPrintedDic.values())[i][1])<2:
-#             xWave=pxWave + 1
-#     fig.add_trace(go.Scatter(x=[xWave], y=[ymaxWaveJob],
-#                             marker=dict(color="red", size=10),
-#                             mode="markers",
-#                             text=value,
-#                             # font_size=18,
-#                             hoverinfo='text'))
-    
-#     fig.data[len(fig.data)-1].showlegend = False
-#     fig.add_vline(x=xWave, line_width=2,  line_color="red")
-#     pxWave=xWave
-   
-
-# fig.update_layout(
-#         hoverlabel=dict(
-#             namelength=-1
-#         )
-#     )
-# fig.update_layout(title=PlotPlotly(pthF, side).side+' '+PlotTitle)
-   
-
-# plot(fig,filename=PlotPlotly(pthF, side).side+' '+fileName+".html") 
-
-# #########################################################
-
-# c2c=DataPivotFront
-
-
-# c2cChangeList=[];
-# indexJobNameDic={}
-
-# ValidSortedJobListWithWave=[]
-
-
-# JobNmeSORTED= list(CalcC2C_AvrgOfAll(pthF,folder,'Front',JobLength,PanelLengthInMM,'Left').SortJobsByTime( c2c.columns).values())
-
-
-# for f in JobNmeSORTED:
-#      vlid,lngth=CalcC2C_AvrgOfAll(pthF,folder,'Front',JobLength,PanelLengthInMM,'Left').CheckIfFileValid_forWave(f,JobLengthWave)
-#      if vlid :
-#          ValidSortedJobListWithWave.append(f)
-     
-      
-            
-
-
-# for i,f in enumerate(ValidSortedJobListWithWave):
-#     try:
-    
-#         c2cChangeList=c2cChangeList+list(c2c[f].dropna())
-#         indexJobNameDic[len(c2cChangeList)-1]=[f,0]
-
-#     except:
-#               continue;
-
-
-
-
-
-
-
-
-
-
-
-# # WaveChangeDF=WaveChangeDF_FRONT
-# indexJobNameDic=indexJobNameDicFRONT
-# WaveJobPrintedDic=WaveJobPrintedDicFRONT
-
-# plt.figure()
-# plt.plot(c2cChangeList)
-
-
-# fig = go.Figure()
-
-# WaveChangeDF = WaveChangeDF.dropna(axis=1)
-
-# ColorList= list(WaveChangeDF.columns)
-
-# for clr in ColorList:     
-#     lineColor=clr;
   
-    
-#     if lineColor=='Yellow':
-#         lineColor='gold';
-    
-#     fig.add_trace(
-#     go.Scatter(y=WaveChangeDF[clr],line_color= lineColor,
-#                 name='Wave Differance Left-Right '+' color '+clr))
-#     fig.data[len(fig.data)-1].visible = 'legendonly';
+# ## 3 Point
+# ## Create Panel Set per color - Actual color position
+# PanelColorSet={};
+# ListColorDict={};
 
+# for c in St1dataAllColors.columns:
+#      for inx in St1dataAllColors.index:
+#          ListColorDict[inx]=[St1dataAllColors[c][inx],St2dataAllColors[c][inx],St3dataAllColors[c][inx]]
+#      PanelColorSet[c]=ListColorDict
+#      ListColorDict={}
+
+   
+
+   
+
+#  ## Calc Scale per Color 
+
+# x=[0,1,2];
+
+
+
+# Scale=St1dataAllColors;
+
+
+# for c in St1dataAllColors.columns:
+#      for inx in St1dataAllColors.index:
+#          y= PanelColorSet[c][inx]
+#          z = np.polyfit(x, y, 1)
+#          p = np.poly1d(z)
+#          try:
+#              Scale[c][inx]=(RefSETloc['Slop'][inx]/list(p)[0]-1)*self.PanelLengthInMM*1000
+#          except:
+#              continue;
+
+   
+
+   
+# ## Calc Scale Max - Min        
+# ScaleMaxMin=[]
+# for c in Scale.columns:
+#     ScaleMaxMin.append(np.max(Scale[c])-np.min(Scale[c]));
     
-#     fig.add_trace(
-#     go.Scatter(y=WaveChangeDF[clr].rolling(MoveAveWave).mean(),line_color= lineColor,
-#                 name='Wave Differance Left-Right- moving average of '+str(MoveAveWave)+' color '+clr))
-    
-    
-#     # ymax=max(WaveRawDataDic[ColorList[0]]-WaveDataWithMaxFilterDic[self.ColorList[0]])
-# ymax=np.max(WaveChangeDF[clr].rolling(MoveAveWave).mean())+20
-# ymaxWaveJob=np.max(WaveChangeDF[clr].rolling(MoveAveWave).mean())
+
  
-# for key, value in indexJobNameDic.items():
-#      fig.add_trace(go.Scatter(x=[key], y=[ymax],
-#                              marker=dict(color="green", size=10),
-#                              mode="markers",
-#                              text=value[0],
-#                              # font_size=18,
-#                              hoverinfo='text'))
-     
-#      fig.data[len(fig.data)-1].showlegend = False
-#      fig.add_vline(x=key, line_width=2, line_dash="dash", line_color="green")
-# pxWave=0     
-# for i ,(key, value) in enumerate(WaveJobPrintedDic.items()):
-#      xWave=key+(1+int(JobLengthWave/10))
-#      if i>0:
-#         if abs(list(WaveJobPrintedDic.values())[i-1][1]- list(WaveJobPrintedDic.values())[i][1])<2:
-#             xWave=pxWave + 1
-#      fig.add_trace(go.Scatter(x=[xWave], y=[ymaxWaveJob],
-#                              marker=dict(color="red", size=10),
-#                              mode="markers",
-#                              text=value,
-#                              # font_size=18,
-#                              hoverinfo='text'))
-     
-#      fig.data[len(fig.data)-1].showlegend = False
-#      fig.add_vline(x=xWave, line_width=2,  line_color="red")
-#      pxWave=xWave
-    
  
-# fig.update_layout(
-#          hoverlabel=dict(
-#              namelength=-1
-#          )
-#      )
-# fig.update_layout(title=PlotPlotly(pthF, side).side+' '+PlotTitle)
-    
- 
-# plot(fig,filename=PlotPlotly(pthF, side).side+' '+fileName+".html") 
-
-# # # ###################################################################
 
 
-
-# WaveChangeList=[];
-# indexJobNameDic={}
-
-# # DataAllMeanColorSET1Left,DataAllMeanColorSET2Left,DataAllMeanColorSET3Left,colorDic = self.CalcMeanByColorForAllJobs('Registration_Left.csv')
-# # DataAllMeanColorSET1Right,DataAllMeanColorSET2Right,DataAllMeanColorSET3Right,colorDic = self.CalcMeanByColorForAllJobs('Registration_Right.csv')
-
-
-
-
-# MeregedDataAllMeanColorLeft= CalcC2C_AvrgOfAll(pthF,folder,'Front',JobLength,PanelLengthInMM,'Left').LoadMeanColorPos_PickSide('Left');
-# MeregedDataAllMeanColorRight= CalcC2C_AvrgOfAll(pthF,folder,'Front',JobLength,PanelLengthInMM,'Left').LoadMeanColorPos_PickSide('Right');
-
-
-# colorDic={}
-
-# for i in MeregedDataAllMeanColorLeft.index:
-#     colorDic[i]= MeregedDataAllMeanColorLeft['Ink\Sets'][i]
-
-# DataAllMeanColorSET1Left=MeregedDataAllMeanColorLeft[['Ink\Sets','Set #1 X']].rename(index=colorDic)
-# DataAllMeanColorSET2Left=MeregedDataAllMeanColorLeft[['Ink\Sets','Set #2 X']].rename(index=colorDic)
-# DataAllMeanColorSET3Left=MeregedDataAllMeanColorLeft[['Ink\Sets','Set #3 X']].rename(index=colorDic)
-
-
-# DataAllMeanColorSET1Right=MeregedDataAllMeanColorRight[['Ink\Sets','Set #1 X']].rename(index=colorDic)
-# DataAllMeanColorSET2Right=MeregedDataAllMeanColorRight[['Ink\Sets','Set #2 X']].rename(index=colorDic)
-# DataAllMeanColorSET3Right=MeregedDataAllMeanColorRight[['Ink\Sets','Set #3 X']].rename(index=colorDic)
-
-# # MeregedDataAllMeanColor= self.LoadMeanColorPos();
-
-
-
-# JobNmeSORTED= list(CalcC2C_AvrgOfAll(pthF,folder,'Front',JobLength,PanelLengthInMM,'Left').SortJobsByTime(CalcC2C_AvrgOfAll(pthF,folder,'Front',JobLength,PanelLengthInMM,'Left').fldrs).values())
-
-# ValidSortedJobListWithWave=[]
-
-# for f in JobNmeSORTED:
-#     vlid,lngth=CalcC2C_AvrgOfAll(pthF,folder,'Front',JobLength,PanelLengthInMM,'Left').CheckIfFileValid_forWave(f,JobLengthWave)
-#     if vlid or ('WaveCalibration' in f):
-#             ValidSortedJobListWithWave.append(f)
-            
-            
-# WaveFilesInx=CalcC2C_AvrgOfAll(pthF,folder,'Front',JobLength,PanelLengthInMM,'Left').find_indexes_with_substring(ValidSortedJobListWithWave, 'WaveCalibration')
-# WaveJobPrintedDic={}
-
-
-# k=0
-# for i,f in enumerate(ValidSortedJobListWithWave):
-#     try:
-    
-#         C2Creg,indexNumberFailed = CalcC2C_AvrgOfAll(pthF,folder,'Front',JobLength,PanelLengthInMM,'Left').CalcC2CSingleSideColorPair('Registration_Left.csv','Registration_Right.csv',f,DataAllMeanColorSET1Left,DataAllMeanColorSET2Left,DataAllMeanColorSET3Left,DataAllMeanColorSET1Right,DataAllMeanColorSET2Right,DataAllMeanColorSET3Right)
-#         WaveChangeList=WaveChangeList+C2Creg
-#         indexJobNameDic[len(WaveChangeList)-1]=[f,lngth]
-
-#         if len(WaveFilesInx)>0:
-            
-#             # indexJobNameDic[len(WaveChangeList)-1]=[f,ValidSortedJobListWithWave[WaveFilesInx[k]]]
-#             if i>WaveFilesInx[k]:
-#                 inxForW=list(indexJobNameDic.keys())[len(list(indexJobNameDic.keys()))-2]
-#                 WaveJobPrintedDic[inxForW]=[ValidSortedJobListWithWave[WaveFilesInx[k]],i]
-#                 k=k+1;
-
-#     except:
-#             continue;
-
-
-
-
-
-# C2CregDF=pd.DataFrame(C2Creg)
-
-# plt.figure()
-# plt.plot(C2CregDF['Orange'])    

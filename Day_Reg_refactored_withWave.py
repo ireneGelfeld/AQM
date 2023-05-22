@@ -1948,8 +1948,8 @@ if scaleChangePlot:
 
        
        # scaleChangeFRONT=PlotPlotly(pthF, side).PlotScaleChange_WithMovingAVRG(scaleChangeDF_FRONTleft,scaleChangeDF_FRONTright,indexJobNameDicScaleFRONT,WaveJobPrintedDicFRONT,MoveAveWaveScale, PlotTitle,fileName);
-       scaleChangeFRONT=PlotPlotly(pthF, side).PlotScaleChange_WithMovingAVRG_OBG_CMYK(ScaleChangeDFAverageOBG,ScaleChangeDFAverageCMYK,scaleChangeDF_FRONTleft,scaleChangeDF_FRONTright,indexJobNameDicFRONT,WaveJobPrintedDicFRONT,MoveAveWaveScale, PlotTitle,fileName);
- 
+       scaleChangeFRONT=PlotPlotly(pthF, side).PlotScaleChange_WithMovingAVRG_OBG_CMYK(OBGfactor,ScaleChangeDFAverageOBG,ScaleChangeDFAverageCMYK,scaleChangeDF_FRONTleft,scaleChangeDF_FRONTright,indexJobNameDicFRONT,WaveJobPrintedDicFRONT,MoveAveWaveScale, PlotTitle,fileName);
+
        # waveChangeFRONT=PlotPlotly(pthF, side).PlotWaveChange(WaveChangeDF_FRONT,indexJobNameDicFRONT,PlotTitle,fileName);
     
     except:
@@ -1976,7 +1976,7 @@ if scaleChangePlot:
 
         
         
-        scaleChangeBACK=PlotPlotly(pthF, side).PlotScaleChange_WithMovingAVRG_OBG_CMYK(ScaleChangeDFAverageBACKOBG,ScaleChangeDFAverageBACKCMYK,scaleChangeDF_BACKleft,scaleChangeDF_BACKright,indexJobNameDicBACK,WaveJobPrintedDicBACK,MoveAveWaveScale, PlotTitle,fileName);
+        scaleChangeBACK=PlotPlotly(pthF, side).PlotScaleChange_WithMovingAVRG_OBG_CMYK(OBGfactor,ScaleChangeDFAverageBACKOBG,ScaleChangeDFAverageBACKCMYK,scaleChangeDF_BACKleft,scaleChangeDF_BACKright,indexJobNameDicBACK,WaveJobPrintedDicBACK,MoveAveWaveScale, PlotTitle,fileName);
         # waveChangeBACK=PlotPlotly(pthF, side).PlotWaveChange(WaveChangeDF_BACK,indexJobNameDicBACK,PlotTitle,fileName);
 
     except:

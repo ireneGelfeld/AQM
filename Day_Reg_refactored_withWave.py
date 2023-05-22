@@ -11,7 +11,7 @@ Created on Wed Jun 16 16:30:46 2021
 # pio.renderers
 # pio.renderers.default='browser'
 ##############################################################################
-global DistBetweenSets,GlobalScale,PanelLengthInMM,JobLengthתcolor_combinations,FullColorList,JobLengthWave,MoveAveWave,MoveAveWaveScale;
+global DistBetweenSets,GlobalScale,PanelLengthInMM,JobLengthתcolor_combinations,FullColorList,JobLengthWave,MoveAveWave,MoveAveWaveScale,OBGfactor;
 
 # For setting the min job length for Change Wave plot- this parameter should be used for setting the allowble moving avarage- for example set JobLengthWave= 100, MoveAveWave=20;
 JobLengthWave=100;
@@ -20,6 +20,7 @@ MoveAveWaveScale=100;
 #For 252
 MarkSetVersion=252
 
+OBGfactor= 1.22
 
 ### Job name markers location
 ymax=200 # Job name location
@@ -1474,7 +1475,7 @@ class PlotPlotly():
        
         return fig    
 
-    def PlotScaleChange_WithMovingAVRG_OBG_CMYK(self,ScaleChangeDFOBG,ScaleChangeDFCMYK,ScaleChangeDFLeft,ScaleChangeDFRight,indexJobNameDic,WaveJobPrintedDic,MoveAveWaveScale, PlotTitle,fileName):
+    def PlotScaleChange_WithMovingAVRG_OBG_CMYK(self,OBGfactor,ScaleChangeDFOBG,ScaleChangeDFCMYK,ScaleChangeDFLeft,ScaleChangeDFRight,indexJobNameDic,WaveJobPrintedDic,MoveAveWaveScale, PlotTitle,fileName):
        
       
        fig = go.Figure()
@@ -1508,14 +1509,14 @@ class PlotPlotly():
            
            
            fig.add_trace(
-           go.Scatter(y=list(ScaleChangeDFOBG),
-                       name='Scale Average OBG'))
+           go.Scatter(y=list(ScaleChangeDFOBG*OBGfactor),
+                       name='Scale Average OBG , OBGfactor='+str(OBGfactor)))
            fig.data[len(fig.data)-1].visible = 'legendonly';
     
            
            fig.add_trace(
-           go.Scatter(y=list(ScaleChangeDFOBG.rolling(MoveAveWaveScale).mean()), line_color = '#008080',  # Aqua color code
-                       name='Scale Average moving average OBG= '+str(MoveAveWaveScale))) 
+           go.Scatter(y=list(ScaleChangeDFOBG.rolling(MoveAveWaveScale).mean()*OBGfactor), line_color = '#008080',  # Aqua color code
+                       name='Scale Average moving average OBG= '+str(MoveAveWaveScale)+', OBGfactor='+str(OBGfactor))) 
            
        except:
            1

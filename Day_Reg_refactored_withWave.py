@@ -103,6 +103,52 @@ import numpy as np
 import pandas as pd
 from plotly.offline import download_plotlyjs, init_notebook_mode,  plot
 from plotly.subplots import make_subplots
+import re
+
+
+def remove_decimal_numbers(string):
+    pattern = r'\d+\.\d+'
+    result = re.sub(pattern, '', string)
+    return result
+
+
+def add_zero_to_timestamp(timestamp):
+    date, time = timestamp.split(' ')
+    time_components = time.split(':')
+    corrected_time_components = []
+
+    for component in time_components:
+        if len(component) == 1:
+            corrected_time_components.append('0' + component)
+        else:
+            corrected_time_components.append(component)
+
+    corrected_time = ':'.join(corrected_time_components)
+    corrected_timestamp = f"{date} {corrected_time}"
+    return corrected_timestamp
+
+def Create_Blanket_ReplacementList(BlanketRep):
+    column_name = 'ok'
+    filter_value = 'ok'
+
+    # Create a Series filtering out the specified value
+    BalnketRepTime = BlanketRep.loc[BlanketRep[column_name] != filter_value, column_name].reset_index(drop=True)
+    BlanketRepList=[]
+    for itm in BalnketRepTime:
+        if '$' in itm:
+            doubleRep=itm.split('$')
+            for doubleRepItm in doubleRep:
+                doubleRepItm=remove_decimal_numbers(doubleRepItm)[:-1]
+                doubleRepItm=add_zero_to_timestamp(doubleRepItm)
+                newString=doubleRepItm.replace('/','-').replace(':','-')
+                BlanketRepList.append('BlanketReplacment '+newString+'    ')
+        else:
+                itm=remove_decimal_numbers(itm)[:-1]
+                itm=add_zero_to_timestamp(itm)
+                newString=itm.replace('/','-').replace(':','-')
+                BlanketRepList.append('BlanketReplacment '+newString+'    ')
+
+    return BlanketRepList
 
 
 class PreapareDataExtractZip():
@@ -917,6 +963,111 @@ class CalcC2C_AvrgOfAll(DispImagePlacment):
             
         return WaveChangeList,indexJobNameDic,WaveJobPrintedDic;
     
+    def CreatWaveBlankwtDic(self,k,i,Inx,Dic,RefDic,ValidSortedJobList):
+        
+            if len(Inx)>0:
+                if i>Inx[k] or Inx[k] == 0:
+                    inxForW=list(RefDic.keys())[len(list(RefDic.keys()))-2]
+                    Dic[inxForW]=[ValidSortedJobList[Inx[k]],i]
+                    k=k+1;
+            return k,Dic
+        
+
+    def CreateWaveChangeDataWithBlanketRep(self,JobLengthWave,BlanketRepList):
+        
+        WaveChangeList=[];
+        indexJobNameDic={}
+        
+        # DataAllMeanColorSET1Left,DataAllMeanColorSET2Left,DataAllMeanColorSET3Left,colorDic = self.CalcMeanByColorForAllJobs('Registration_Left.csv')
+        # DataAllMeanColorSET1Right,DataAllMeanColorSET2Right,DataAllMeanColorSET3Right,colorDic = self.CalcMeanByColorForAllJobs('Registration_Right.csv')
+
+
+
+
+        MeregedDataAllMeanColorLeft= self.LoadMeanColorPos_PickSide('Left');
+        MeregedDataAllMeanColorRight= self.LoadMeanColorPos_PickSide('Right');
+        
+        
+        colorDic={}
+        
+        for i in MeregedDataAllMeanColorLeft.index:
+           colorDic[i]= MeregedDataAllMeanColorLeft['Ink\Sets'][i]
+        
+        DataAllMeanColorSET1Left=MeregedDataAllMeanColorLeft[['Ink\Sets','Set #1 X']].rename(index=colorDic)
+        DataAllMeanColorSET2Left=MeregedDataAllMeanColorLeft[['Ink\Sets','Set #2 X']].rename(index=colorDic)
+        DataAllMeanColorSET3Left=MeregedDataAllMeanColorLeft[['Ink\Sets','Set #3 X']].rename(index=colorDic)
+
+
+        DataAllMeanColorSET1Right=MeregedDataAllMeanColorRight[['Ink\Sets','Set #1 X']].rename(index=colorDic)
+        DataAllMeanColorSET2Right=MeregedDataAllMeanColorRight[['Ink\Sets','Set #2 X']].rename(index=colorDic)
+        DataAllMeanColorSET3Right=MeregedDataAllMeanColorRight[['Ink\Sets','Set #3 X']].rename(index=colorDic)
+
+        # MeregedDataAllMeanColor= self.LoadMeanColorPos();
+        
+        
+
+        ValidSortedJobListWithWave=[]
+
+        for f in self.fldrs:
+            vlid,lngth=self.CheckIfFileValid_forWave(f,JobLengthWave)
+            if vlid or ('WaveCalibration' in f):
+                    ValidSortedJobListWithWave.append(f)
+                    
+        ValidSortedJobListWithWave= list(self.SortJobsByTime(ValidSortedJobListWithWave + BlanketRepList).values())
+            
+        WaveFilesInx=self.find_indexes_with_substring(ValidSortedJobListWithWave, 'WaveCalibration')
+        BlanketRepInx=self.find_indexes_with_substring(ValidSortedJobListWithWave, 'BlanketReplacment')
+
+        WaveJobPrintedDic={}
+        BlnketReplacmentDic={}
+
+
+        k=0
+        kb=0
+        for i,f in enumerate(ValidSortedJobListWithWave):
+            try:
+                
+                
+                if 'BlanketReplacment' in f:
+                    if len(BlanketRepInx)>0:
+                        if i>=BlanketRepInx[kb] or BlanketRepInx[kb] == 0:
+                            if i==0:
+                                inxForW = 0;
+                            else: 
+                                if i == inxForW +1:
+                                    inxForW=inxForW+1
+                                else:
+                                      inxForW=list(indexJobNameDic.keys())[len(list(indexJobNameDic.keys()))-1]
+                            while  inxForW in  BlnketReplacmentDic.keys():
+                                inxForW=inxForW+1
+                            BlnketReplacmentDic[inxForW]=[ValidSortedJobListWithWave[BlanketRepInx[kb]],i]
+                            kb=kb+1 
+            
+                else:       
+                    C2Creg,indexNumberFailed = self.CalcC2CSingleSideColorPair('Registration_Left.csv','Registration_Right.csv',f,DataAllMeanColorSET1Left,DataAllMeanColorSET2Left,DataAllMeanColorSET3Left,DataAllMeanColorSET1Right,DataAllMeanColorSET2Right,DataAllMeanColorSET3Right)
+                    WaveChangeList=WaveChangeList+C2Creg
+                    indexJobNameDic[len(WaveChangeList)-1]=[f,lngth]
+    
+                    k,WaveJobPrintedDic= self.CreatWaveBlankwtDic(k,i,WaveFilesInx,WaveJobPrintedDic,indexJobNameDic,ValidSortedJobListWithWave)
+                    # kb,BlnketReplacmentDic= self.CreatWaveBlankwtDic(kb,i,BlanketRepInx,BlnketReplacmentDic,indexJobNameDic,ValidSortedJobListWithWave)
+    
+                    # if len(WaveFilesInx)>0:
+                    #     if i>WaveFilesInx[k] or WaveFilesInx[k] == 0:
+                    #         inxForW=list(indexJobNameDic.keys())[len(list(indexJobNameDic.keys()))-2]
+                    #         WaveJobPrintedDic[inxForW]=[ValidSortedJobListWithWave[WaveFilesInx[k]],i]
+                    #         k=k+1;
+                            
+             
+                
+
+            except:
+                    continue;
+            
+            
+        return WaveChangeList,indexJobNameDic,WaveJobPrintedDic,BlnketReplacmentDic;
+
+
+    
     def CreateC2CchangeData(self,c2c,JobLengthWave):
         
         c2cChangeList=[];
@@ -1251,12 +1402,65 @@ class PlotPlotly():
              fig.add_vline(x=xWave, line_width=1,  line_color="red")
              pxWave=xWave
              
+             
+             
+             
         return fig
         
+    def PlotJobNameAndWaveJobWith_BlanketRep(self,fig,ymax,ymaxWaveJob,indexJobNameDic,WaveJobPrintedDic,BlnketReplacmentDic):
+        
+        for key, value in indexJobNameDic.items():
+             fig.add_trace(go.Scatter(x=[key], y=[ymax],
+                                     marker=dict(color="green", size=10),
+                                     mode="markers",
+                                     text=value[0],
+                                     # font_size=18,
+                                     hoverinfo='text'))
+             
+             fig.data[len(fig.data)-1].showlegend = False
+             fig.add_vline(x=key, line_width=0.5, line_dash="dash", line_color="green")
+        pxWave=0     
+        for i ,(key, value) in enumerate(WaveJobPrintedDic.items()):
+             xWave=key+(1+int(JobLengthWave/10))
+             if i>0:
+                if abs(list(WaveJobPrintedDic.values())[i-1][1]- list(WaveJobPrintedDic.values())[i][1])<2:
+                    xWave=pxWave + 1
+             fig.add_trace(go.Scatter(x=[xWave], y=[ymaxWaveJob],
+                                     marker=dict(color="red", size=10),
+                                     mode="markers",
+                                     text=value,
+                                     # font_size=18,
+                                     hoverinfo='text'))
+             
+             fig.data[len(fig.data)-1].showlegend = False
+             fig.add_vline(x=xWave, line_width=1,  line_color="red")
+             pxWave=xWave
+             
+        try:
+            pxBR=0     
+            for i ,(key, value) in enumerate(BlnketReplacmentDic.items()):
+                 xBR=key+(1+int(JobLengthWave/10))
+                 if i>0:
+                    if abs(list(BlnketReplacmentDic.values())[i-1][1]- list(BlnketReplacmentDic.values())[i][1])<2:
+                        xBR=pxBR + 1
+                 fig.add_trace(go.Scatter(x=[xBR], y=[ymaxWaveJob-50],
+                                         marker=dict(color="blue", size=10),
+                                         mode="markers",
+                                         text=value,
+                                         # font_size=18,
+                                         hoverinfo='text'))
+                 
+                 fig.data[len(fig.data)-1].showlegend = False
+                 fig.add_vline(x=xBR, line_width=1,  line_color="blue")
+                 pxBR=xBR     
+        except:
+             1
+             
+             
+        return fig
 
 
-
-    def PlotWaveChange_WithMovingAVRG(self,ScaleChangeDFLeft,ScaleChangeDFRight,c2cChangeDF,WaveChangeDF,indexJobNameDic,WaveJobPrintedDic,MoveAveWave, PlotTitle,fileName):
+    def PlotWaveChange_WithMovingAVRG(self,ScaleChangeDFLeft,ScaleChangeDFRight,c2cChangeDF,WaveChangeDF,indexJobNameDic,WaveJobPrintedDic,BlnketReplacmentDic,MoveAveWave, PlotTitle,fileName):
         
        fig = go.Figure()
        
@@ -1340,7 +1544,7 @@ class PlotPlotly():
        # ymax=200
        # ymaxWaveJob=180
         
-       fig= self.PlotJobNameAndWaveJob(fig, ymax, ymaxWaveJob, indexJobNameDic, WaveJobPrintedDic)
+       fig= self.PlotJobNameAndWaveJobWith_BlanketRep(fig, ymax, ymaxWaveJob, indexJobNameDic, WaveJobPrintedDic,BlnketReplacmentDic)
            
         
        fig.update_layout(
@@ -1360,7 +1564,7 @@ class PlotPlotly():
 
 
 
-    def Plotc2cChange_WithMovingAVRG(self,c2cChangeDF,indexJobNameDic,WaveJobPrintedDic,MoveAveWave, PlotTitle,fileName):
+    def Plotc2cChange_WithMovingAVRG(self,c2cChangeDF,indexJobNameDic,WaveJobPrintedDic,BlnketReplacmentDic,MoveAveWave, PlotTitle,fileName):
         
         fig = go.Figure()
        
@@ -1388,7 +1592,7 @@ class PlotPlotly():
         # ymax=200
         # ymaxWaveJob=180
         
-        fig= self.PlotJobNameAndWaveJob(fig, ymax, ymaxWaveJob, indexJobNameDic, WaveJobPrintedDic)
+        fig= self.PlotJobNameAndWaveJobWith_BlanketRep(fig, ymax, ymaxWaveJob, indexJobNameDic, WaveJobPrintedDic, BlnketReplacmentDic)
 
            
         
@@ -1408,7 +1612,7 @@ class PlotPlotly():
 
  
 
-    def PlotScaleChange_WithMovingAVRG(self,ScaleChangeDFLeft,ScaleChangeDFRight,indexJobNameDic,WaveJobPrintedDic,MoveAveWaveScale, PlotTitle,fileName):
+    def PlotScaleChange_WithMovingAVRG(self,ScaleChangeDFLeft,ScaleChangeDFRight,indexJobNameDic,WaveJobPrintedDic,BlnketReplacmentDic,MoveAveWaveScale, PlotTitle,fileName):
         
        
         fig = go.Figure()
@@ -1459,7 +1663,7 @@ class PlotPlotly():
         # ymax=200
         # ymaxWaveJob=180
         
-        fig= self.PlotJobNameAndWaveJob(fig, ymax, ymaxWaveJob, indexJobNameDic, WaveJobPrintedDic)
+        fig= self.PlotJobNameAndWaveJobWith_BlanketRep(fig, ymax, ymaxWaveJob, indexJobNameDic, WaveJobPrintedDic, BlnketReplacmentDic)
 
            
         
@@ -1475,7 +1679,7 @@ class PlotPlotly():
        
         return fig    
 
-    def PlotScaleChange_WithMovingAVRG_OBG_CMYK(self,OBGfactor,ScaleChangeDFOBG,ScaleChangeDFCMYK,ScaleChangeDFLeft,ScaleChangeDFRight,indexJobNameDic,WaveJobPrintedDic,MoveAveWaveScale, PlotTitle,fileName):
+    def PlotScaleChange_WithMovingAVRG_OBG_CMYK(self,OBGfactor,ScaleChangeDFOBG,ScaleChangeDFCMYK,ScaleChangeDFLeft,ScaleChangeDFRight,indexJobNameDic,WaveJobPrintedDic,BlnketReplacmentDic,MoveAveWaveScale, PlotTitle,fileName):
        
       
        fig = go.Figure()
@@ -1549,8 +1753,9 @@ class PlotPlotly():
        # ymaxWaveJob=np.mean(list(ScaleChangeDFRight[0].rolling(MoveAveWave).mean())[MoveAveWave+10:])
        # ymax=200
        # ymaxWaveJob=180
-       
-       fig= self.PlotJobNameAndWaveJob(fig, ymax, ymaxWaveJob, indexJobNameDic, WaveJobPrintedDic)
+       # fig= self.PlotJobNameAndWaveJob(fig, ymax, ymaxWaveJob, indexJobNameDic, WaveJobPrintedDic)
+
+       fig= self.PlotJobNameAndWaveJobWith_BlanketRep(fig, ymax, ymaxWaveJob, indexJobNameDic, WaveJobPrintedDic, BlnketReplacmentDic)
 
           
        
@@ -1567,7 +1772,7 @@ class PlotPlotly():
        return fig  
 
     
-    def Plot_YuriMethod(self,dfList,ListName,indexJobNameDic,WaveJobPrintedDic,MoveAveWave,PlotTitle,fileName):
+    def Plot_YuriMethod(self,dfList,ListName,indexJobNameDic,WaveJobPrintedDic,BlnketReplacmentDic,MoveAveWave,PlotTitle,fileName):
         
         fig = go.Figure()
         
@@ -1584,14 +1789,15 @@ class PlotPlotly():
         # ymax=200
         # ymaxWaveJob=180
         
-        fig= self.PlotJobNameAndWaveJob(fig, ymax, ymaxWaveJob, indexJobNameDic, WaveJobPrintedDic)
-
+        # fig= self.PlotJobNameAndWaveJob(fig, ymax, ymaxWaveJob, indexJobNameDic, WaveJobPrintedDic)
+        fig= self.PlotJobNameAndWaveJobWith_BlanketRep(fig, ymax, ymaxWaveJob, indexJobNameDic, WaveJobPrintedDic, BlnketReplacmentDic)
         fig.update_layout(title=self.side+' '+PlotTitle)
 
         plot(fig,filename=self.side+' '+fileName+".html") 
         
         return fig
     
+
 
 
 # ################################### 
@@ -1609,7 +1815,14 @@ pthF=pthF+'/';
 folder=PreapareData(pthF).ExtractFilesFromZip();
 
 
+BlanketRep=pd.DataFrame();
+BlanketRepList=[]
+try: 
+    BlanketRep=pd.read_csv(pthF+'output.csv')
+    BlanketRepList=Create_Blanket_ReplacementList(BlanketRep);
 
+except:
+    1
 
 ###################################################################################################################
 
@@ -1667,9 +1880,27 @@ print(endCalc - startCalc)
 
 
 
+# Column and value to filter
+# column_name = 'ok'
+# filter_value = 'ok'
 
-
-
+# # Create a Series filtering out the specified value
+# BalnketRepTime = BlanketRep.loc[BlanketRep[column_name] != filter_value, column_name].reset_index(drop=True)
+# BlanketRepList=[]
+# for itm in BalnketRepTime:
+#     if '$' in itm:
+#         doubleRep=itm.split('$')
+#         for doubleRepItm in doubleRep:
+#             doubleRepItm=remove_decimal_numbers(doubleRepItm)[:-1]
+#             doubleRepItm=add_zero_to_timestamp(doubleRepItm)
+#             newString=doubleRepItm.replace('/','-').replace(':','-')
+#             BlanketRepList.append('BlanketReplacment '+newString+'    ')
+#     else:
+#             itm=remove_decimal_numbers(itm)[:-1]
+#             itm=add_zero_to_timestamp(itm)
+#             newString=itm.replace('/','-').replace(':','-')
+#             BlanketRepList.append('BlanketReplacment '+newString+'    ')
+        
 
 
 
@@ -1698,17 +1929,26 @@ except:
 os.chdir(pthF)
 # #########################################################################################################################
 #################################Wave Prograss Over Time ######################
+# if WaveChangePlot:
+#     WaveChangeListFRONT,indexJobNameDicFRONT,WaveJobPrintedDicFRONT=CalcC2C_AvrgOfAll(pthF,folder,'Front',JobLength,PanelLengthInMM,'Left').CreateWaveChangeData(JobLengthWave);
+#     WaveChangeDF_FRONT=pd.DataFrame(WaveChangeListFRONT)
+    
+#     try:
+#        WaveChangeListBACK,indexJobNameDicBACK,WaveJobPrintedDicBACK=CalcC2C_AvrgOfAll(pthF,folder,'Back',JobLength,PanelLengthInMM,'Left').CreateWaveChangeData(JobLengthWave);
+#        WaveChangeDF_BACK=pd.DataFrame(WaveChangeListBACK)
+    
+#     except:
+#       1; 
 if WaveChangePlot:
-    WaveChangeListFRONT,indexJobNameDicFRONT,WaveJobPrintedDicFRONT=CalcC2C_AvrgOfAll(pthF,folder,'Front',JobLength,PanelLengthInMM,'Left').CreateWaveChangeData(JobLengthWave);
+    WaveChangeListFRONT,indexJobNameDicFRONT,WaveJobPrintedDicFRONT,BlnketReplacmentDic=CalcC2C_AvrgOfAll(pthF,folder,'Front',JobLength,PanelLengthInMM,'Left').CreateWaveChangeDataWithBlanketRep(JobLengthWave,BlanketRepList);
     WaveChangeDF_FRONT=pd.DataFrame(WaveChangeListFRONT)
     
     try:
-       WaveChangeListBACK,indexJobNameDicBACK,WaveJobPrintedDicBACK=CalcC2C_AvrgOfAll(pthF,folder,'Back',JobLength,PanelLengthInMM,'Left').CreateWaveChangeData(JobLengthWave);
+       WaveChangeListBACK,indexJobNameDicBACK,WaveJobPrintedDicBACK,BlnketReplacmentDic=CalcC2C_AvrgOfAll(pthF,folder,'Back',JobLength,PanelLengthInMM,'Left').CreateWaveChangeDataWithBlanketRep(JobLengthWave,BlanketRepList);
        WaveChangeDF_BACK=pd.DataFrame(WaveChangeListBACK)
     
     except:
       1; 
-
 ######################C2C Prograss Over Time ######################
 
 if c2cChangePlot:
@@ -1881,7 +2121,7 @@ if WaveChangePlot:
     side='Front'
     
     try:
-        waveChangeFRONT=PlotPlotly(pthF, side).PlotWaveChange_WithMovingAVRG(scaleChangeDF_FRONTleft,scaleChangeDF_FRONTright,c2cChangeDF_FRONT,WaveChangeDF_FRONT,indexJobNameDicFRONT,WaveJobPrintedDicFRONT,MoveAveWave, PlotTitle,fileName);
+        waveChangeFRONT=PlotPlotly(pthF, side).PlotWaveChange_WithMovingAVRG(scaleChangeDF_FRONTleft,scaleChangeDF_FRONTright,c2cChangeDF_FRONT,WaveChangeDF_FRONT,indexJobNameDicFRONT,WaveJobPrintedDicFRONT,BlnketReplacmentDic,MoveAveWave, PlotTitle,fileName);
         # waveChangeFRONT=PlotPlotly(pthF, side).PlotWaveChange(WaveChangeDF_FRONT,indexJobNameDicFRONT,PlotTitle,fileName);
     
     except:
@@ -1895,7 +2135,7 @@ if WaveChangePlot:
     side='Back'
     
     try:
-        waveChangeBACK=PlotPlotly(pthF, side).PlotWaveChange_WithMovingAVRG(scaleChangeDF_BACKleft,scaleChangeDF_BACKright,c2cChangeDF_BACK,WaveChangeDF_BACK,indexJobNameDicBACK,WaveJobPrintedDicBACK,MoveAveWave, PlotTitle,fileName);
+        waveChangeBACK=PlotPlotly(pthF, side).PlotWaveChange_WithMovingAVRG(scaleChangeDF_BACKleft,scaleChangeDF_BACKright,c2cChangeDF_BACK,WaveChangeDF_BACK,indexJobNameDicBACK,WaveJobPrintedDicBACK,BlnketReplacmentDic,MoveAveWave, PlotTitle,fileName);
         # waveChangeBACK=PlotPlotly(pthF, side).PlotWaveChange(WaveChangeDF_BACK,indexJobNameDicBACK,PlotTitle,fileName);
     
     except:
@@ -1909,7 +2149,7 @@ if c2cChangePlot:
     side='Front'
     
     try:
-        c2cChangeFRONT=PlotPlotly(pthF, side).Plotc2cChange_WithMovingAVRG(c2cChangeDF_FRONT,indexJobNameDicC2CFRONT,WaveJobPrintedDicFRONT,MoveAveWave, PlotTitle,fileName);
+        c2cChangeFRONT=PlotPlotly(pthF, side).Plotc2cChange_WithMovingAVRG(c2cChangeDF_FRONT,indexJobNameDicC2CFRONT,WaveJobPrintedDicFRONT,BlnketReplacmentDic,MoveAveWave, PlotTitle,fileName);
         # waveChangeFRONT=PlotPlotly(pthF, side).PlotWaveChange(WaveChangeDF_FRONT,indexJobNameDicFRONT,PlotTitle,fileName);
     
     except:
@@ -1923,7 +2163,7 @@ if c2cChangePlot:
     side='Back'
     
     try:
-        c2cChangeBACK=PlotPlotly(pthF, side).Plotc2cChange_WithMovingAVRG(c2cChangeDF_BACK,indexJobNameDicC2CBACK,WaveJobPrintedDicBACK,MoveAveWave, PlotTitle,fileName);
+        c2cChangeBACK=PlotPlotly(pthF, side).Plotc2cChange_WithMovingAVRG(c2cChangeDF_BACK,indexJobNameDicC2CBACK,WaveJobPrintedDicBACK,BlnketReplacmentDic,MoveAveWave, PlotTitle,fileName);
         # waveChangeBACK=PlotPlotly(pthF, side).PlotWaveChange(WaveChangeDF_BACK,indexJobNameDicBACK,PlotTitle,fileName);
     
     except:
@@ -1948,7 +2188,7 @@ if scaleChangePlot:
 
        
        # scaleChangeFRONT=PlotPlotly(pthF, side).PlotScaleChange_WithMovingAVRG(scaleChangeDF_FRONTleft,scaleChangeDF_FRONTright,indexJobNameDicScaleFRONT,WaveJobPrintedDicFRONT,MoveAveWaveScale, PlotTitle,fileName);
-       scaleChangeFRONT=PlotPlotly(pthF, side).PlotScaleChange_WithMovingAVRG_OBG_CMYK(OBGfactor,ScaleChangeDFAverageOBG,ScaleChangeDFAverageCMYK,scaleChangeDF_FRONTleft,scaleChangeDF_FRONTright,indexJobNameDicFRONT,WaveJobPrintedDicFRONT,MoveAveWaveScale, PlotTitle,fileName);
+       scaleChangeFRONT=PlotPlotly(pthF, side).PlotScaleChange_WithMovingAVRG_OBG_CMYK(OBGfactor,ScaleChangeDFAverageOBG,ScaleChangeDFAverageCMYK,scaleChangeDF_FRONTleft,scaleChangeDF_FRONTright,indexJobNameDicFRONT,WaveJobPrintedDicFRONT,BlnketReplacmentDic,MoveAveWaveScale, PlotTitle,fileName);
 
        # waveChangeFRONT=PlotPlotly(pthF, side).PlotWaveChange(WaveChangeDF_FRONT,indexJobNameDicFRONT,PlotTitle,fileName);
     
@@ -1976,7 +2216,7 @@ if scaleChangePlot:
 
         
         
-        scaleChangeBACK=PlotPlotly(pthF, side).PlotScaleChange_WithMovingAVRG_OBG_CMYK(OBGfactor,ScaleChangeDFAverageBACKOBG,ScaleChangeDFAverageBACKCMYK,scaleChangeDF_BACKleft,scaleChangeDF_BACKright,indexJobNameDicBACK,WaveJobPrintedDicBACK,MoveAveWaveScale, PlotTitle,fileName);
+        scaleChangeBACK=PlotPlotly(pthF, side).PlotScaleChange_WithMovingAVRG_OBG_CMYK(OBGfactor,ScaleChangeDFAverageBACKOBG,ScaleChangeDFAverageBACKCMYK,scaleChangeDF_BACKleft,scaleChangeDF_BACKright,indexJobNameDicBACK,WaveJobPrintedDicBACK,BlnketReplacmentDic,MoveAveWaveScale, PlotTitle,fileName);
         # waveChangeBACK=PlotPlotly(pthF, side).PlotWaveChange(WaveChangeDF_BACK,indexJobNameDicBACK,PlotTitle,fileName);
 
     except:
@@ -1987,7 +2227,7 @@ if YuriMethod:
     fileName= "Skew- Yurri Method_FRONT_AQM"
     side='Front'
     
-    FigSkew = PlotPlotly(pthF, side).Plot_YuriMethod(dfList, ListName, indexJobNameDicScaleFRONT, WaveJobPrintedDicFRONT, MoveAveWave, PlotTitle, fileName)
+    FigSkew = PlotPlotly(pthF, side).Plot_YuriMethod(dfList, ListName, indexJobNameDicScaleFRONT, WaveJobPrintedDicFRONT,BlnketReplacmentDic, MoveAveWave, PlotTitle, fileName)
     
 
 ############################################################################################
@@ -1997,3 +2237,93 @@ print(endFigure - startFigure)
 
 # 
 ##### TILL HERE!!!!
+# WaveChangeList=[];
+# indexJobNameDic={}
+
+# # DataAllMeanColorSET1Left,DataAllMeanColorSET2Left,DataAllMeanColorSET3Left,colorDic = self.CalcMeanByColorForAllJobs('Registration_Left.csv')
+# # DataAllMeanColorSET1Right,DataAllMeanColorSET2Right,DataAllMeanColorSET3Right,colorDic = self.CalcMeanByColorForAllJobs('Registration_Right.csv')
+
+
+
+
+# MeregedDataAllMeanColorLeft= CalcC2C_AvrgOfAll(pthF,folder,'Front',JobLength,PanelLengthInMM,'Left').LoadMeanColorPos_PickSide('Left');
+# MeregedDataAllMeanColorRight= CalcC2C_AvrgOfAll(pthF,folder,'Front',JobLength,PanelLengthInMM,'Left').LoadMeanColorPos_PickSide('Right');
+
+
+# colorDic={}
+
+# for i in MeregedDataAllMeanColorLeft.index:
+#    colorDic[i]= MeregedDataAllMeanColorLeft['Ink\Sets'][i]
+
+# DataAllMeanColorSET1Left=MeregedDataAllMeanColorLeft[['Ink\Sets','Set #1 X']].rename(index=colorDic)
+# DataAllMeanColorSET2Left=MeregedDataAllMeanColorLeft[['Ink\Sets','Set #2 X']].rename(index=colorDic)
+# DataAllMeanColorSET3Left=MeregedDataAllMeanColorLeft[['Ink\Sets','Set #3 X']].rename(index=colorDic)
+
+
+# DataAllMeanColorSET1Right=MeregedDataAllMeanColorRight[['Ink\Sets','Set #1 X']].rename(index=colorDic)
+# DataAllMeanColorSET2Right=MeregedDataAllMeanColorRight[['Ink\Sets','Set #2 X']].rename(index=colorDic)
+# DataAllMeanColorSET3Right=MeregedDataAllMeanColorRight[['Ink\Sets','Set #3 X']].rename(index=colorDic)
+
+# # MeregedDataAllMeanColor= self.LoadMeanColorPos();
+
+
+
+# ValidSortedJobListWithWave=[]
+
+# for f in CalcC2C_AvrgOfAll(pthF,folder,'Front',JobLength,PanelLengthInMM,'Left').fldrs:
+#     vlid,lngth=CalcC2C_AvrgOfAll(pthF,folder,'Front',JobLength,PanelLengthInMM,'Left').CheckIfFileValid_forWave(f,JobLengthWave)
+#     if vlid or ('WaveCalibration' in f):
+#             ValidSortedJobListWithWave.append(f)
+            
+# ValidSortedJobListWithWave= list(CalcC2C_AvrgOfAll(pthF,folder,'Front',JobLength,PanelLengthInMM,'Left').SortJobsByTime(ValidSortedJobListWithWave + BlanketRepList).values())
+    
+# WaveFilesInx=CalcC2C_AvrgOfAll(pthF,folder,'Front',JobLength,PanelLengthInMM,'Left').find_indexes_with_substring(ValidSortedJobListWithWave, 'WaveCalibration')
+# BlanketRepInx=CalcC2C_AvrgOfAll(pthF,folder,'Front',JobLength,PanelLengthInMM,'Left').find_indexes_with_substring(ValidSortedJobListWithWave, 'BlanketReplacment')
+
+# WaveJobPrintedDic={}
+# BlnketReplacmentDic={}
+
+
+# k=0
+# kb=0
+# for i,f in enumerate(ValidSortedJobListWithWave):
+#     try:
+        
+#         if 'BlanketReplacment' in f:
+#             if len(BlanketRepInx)>0:
+#                 if i>=BlanketRepInx[kb] or BlanketRepInx[kb] == 0:
+#                     if i==0:
+#                         inxForW = 0;
+#                     else: 
+#                         if i == inxForW +1:
+#                             inxForW=inxForW+1
+#                         else:
+#                               inxForW=list(indexJobNameDic.keys())[len(list(indexJobNameDic.keys()))-2]
+#                     while  inxForW in  BlnketReplacmentDic.keys():
+#                         inxForW=inxForW+1
+#                     BlnketReplacmentDic[inxForW]=[ValidSortedJobListWithWave[BlanketRepInx[kb]],i]
+#                     kb=kb+1 
+    
+#         else:
+#             C2Creg,indexNumberFailed = CalcC2C_AvrgOfAll(pthF,folder,'Front',JobLength,PanelLengthInMM,'Left').CalcC2CSingleSideColorPair('Registration_Left.csv','Registration_Right.csv',f,DataAllMeanColorSET1Left,DataAllMeanColorSET2Left,DataAllMeanColorSET3Left,DataAllMeanColorSET1Right,DataAllMeanColorSET2Right,DataAllMeanColorSET3Right)
+#             WaveChangeList=WaveChangeList+C2Creg
+#             indexJobNameDic[len(WaveChangeList)-1]=[f,lngth]
+    
+#             k,WaveJobPrintedDic= CalcC2C_AvrgOfAll(pthF,folder,'Front',JobLength,PanelLengthInMM,'Left').CreatWaveBlankwtDic(k,i,WaveFilesInx,WaveJobPrintedDic,indexJobNameDic,ValidSortedJobListWithWave)
+#             # kb,BlnketReplacmentDic= CalcC2C_AvrgOfAll(pthF,folder,'Front',JobLength,PanelLengthInMM,'Left').CreatWaveBlankwtDic(kb,i,BlanketRepInx,BlnketReplacmentDic,indexJobNameDic,ValidSortedJobListWithWave)
+    
+#             # # if len(WaveFilesInx)>0:
+#             # #     if i>WaveFilesInx[k] or WaveFilesInx[k] == 0:
+#             # #         inxForW=list(indexJobNameDic.keys())[len(list(indexJobNameDic.keys()))-2]
+#             # #         WaveJobPrintedDic[inxForW]=[ValidSortedJobListWithWave[WaveFilesInx[k]],i]
+#             # #         k=k+1;
+                    
+#             # if len(BlanketRepInx)>0:
+#             #     if i>BlanketRepInx[kb] or BlanketRepInx[kb] == 0:
+#             #         inxForW=list(indexJobNameDic.keys())[len(list(indexJobNameDic.keys()))-2]
+#             #         BlnketReplacmentDic[inxForW]=[ValidSortedJobListWithWave[WaveFilesInx[k]],i]
+#             #         kb=kb+1; 
+        
+
+#     except:
+#             continue;

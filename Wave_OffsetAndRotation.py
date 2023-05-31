@@ -177,6 +177,123 @@ class CalcWave:
             except:
                   continue;
         return  JobNmeSORTED,CorrectionCorrByColorAllWave;
+    
+    
+    def CreateDFwithAllColorAndWaveCorrection_Dic(self):
+        # CorrectionCorrByColorAllWave=pd.DataFrame();
+        JobNmeSORTED= self.SortJobsByTime(self.folder)
+        WaveCorrJobDIC={}
+        for f in list(JobNmeSORTED.values()):
+            try:
+              ColorDic,BarDic,BeforCorrByColor,AfterCorrByColor,CorrectionCorrByColor = self.OrgnazeDataByColorAndCorrectionState(f);
+              # colNmf={};
+              # for c in CorrectionCorrByColor.columns:
+              #     colNmf[c]=f+' '+c;
+                 
+              # CorrectionCorrByColor = CorrectionCorrByColor.rename(columns=colNmf);
+              WaveCorrJobDIC[f]=CorrectionCorrByColor
+              # CorrectionCorrByColorAllWave=pd.concat([CorrectionCorrByColorAllWave,CorrectionCorrByColor],axis=1);
+            except:
+                  continue;
+        return  JobNmeSORTED,WaveCorrJobDIC;
+    
+    
+def rotate_line(x, y, theta):
+    # Convert theta to radians
+    theta_rad = np.radians(theta)
+    
+    # Create rotation matrix
+    rotation_matrix = np.array([[np.cos(theta_rad), -np.sin(theta_rad)],
+                                [np.sin(theta_rad), np.cos(theta_rad)]])
+    
+    # Create a 2D vector from the original line coordinates
+    original_vector = np.array([x, y])
+    
+    # Perform the rotation
+    rotated_vector = np.dot(rotation_matrix, original_vector)
+    
+    # Extract the rotated line coordinates
+    rotated_x = rotated_vector[0]
+    rotated_y = rotated_vector[1]
+    
+    return rotated_x, rotated_y
+
+    
+class PlotPlotly():
+    def __init__(self, pthF, side):
+        self.pthF = pthF;
+        self.side = side;
+            
+    def PlotRotateWave(self,clr,CorrectionCorrByColorAllWavedic, plotTitle,fileName):
+        
+        fig = go.Figure()
+        keys=CorrectionCorrByColorAllWavedic.keys()
+        Wave2Compare=CorrectionCorrByColorAllWavedic[keys[0]][clr]
+        Wave2fixed=CorrectionCorrByColorAllWavedic[keys[1]][clr]
+
+        # Add traces, one for each slider step
+        # fig.add_trace(
+        #     go.Scatter(x=list(self.xdb),y=list(self.ydb),line_color='red' ,
+        #                 name='raw Data'))
+
+        # fig.add_trace(
+        #     go.Scatter(x=list(self.xdb),y=self.tlt,line_color='blue' ,
+        #                 name='Tilt '+'Slope(x1000)='+"{0:.3f}".format(self.z[0]*1000)))
+        fig.add_trace(
+            go.Scatter(y=list(Wave2Compare), line_color=clr,
+                       name=keys[0]+' wave 2 compare'))
+
+        # fig.add_trace(
+        #     go.Scatter(y=list(db[ColorForDisplay]),line_color=ColorForDisplay , line=dict(dash='dash'),
+        #                 name=ColorForDisplay+'_After'), row=2, col=1)
+
+        ##### Fiter Vs Befor ####
+        for theta in range(35):
+            rotated_x, rotated_y = rotate_line(x, Wave2fixed, theta)
+            fig.add_trace(
+                go.Scatter(
+                    visible=False,
+                    line=dict(color=clr),
+                    name=keys[1]+" wave rotation = " + str(theta),
+                    y=rotated_y))
+
+        # Make 10th trace visible
+        fig.data[1].visible = True
+
+        # Create and add slider
+        steps = []
+        for i in range(len(fig.data)):
+            step = dict(
+                method="update",
+                args=[{"visible": [False] * len(fig.data)},
+                      {"title": plotTitle + str(i)}],  # layout attribute
+            )
+
+            if i < len(fig.data):
+                # Toggle i'th trace to "visible"
+                step["args"][0]["visible"][i] = True
+
+            # step["args"][0]["visible"][0] = True
+            # step["args"][0]["visible"][1] = True
+
+            steps.append(step)
+
+        sliders = [dict(
+            active=10,
+            currentvalue={"prefix": "Theta:"},
+            pad={"t": 100},
+            steps=steps
+        )]
+
+        fig.update_layout(
+            sliders=sliders
+        )
+
+        fig.show()
+
+        plot(fig, filename=fileName)
+
+        return fig 
 
 #################################################################################################################
 from tkinter import filedialog
@@ -193,6 +310,7 @@ folderWaveCalibrationFront=PreapareData(pthF).ExtractFilesFromZip()
 
 JobNmeSORTEDFront,CorrectionCorrByColorAllWaveFront = CalcWave(pthF,folderWaveCalibrationFront,side,Panel).CreateDFwithAllColorAndWaveCorrection();
 
+JobNmeSORTEDFront,CorrectionCorrByColorAllWaveFrontdic = CalcWave(pthF,folderWaveCalibrationFront,side,Panel).CreateDFwithAllColorAndWaveCorrection_Dic();
 
 
 try:
@@ -202,10 +320,81 @@ try:
     
     
     JobNmeSORTEDBack,CorrectionCorrByColorAllWaveBack = CalcWave(pthF,folderWaveCalibrationBack,side,Panel).CreateDFwithAllColorAndWaveCorrection();
+
+    JobNmeSORTEDBack,CorrectionCorrByColorAllWaveBackdic = CalcWave(pthF,folderWaveCalibrationBack,side,Panel).CreateDFwithAllColorAndWaveCorrection_Dic();
+
+
 except:
     1
 
 os.chdir(pthF)
+#########################PLOT########################################
+
+
+#########################PLOT########################################
+
+plt.figure()
+plt.plot(CorrectionCorrByColorAllWaveFrontdic['QCS WaveCalibration_78 Archive 11-05-2023 20-55-41.zip']['Black'])
+
+lineExmp=list[CorrectionCorrByColorAllWaveFrontdic['QCS WaveCalibration_78 Archive 11-05-2023 20-55-41.zip']['Black']]
+
+x=list(range(len(lineExmp)))
+
+thetaEng=list(np.asarray(range(1,11,1))*0.1)
+
+rotated_x, rotated_y=rotate_line(x, lineExmp, 90)
+
+plt.figure()
+plt.plot(lineExmp)
+for i in thetaEng:
+    rotated_x, rotated_y=rotate_line(x, lineExmp, i)
+    plt.plot(rotated_x,rotated_y)
+    # plt.plot(rotated_y)
+
+
+
+plt.figure()
+# plt.plot(lineExmp)
+for i in range(2,60,2):
+    rotated_x, rotated_y=rotate_line(x, lineExmp, i)
+    plt.plot(rotated_x)
+
+
+plt.figure()
+# plt.plot(lineExmp)
+for i in range(2,35,2):
+    rotated_x, rotated_y=rotate_line(x, lineExmp, i)
+    # plt.plot(rotated_x,rotated_y)
+    plt.plot(rotated_y,color='b')
+plt.plot(rotated_y,color='r')
+
+
+plt.figure()
+plt.plot(lineExmp)
+rotated_x, rotated_y=rotate_line(x, lineExmp, 60)
+plt.plot(rotated_y)
+
+
+theta=10
+x=list(range(len(lineExmp)))
+y=lineExmp
+
+
+theta_rad = np.radians(theta)
+
+# Create rotation matrix
+rotation_matrix = np.array([[np.cos(theta_rad), -np.sin(theta_rad)],
+                            [np.sin(theta_rad), np.cos(theta_rad)]])
+
+# Create a 2D vector from the original line coordinates
+original_vector = np.array([x, y])
+
+# Perform the rotation
+rotated_vector = np.dot(rotation_matrix, original_vector)
+
+# Extract the rotated line coordinates
+rotated_x = rotated_vector[0]
+rotated_y = rotated_vector[1]
 
 #########################PLOT########################################
 

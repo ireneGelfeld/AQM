@@ -1024,6 +1024,8 @@ class CalcC2C_AvrgOfAll(DispImagePlacment):
 
         k=0
         kb=0
+        inxForW=0
+
         for i,f in enumerate(ValidSortedJobListWithWave):
             try:
                 
@@ -2237,6 +2239,9 @@ print(endFigure - startFigure)
 
 # 
 ##### TILL HERE!!!!
+
+
+
 # WaveChangeList=[];
 # indexJobNameDic={}
 
@@ -2253,7 +2258,7 @@ print(endFigure - startFigure)
 # colorDic={}
 
 # for i in MeregedDataAllMeanColorLeft.index:
-#    colorDic[i]= MeregedDataAllMeanColorLeft['Ink\Sets'][i]
+#     colorDic[i]= MeregedDataAllMeanColorLeft['Ink\Sets'][i]
 
 # DataAllMeanColorSET1Left=MeregedDataAllMeanColorLeft[['Ink\Sets','Set #1 X']].rename(index=colorDic)
 # DataAllMeanColorSET2Left=MeregedDataAllMeanColorLeft[['Ink\Sets','Set #2 X']].rename(index=colorDic)
@@ -2286,19 +2291,18 @@ print(endFigure - startFigure)
 
 # k=0
 # kb=0
+# inxForW=0
 # for i,f in enumerate(ValidSortedJobListWithWave):
 #     try:
         
 #         if 'BlanketReplacment' in f:
 #             if len(BlanketRepInx)>0:
 #                 if i>=BlanketRepInx[kb] or BlanketRepInx[kb] == 0:
-#                     if i==0:
-#                         inxForW = 0;
-#                     else: 
-#                         if i == inxForW +1:
-#                             inxForW=inxForW+1
-#                         else:
-#                               inxForW=list(indexJobNameDic.keys())[len(list(indexJobNameDic.keys()))-2]
+                    
+#                     if i == inxForW +1:
+#                         inxForW=inxForW+1
+#                     else:
+#                         inxForW=list(indexJobNameDic.keys())[len(list(indexJobNameDic.keys()))-1]
 #                     while  inxForW in  BlnketReplacmentDic.keys():
 #                         inxForW=inxForW+1
 #                     BlnketReplacmentDic[inxForW]=[ValidSortedJobListWithWave[BlanketRepInx[kb]],i]

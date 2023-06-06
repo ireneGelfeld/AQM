@@ -128,7 +128,7 @@ def add_zero_to_timestamp(timestamp):
     return corrected_timestamp
 
 def Create_Blanket_ReplacementList(BlanketRep):
-    column_name = 'ok'
+    column_name = 3
     filter_value = 'ok'
 
     # Create a Series filtering out the specified value
@@ -1883,11 +1883,10 @@ pthF=pthF+'/';
 
 folder=PreapareData(pthF).ExtractFilesFromZip();
 
-
 BlanketRep=pd.DataFrame();
 BlanketRepList=[]
 try: 
-    BlanketRep=pd.read_csv(pthF+'output.csv')
+    BlanketRep=pd.read_csv(pthF+'output.csv',header=None)
     BlanketRepList=Create_Blanket_ReplacementList(BlanketRep);
 
 except:

@@ -42,7 +42,7 @@ MaxWaveWindow=11
 S_g_Degree=1
 ColorDic={0:'Magenta',1:'Yellow',2:'Blue',3:'Orange',4:'Cyan',5:'Green',6:'Black'}
 pixSize = 84.6666 # [um]
-sideDic={0:'Operator Side',1:'Middle',2:'Drive Side'}
+sideDic={0:'Left Side',1:'Middle',2:'Right Side'}
 
 
 ############################################################################
@@ -399,7 +399,7 @@ def Plot3subPlots(db,PlotTitle,fileName):
     
     fig = go.Figure()
     #fig_back = go.Figure()
-    fig = make_subplots(rows=3, cols=1,subplot_titles=('Op-side', 'Middle', 'Dr-side'), vertical_spacing=0.1, shared_xaxes=True)
+    fig = make_subplots(rows=3, cols=1,subplot_titles=('left-side', 'Middle', 'right-side'), vertical_spacing=0.1, shared_xaxes=True)
    
     ln_list=[len(db[0].columns),len(db[1].columns),len(db[2].columns)]
     min_index = ln_list.index(min(ln_list))
@@ -412,13 +412,13 @@ def Plot3subPlots(db,PlotTitle,fileName):
                     lineColor='gold';
     # for i in rnge:
         fig.add_trace(go.Scatter(y=list(db[0][c]), line_color=lineColor,
-                    name=c+' Op-side'),row=1, col=1)
+                    name=c+' left-side'),row=1, col=1)
         
         fig.add_trace(go.Scatter(y=list(db[1][c]), line_color=lineColor,
                     name=c+' Middle'),row=2, col=1)
         
         fig.add_trace(go.Scatter(y=list(db[2][c]), line_color=lineColor,
-                    name=c+' Dr-side'),row=3, col=1)
+                    name=c+' right-side'),row=3, col=1)
    
     
     fig.update_layout(title=PlotTitle)
@@ -1105,7 +1105,7 @@ for i in range(3):
 ##################################################################
 
 db= C2Cmat_allPanels;
-PlotTitle='Color differance from Traget multiPanel'
+PlotTitle='C2C'
 fileName=PlotTitle+'.html'
 figC2C_multiPanel= PlotSingle_Basic_multiPanel(db,PlotTitle,fileName,indexPanelNameDic,100)
 ##########################################################################################
@@ -1113,14 +1113,14 @@ figC2C_multiPanel= PlotSingle_Basic_multiPanel(db,PlotTitle,fileName,indexPanelN
 ##########################################################################################
 ##########################################################################################
 db= Cyan_Black_Sgoly_allPanels;
-PlotTitle='Cyan Vs color- multiPanel'
+PlotTitle='2 color diff -Cyan Vs color'
 
 fileName=PlotTitle+'.html'
 figCyanVsClr_multiPanel_OP= PlotSingle_DiffFromRefclr_multiPanel(db,PlotTitle,fileName,indexPanelNameDic,100)
 
 ##########################################################################################
 db= Green_Black_Sgoly_allPanels;
-PlotTitle='Green Vs color- multiPanel'
+PlotTitle='2 color diff - Green Vs color'
 
 fileName=PlotTitle+'.html'
 figCyanVsClr_multiPanel_OP= PlotSingle_DiffFromRefclr_multiPanel(db,PlotTitle,fileName,indexPanelNameDic,100)
@@ -1129,7 +1129,7 @@ figCyanVsClr_multiPanel_OP= PlotSingle_DiffFromRefclr_multiPanel(db,PlotTitle,fi
 ##########################################################################################
 ##########################################################################################
 db= ClrDF_fromTargetS_goly_allPanels;
-PlotTitle='Color from Target- multiPanel'
+PlotTitle='Single color from Target'
 
 fileName=PlotTitle+'.html'
 figCyanVsClr_multiPanel_colorFromTarget= PlotSingle_BasicVsTraget_multiPanel(db,PlotTitle,fileName,indexPanelNameDic,100)

@@ -675,12 +675,25 @@ class CalcC2C_AvrgOfAll(DispImagePlacment):
          
          return St1dataAllColors,St2dataAllColors,St3dataAllColors,RefSETloc,Scale,ScaleMaxMin,colorDic
      
+    def CheckForAI(self):
+        
+        file_name = 'C2CRegistration_'+self.pageSide+'.csv'; # Replace with the actual file name you want to check
+        
+        if os.path.exists(file_path):
+            fname = 'C2CRegistration_'+self.pageSide+'.csv'
+            
+        else:
+            fname= 'Registration_'+self.pageSide+'.csv';
+        
+        return  fname;
+
     def CalcScaleForAllJOBS(self):
         
         ScaleMaxMinDF=pd.DataFrame();
         
+        # fname= 'Registration_'+self.pageSide+'.csv';
         
-        fname= 'Registration_'+self.pageSide+'.csv';
+        fname= self.CheckForAI();
         
         DataAllMeanColorSET1,DataAllMeanColorSET2,DataAllMeanColorSET3,colorDic,RefSETloc = self.CalcScaleFromTarget();
 
@@ -706,7 +719,7 @@ class CalcC2C_AvrgOfAll(DispImagePlacment):
         colorDicOBG={}
         colorDicCMYK={}
         
-        fname= 'Registration_'+self.pageSide+'.csv';
+        fname= self.CheckForAI();
         
         DataAllMeanColorSET1,DataAllMeanColorSET2,DataAllMeanColorSET3,colorDic,RefSETloc = self.CalcScaleFromTarget();
         

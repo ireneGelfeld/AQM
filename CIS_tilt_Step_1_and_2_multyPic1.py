@@ -451,7 +451,8 @@ while 1:
                             RecDimX, RecDimY, xdb, ydb, tlt, z).PlotCIS()
     
     # url = py.plot(figCIScalc, filename=fileName)
-    # subprocess.Popen(['start', 'chrome', url], shell=True)
+    url = 'file://' + pth4save + fileName
+    subprocess.Popen(['start', 'chrome', url], shell=True)
     
     # root = Tk()
     # root.withdraw()

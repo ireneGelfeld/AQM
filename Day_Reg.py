@@ -14,7 +14,7 @@ Created on Wed Jun 16 16:30:46 2021
 global DistBetweenSets,GlobalScale,PanelLengthInMM,JobLengthתcolor_combinations,FullColorList,JobLengthWave,MoveAveWave,MoveAveWaveScale,OBGfactor;
 
 # For setting the min job length for Change Wave plot- this parameter should be used for setting the allowble moving avarage- for example set JobLengthWave= 100, MoveAveWave=20;
-JobLengthWave=100;
+JobLengthWave=50;
 MoveAveWave=30;
 MoveAveWaveScale=100;
 #For 252
@@ -23,13 +23,13 @@ MarkSetVersion=252
 OBGfactor= 1.22
 
 ### Job name markers location
-ymax=200 # Job name location
-ymaxWaveJob=180 # Wave job location
+ymax=120 # Job name location
+ymaxWaveJob=100 # Wave job location
 
 if MarkSetVersion==252:
 
     
-    GlobalScale = 0.9983 # Drop3 simplex = 0.9976, Duplex = 0.9984 ,,,, Drop5 Simplex = 0.9953, Duplex = 0.9945 
+    GlobalScale = 0.9945 # Drop3 simplex = 0.9976, Duplex = 0.9984 ,,,, Drop5 Simplex = 0.9953, Duplex = 0.9945 
     DistBetweenSets =  125686/GlobalScale; 
     
 else:
@@ -139,6 +139,7 @@ def Create_Blanket_ReplacementList(BlanketRep):
             doubleRep=itm.split('$')
             for doubleRepItm in doubleRep:
                 doubleRepItm=remove_decimal_numbers(doubleRepItm)[:-1]
+                doubleRepItm=doubleRepItm.strip()
                 doubleRepItm=add_zero_to_timestamp(doubleRepItm)
                 newString=doubleRepItm.replace('/','-').replace(':','-')
                 BlanketRepList.append('BlanketReplacment '+newString+'    ')

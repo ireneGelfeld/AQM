@@ -4,7 +4,7 @@ Created on Sun Apr 24 12:35:16 2022
 
 @author: Ireneg
 """
-
+ 
 
 #from IPython import get_ipython
 #get_ipython().magic('reset -sf')
@@ -19,7 +19,7 @@ MarkSetVersion=252
 if MarkSetVersion==252:
 
     
-    GlobalScale = 0.9983 # Drop3 simplex = 0.9976, Duplex = 0.9984 ,,,, Drop5 Simplex = 0.9953, Duplex = 0.9945 
+    GlobalScale = 0.9945 # Drop3 simplex = 0.9976, Duplex = 0.9984 ,,,, Drop5 Simplex = 0.9953, Duplex = 0.9945 
     DistBetweenSets =  125686/GlobalScale; 
     firstSetDistance=31053/GlobalScale; 
 

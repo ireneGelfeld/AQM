@@ -25,6 +25,13 @@ import matplotlib.pyplot as plt
 import numpy as np
 import cv2
 global RecDimX, RecDimY
+import subprocess 
+import chart_studio.plotly as py 
+# url = "https://your-plotly-visualization-url" 
+# subprocess.Popen(['start', 'chrome', url], shell=True)
+
+
+
 
 RecDimX = 5
 RecDimY = 5
@@ -49,7 +56,7 @@ CISsavgolWindow12k = 373
 FileNameCSV = 'CIS_B2_filter_'+str(CISsavgolWindow)+'.csv'
 FileNameCSV12k = 'CIS_B2_filter12k_'+str(CISsavgolWindow12k)+'.csv'
 
-plot12k = 0
+plot12k = 1
 plot385 = 1
 
 
@@ -388,7 +395,7 @@ class plotPlotly(CIScurveFromImage):
             sliders=sliders
         )
 
-        fig.show()
+        # fig.show()
 
         plot(fig, filename=self.fileName)
 
@@ -442,6 +449,9 @@ while 1:
     z = 0
     figCIScalc = plotPlotly(ImageGL, plotTitle, fileName,
                             RecDimX, RecDimY, xdb, ydb, tlt, z).PlotCIS()
+    
+    # url = py.plot(figCIScalc, filename=fileName)
+    # subprocess.Popen(['start', 'chrome', url], shell=True)
     
     # root = Tk()
     # root.withdraw()

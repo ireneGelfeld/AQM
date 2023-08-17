@@ -27,6 +27,9 @@ import cv2
 global RecDimX, RecDimY
 import subprocess 
 import chart_studio.plotly as py 
+import webbrowser
+import shutil
+
 # url = "https://your-plotly-visualization-url" 
 # subprocess.Popen(['start', 'chrome', url], shell=True)
 
@@ -399,6 +402,7 @@ class plotPlotly(CIScurveFromImage):
 
         plot(fig, filename=self.fileName)
 
+
         return fig
 
 
@@ -442,18 +446,33 @@ while 1:
     
     plotTitle = pthF+" CIS edge T_Lum= "
     fileName = pthF.replace('/', '_').replace(f,
-                                              "").replace(":", "") + "CIS edge" + ".html"
+                                              "").replace(":", "") + "CIS" + ".html"
     xdb = 0
     ydb = 0
     tlt = 0
     z = 0
     figCIScalc = plotPlotly(ImageGL, plotTitle, fileName,
                             RecDimX, RecDimY, xdb, ydb, tlt, z).PlotCIS()
-    
+    os.chdir(pth4save)
+    plotly_html_content = figCIScalc.to_html(full_html=False)
+    # Save the HTML content to a file with a custom name
+    custom_html_name = fileName
+    with open(custom_html_name, 'w') as f:
+        f.write(plotly_html_content)
+
+
     # url = py.plot(figCIScalc, filename=fileName)
-    url = 'file://' + pth4save + fileName
+    url = 'file:///' + pth4save + fileName
     subprocess.Popen(['start', 'chrome', url], shell=True)
     
+    
+    # # url = 'file:///C:/Users/gevay/Downloads/C_Users_gevay_Downloads_Cropped%20images_CIS.html'
+
+    # webbrowser.open(url)
+    
+    # chrome_path = 'C:/Program Files/Google/Chrome/Application/chrome.exe'
+    # webbrowser.register('chrome', None, webbrowser.BackgroundBrowser(chrome_path))
+    # webbrowser.get('chrome').open(url)
     # root = Tk()
     # root.withdraw()
     T_Lum = simpledialog.askstring(

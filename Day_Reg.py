@@ -14,8 +14,10 @@ Created on Wed Jun 16 16:30:46 2021
 global DistBetweenSets,GlobalScale,PanelLengthInMM,JobLengthתcolor_combinations,FullColorList,JobLengthWave,MoveAveWave,MoveAveWaveScale,OBGfactor;
 
 # For setting the min job length for Change Wave plot- this parameter should be used for setting the allowble moving avarage- for example set JobLengthWave= 100, MoveAveWave=20;
-JobLengthWave=50;
-MoveAveWave=30;
+JobLengthWave=100;
+MoveAveWave=10;
+S_g_Degree=1;
+
 MoveAveWaveScale=100;
 #For 252
 MarkSetVersion=252
@@ -23,13 +25,13 @@ MarkSetVersion=252
 OBGfactor= 1.22
 
 ### Job name markers location
-ymax=120 # Job name location
-ymaxWaveJob=100 # Wave job location
+ymax=200 # Job name location
+ymaxWaveJob=180 # Wave job location
 
 if MarkSetVersion==252:
 
     
-    GlobalScale = 0.9945 # Drop3 simplex = 0.9976, Duplex = 0.9984 ,,,, Drop5 Simplex = 0.9953, Duplex = 0.9945 
+    GlobalScale = 0.9983 # Drop3 simplex = 0.9976, Duplex = 0.9984 ,,,, Drop5 Simplex = 0.9953, Duplex = 0.9945 
     DistBetweenSets =  125686/GlobalScale; 
     
 else:
@@ -104,6 +106,7 @@ import pandas as pd
 from plotly.offline import download_plotlyjs, init_notebook_mode,  plot
 from plotly.subplots import make_subplots
 import re
+from scipy.signal import savgol_filter
 
 
 def remove_decimal_numbers(string):
@@ -128,7 +131,7 @@ def add_zero_to_timestamp(timestamp):
     return corrected_timestamp
 
 def Create_Blanket_ReplacementList(BlanketRep):
-    column_name = 3
+    column_name = 'ok'
     filter_value = 'ok'
 
     # Create a Series filtering out the specified value
@@ -139,7 +142,6 @@ def Create_Blanket_ReplacementList(BlanketRep):
             doubleRep=itm.split('$')
             for doubleRepItm in doubleRep:
                 doubleRepItm=remove_decimal_numbers(doubleRepItm)[:-1]
-                doubleRepItm=doubleRepItm.strip()
                 doubleRepItm=add_zero_to_timestamp(doubleRepItm)
                 newString=doubleRepItm.replace('/','-').replace(':','-')
                 BlanketRepList.append('BlanketReplacment '+newString+'    ')
@@ -306,7 +308,7 @@ class CalcC2C_AvrgOfAll(DispImagePlacment):
         flatNumberFailed=(RawData[RawData['Registration Status']!='Success'].iloc[:,1].unique().tolist());
         return  RawDataSuccess,flatNumberFailed,l1; 
     
-    def CalcMeanByColorForAllJobs(self,fname):
+    def CalcMeanByColorForAllJobs(self,pageSide):
         
         DataAllMeanColorSET1ToT = pd.DataFrame();
         DataAllMeanColorSET2ToT = pd.DataFrame();
@@ -318,6 +320,7 @@ class CalcC2C_AvrgOfAll(DispImagePlacment):
         
         for f in self.fldrs:
             try:
+                fname=self.CheckForAI(pageSide,f)
                 RawDataSuccess,flatNumberFailed,l1 = self.LoadRawData(fname,f);
                 
                 DataAllMeanColorSET1,DataAllMeanColorSET2,DataAllMeanColorSET3,ln, colorDic= self.CalcMeanByColor(RawDataSuccess);
@@ -676,17 +679,36 @@ class CalcC2C_AvrgOfAll(DispImagePlacment):
          
          return St1dataAllColors,St2dataAllColors,St3dataAllColors,RefSETloc,Scale,ScaleMaxMin,colorDic
      
+    def CheckForAI(self,pageSide,f):
+        
+        zip_file_path = self.pthF+'/'+f
+        sub_folder = self.side+'/'+'RawResults'  # Path to the subfolder within the zip
+        file_name = 'C2CRegistration_'+pageSide+'.csv'      # Name of the file you want to check
+        
+        with zipfile.ZipFile(zip_file_path, 'r') as zip_ref:
+            sub_folder_files = [name for name in zip_ref.namelist() if name.startswith(sub_folder)]
+        
+            if sub_folder+'/'+file_name in sub_folder_files:
+                fname = file_name
+            else:
+                
+                fname = 'Registration_'+pageSide+'.csv'
+        
+        return  fname;
+
     def CalcScaleForAllJOBS(self):
         
         ScaleMaxMinDF=pd.DataFrame();
         
+        # fname= 'Registration_'+self.pageSide+'.csv';
         
-        fname= 'Registration_'+self.pageSide+'.csv';
         
         DataAllMeanColorSET1,DataAllMeanColorSET2,DataAllMeanColorSET3,colorDic,RefSETloc = self.CalcScaleFromTarget();
 
         for f in self.fldrs:
            stP=pd.DataFrame();
+           fname= self.CheckForAI(self.pageSide,f);
+
            try:
                St1dataAllColors,St2dataAllColors,St3dataAllColors,RefSETloc,Scale,ScaleMaxMin,colorDic=self.DataForCalcSCALE_FromData(DataAllMeanColorSET1,DataAllMeanColorSET2,DataAllMeanColorSET3,colorDic,RefSETloc,fname,f);
              
@@ -707,7 +729,6 @@ class CalcC2C_AvrgOfAll(DispImagePlacment):
         colorDicOBG={}
         colorDicCMYK={}
         
-        fname= 'Registration_'+self.pageSide+'.csv';
         
         DataAllMeanColorSET1,DataAllMeanColorSET2,DataAllMeanColorSET3,colorDic,RefSETloc = self.CalcScaleFromTarget();
         
@@ -727,6 +748,7 @@ class CalcC2C_AvrgOfAll(DispImagePlacment):
         for f in self.fldrs:
            # stP=pd.DataFrame();
 
+           fname= self.CheckForAI(self.pageSide,f);
 
            try:
                St1dataAllColors,St2dataAllColors,St3dataAllColors,RefSETloc,Scale,ScaleMaxMin,colorDic=self.DataForCalcSCALE_FromData(DataAllMeanColorSET1,DataAllMeanColorSET2,DataAllMeanColorSET3,colorDic,RefSETloc,fname,f);
@@ -887,7 +909,7 @@ class CalcC2C_AvrgOfAll(DispImagePlacment):
             try:
                 vlid,lngth=self.CheckIfFileValid_forWave(f,JobLengthWave)
                 if vlid:
-                    C2Creg,indexNumberFailed = self.CalcC2CSingleSideColorPair('Registration_Left.csv','Registration_Right.csv',f,DataAllMeanColorSET1Left,DataAllMeanColorSET2Left,DataAllMeanColorSET3Left,DataAllMeanColorSET1Right,DataAllMeanColorSET2Right,DataAllMeanColorSET3Right)
+                    C2Creg,indexNumberFailed = self.CalcC2CSingleSideColorPair(self.CheckForAI('Left',f),self.CheckForAI('Right',f),f,DataAllMeanColorSET1Left,DataAllMeanColorSET2Left,DataAllMeanColorSET3Left,DataAllMeanColorSET1Right,DataAllMeanColorSET2Right,DataAllMeanColorSET3Right)
                     WaveChangeList=WaveChangeList+C2Creg
 
                     indexJobNameDic[len(WaveChangeList)-1]=[f,str(lngth)]
@@ -947,7 +969,7 @@ class CalcC2C_AvrgOfAll(DispImagePlacment):
         for i,f in enumerate(ValidSortedJobListWithWave):
             try:
             
-                C2Creg,indexNumberFailed = self.CalcC2CSingleSideColorPair('Registration_Left.csv','Registration_Right.csv',f,DataAllMeanColorSET1Left,DataAllMeanColorSET2Left,DataAllMeanColorSET3Left,DataAllMeanColorSET1Right,DataAllMeanColorSET2Right,DataAllMeanColorSET3Right)
+                C2Creg,indexNumberFailed = self.CalcC2CSingleSideColorPair(self.CheckForAI('Left',f),self.CheckForAI('Right',f),f,DataAllMeanColorSET1Left,DataAllMeanColorSET2Left,DataAllMeanColorSET3Left,DataAllMeanColorSET1Right,DataAllMeanColorSET2Right,DataAllMeanColorSET3Right)
                 WaveChangeList=WaveChangeList+C2Creg
                 indexJobNameDic[len(WaveChangeList)-1]=[f,lngth]
 
@@ -1047,7 +1069,7 @@ class CalcC2C_AvrgOfAll(DispImagePlacment):
                             kb=kb+1 
             
                 else:       
-                    C2Creg,indexNumberFailed = self.CalcC2CSingleSideColorPair('Registration_Left.csv','Registration_Right.csv',f,DataAllMeanColorSET1Left,DataAllMeanColorSET2Left,DataAllMeanColorSET3Left,DataAllMeanColorSET1Right,DataAllMeanColorSET2Right,DataAllMeanColorSET3Right)
+                    C2Creg,indexNumberFailed = self.CalcC2CSingleSideColorPair(self.CheckForAI('Left',f),self.CheckForAI('Right',f),f,DataAllMeanColorSET1Left,DataAllMeanColorSET2Left,DataAllMeanColorSET3Left,DataAllMeanColorSET1Right,DataAllMeanColorSET2Right,DataAllMeanColorSET3Right)
                     WaveChangeList=WaveChangeList+C2Creg
                     indexJobNameDic[len(WaveChangeList)-1]=[f,lngth]
     
@@ -1127,7 +1149,7 @@ class CalcC2C_AvrgOfAll(DispImagePlacment):
         for i,f in enumerate(ValidSortedJobList):
             try:
          
-                    C2Creg,indexNumberFailed = self.CalcC2CSingleSideColorPair('Registration_Left.csv','Registration_Right.csv',f,DataAllMeanColorSET1Left,DataAllMeanColorSET2Left,DataAllMeanColorSET3Left,DataAllMeanColorSET1Right,DataAllMeanColorSET2Right,DataAllMeanColorSET3Right)
+                    C2Creg,indexNumberFailed = self.CalcC2CSingleSideColorPair(self.CheckForAI('Left',f),self.CheckForAI('Right',f),f,DataAllMeanColorSET1Left,DataAllMeanColorSET2Left,DataAllMeanColorSET3Left,DataAllMeanColorSET1Right,DataAllMeanColorSET2Right,DataAllMeanColorSET3Right)
                     WaveChangeList=WaveChangeList+C2Creg
                 
         
@@ -1236,16 +1258,17 @@ class CalcC2C_AvrgOfAll(DispImagePlacment):
         ImagePlacement_pp=pd.DataFrame()
         flatNumberFailed_pp=pd.DataFrame();
         
-        DataAllMeanColorSET1left,DataAllMeanColorSET2left,DataAllMeanColorSET3left,colorDic = self.CalcMeanByColorForAllJobs('Registration_Left.csv')
-        DataAllMeanColorSET1right,DataAllMeanColorSET2right,DataAllMeanColorSET3right,colorDic = self.CalcMeanByColorForAllJobs('Registration_Right.csv')
+        
+        DataAllMeanColorSET1left,DataAllMeanColorSET2left,DataAllMeanColorSET3left,colorDic = self.CalcMeanByColorForAllJobs('Left')
+        DataAllMeanColorSET1right,DataAllMeanColorSET2right,DataAllMeanColorSET3right,colorDic = self.CalcMeanByColorForAllJobs('Right')
         
         for f in self.fldrs:
             stP=pd.DataFrame();
             flatNumberFailed=pd.DataFrame();
             try:
                 if self.CheckIfFileValid(f):
-                    C2CregLeft,indexNumberFailedLeft=self.CalcC2CSingleSide('Registration_Left.csv',f,DataAllMeanColorSET1left,DataAllMeanColorSET2left,DataAllMeanColorSET3left);
-                    C2CregRight,indexNumberFailedRight=self.CalcC2CSingleSide('Registration_Right.csv',f,DataAllMeanColorSET1right,DataAllMeanColorSET2right,DataAllMeanColorSET3right);
+                    C2CregLeft,indexNumberFailedLeft=self.CalcC2CSingleSide(self.CheckForAI('Left',f),f,DataAllMeanColorSET1left,DataAllMeanColorSET2left,DataAllMeanColorSET3left);
+                    C2CregRight,indexNumberFailedRight=self.CalcC2CSingleSide(self.CheckForAI('Right',f),f,DataAllMeanColorSET1right,DataAllMeanColorSET2right,DataAllMeanColorSET3right);
                     C2CMaxLeftRight=[];
                     for i in range(len(C2CregRight)):
                             tmp=[C2CregLeft[i],C2CregRight[i]];
@@ -1559,9 +1582,13 @@ class PlotPlotly():
            fig.data[len(fig.data)-1].visible = 'legendonly';
 
            
+           # fig.add_trace(
+           # go.Scatter(y=WaveChangeDF[clr].rolling(MoveAveWave).mean(),line_color= lineColor,
+           #             name='Wave Differance Left-Right- moving average of '+str(MoveAveWave)+' color '+clr))
+           
            fig.add_trace(
-           go.Scatter(y=WaveChangeDF[clr].rolling(MoveAveWave).mean(),line_color= lineColor,
-                       name='Wave Differance Left-Right- moving average of '+str(MoveAveWave)+' color '+clr))
+           go.Scatter(y=list(savgol_filter((WaveChangeDF[clr]), MoveAveWave, S_g_Degree)),line_color= lineColor,
+                       name='Wave Differance Left-Right- savgol of '+str(MoveAveWave)+' color '+clr))
            
            
            # ymax=max(WaveRawDataDic[ColorList[0]]-WaveDataWithMaxFilterDic[self.ColorList[0]])
@@ -1571,10 +1598,15 @@ class PlotPlotly():
                     name='C2C '))
        fig.data[len(fig.data)-1].visible = 'legendonly';
 
-        
+       
+       # fig.add_trace(
+       # go.Scatter(y=list(c2cChangeDF[0].rolling(MoveAveWave).mean()),line_color= '#8B0000',  # Coral
+       #              name='C2C moving average ')) 
+       
        fig.add_trace(
-       go.Scatter(y=list(c2cChangeDF[0].rolling(MoveAveWave).mean()),line_color= '#8B0000',  # Coral
-                    name='C2C moving average ')) 
+       go.Scatter(y=list(savgol_filter((c2cChangeDF[0]), MoveAveWave, S_g_Degree) ),line_color= '#8B0000',  # Coral
+                    name='C2C savgol ')) 
+       
        
        fig.add_trace(
         go.Scatter(y=list(ScaleChangeDFAverage),
@@ -1582,10 +1614,13 @@ class PlotPlotly():
        fig.data[len(fig.data)-1].visible = 'legendonly';
 
         
-       fig.add_trace(
-        go.Scatter(y=list(ScaleChangeDFAverage.rolling(MoveAveWaveScale).mean()), line_color = '#9370DB',# MediumPurple
-                    name='Scale Average moving average = '+str(MoveAveWaveScale)))  
+       # fig.add_trace(
+       #  go.Scatter(y=list(ScaleChangeDFAverage.rolling(MoveAveWaveScale).mean()), line_color = '#9370DB',# MediumPurple
+       #              name='Scale Average moving average = '+str(MoveAveWaveScale)))  
        
+       fig.add_trace(
+        go.Scatter(y=list(savgol_filter((ScaleChangeDFAverage), MoveAveWave, S_g_Degree) ), line_color = '#9370DB',# MediumPurple
+                    name='Scale savgol average = '+str(MoveAveWaveScale)))  
        
        # fig.add_trace(
        #  go.Scatter(y=list(ScaleChangeDFRight[0]),
@@ -1649,10 +1684,10 @@ class PlotPlotly():
                     name='C2C '))
         fig.data[len(fig.data)-1].visible = 'legendonly';
 
-        
+         
         fig.add_trace(
-        go.Scatter(y=list(c2cChangeDF[0].rolling(MoveAveWave).mean()),line_color= '#8B0000',  # Coral
-                    name='C2C moving average '))
+        go.Scatter(y=list(savgol_filter((c2cChangeDF[0]), MoveAveWave, S_g_Degree)),line_color= '#8B0000',  # Coral
+                    name='C2C savgol '))
            
            
            # ymax=max(WaveRawDataDic[ColorList[0]]-WaveDataWithMaxFilterDic[self.ColorList[0]])
@@ -1700,8 +1735,8 @@ class PlotPlotly():
 
         
         fig.add_trace(
-        go.Scatter(y=list(ScaleChangeDFAverage.rolling(MoveAveWaveScale).mean()), line_color = '#9370DB',# MediumPurple
-                    name='Scale Average moving average = '+str(MoveAveWaveScale)))         
+        go.Scatter(y=list(savgol_filter((ScaleChangeDFAverage), MoveAveWave, S_g_Degree)), line_color = '#9370DB',# MediumPurple
+                    name='Scale savgol average = '+str(MoveAveWaveScale)))         
      
       
         # fig.add_trace(
@@ -1765,10 +1800,9 @@ class PlotPlotly():
                    name='Scale Average'))
        fig.data[len(fig.data)-1].visible = 'legendonly';
 
-       
        fig.add_trace(
-       go.Scatter(y=list(ScaleChangeDFAverage.rolling(MoveAveWaveScale).mean()), line_color = '#9370DB',# MediumPurple
-                   name='Scale Average moving average = '+str(MoveAveWaveScale)))         
+       go.Scatter(y=list(savgol_filter((ScaleChangeDFAverage), MoveAveWave, S_g_Degree)), line_color = '#9370DB',# MediumPurple
+                   name='Scale savgol average = '+str(MoveAveWaveScale)))         
     
        try:
            fig.add_trace(
@@ -1776,10 +1810,10 @@ class PlotPlotly():
                        name='Scale Average CMYK'))
            fig.data[len(fig.data)-1].visible = 'legendonly';
     
-           
+          
            fig.add_trace(
-           go.Scatter(y=list(ScaleChangeDFCMYK.rolling(MoveAveWaveScale).mean()), line_color = '#FF7F50',# warm oraneg pink
-                       name='Scale Average moving average CMYK= '+str(MoveAveWaveScale)))         
+           go.Scatter(y=list( savgol_filter((ScaleChangeDFCMYK), MoveAveWave, S_g_Degree)), line_color = '#FF7F50',# warm oraneg pink
+                       name='Scale savgol average CMYK= '+str(MoveAveWaveScale)))         
            
            
            fig.add_trace(
@@ -1789,8 +1823,8 @@ class PlotPlotly():
     
            
            fig.add_trace(
-           go.Scatter(y=list(ScaleChangeDFOBG.rolling(MoveAveWaveScale).mean()*OBGfactor), line_color = '#008080',  # Aqua color code
-                       name='Scale Average moving average OBG= '+str(MoveAveWaveScale)+', OBGfactor='+str(OBGfactor))) 
+           go.Scatter(y=list(savgol_filter((ScaleChangeDFOBG), MoveAveWave, S_g_Degree)*OBGfactor), line_color = '#008080',  # Aqua color code
+                       name='Scale savgol average OBG= '+str(MoveAveWaveScale)+', OBGfactor='+str(OBGfactor))) 
            
        except:
            1
@@ -1849,8 +1883,8 @@ class PlotPlotly():
         for i,df in enumerate(dfList):
             fig.add_trace(go.Scatter(y= list(df), name= ListName[i]));
             fig.add_trace(
-            go.Scatter(y=list(df.rolling(MoveAveWave).mean()),
-                        name=ListName[i]+' moving average window='+str(MoveAveWave)))
+            go.Scatter(y=list(savgol_filter((df), MoveAveWave, S_g_Degree)),
+                        name=ListName[i]+' savgol window='+str(MoveAveWave)))
             
         
         # ymax=np.mean(list(df.rolling(MoveAveWave).mean())[MoveAveWave+10:])+20
@@ -1884,10 +1918,11 @@ pthF=pthF+'/';
 
 folder=PreapareData(pthF).ExtractFilesFromZip();
 
+
 BlanketRep=pd.DataFrame();
 BlanketRepList=[]
 try: 
-    BlanketRep=pd.read_csv(pthF+'output.csv',header=None)
+    BlanketRep=pd.read_csv(pthF+'output.csv')
     BlanketRepList=Create_Blanket_ReplacementList(BlanketRep);
 
 except:
@@ -2312,10 +2347,38 @@ print(endFigure - startFigure)
 
 
 
-# WaveChangeList=[];
-# indexJobNameDic={}
+# ImagePlacement_pp=pd.DataFrame()
+# flatNumberFailed_pp=pd.DataFrame();
 
 
+# DataAllMeanColorSET1left,DataAllMeanColorSET2left,DataAllMeanColorSET3left,colorDic = CalcC2C_AvrgOfAll(pthF,folder,'Front',JobLength,PanelLengthInMM,'Left').CalcMeanByColorForAllJobs('Left')
+# DataAllMeanColorSET1right,DataAllMeanColorSET2right,DataAllMeanColorSET3right,colorDic = CalcC2C_AvrgOfAll(pthF,folder,'Front',JobLength,PanelLengthInMM,'Left').CalcMeanByColorForAllJobs('Right')
+
+# for f in CalcC2C_AvrgOfAll(pthF,folder,'Front',JobLength,PanelLengthInMM,'Left').fldrs:
+#     stP=pd.DataFrame();
+#     flatNumberFailed=pd.DataFrame();
+#     try:
+#         if CalcC2C_AvrgOfAll(pthF,folder,'Front',JobLength,PanelLengthInMM,'Left').CheckIfFileValid(f):
+#             C2CregLeft,indexNumberFailedLeft=CalcC2C_AvrgOfAll(pthF,folder,'Front',JobLength,PanelLengthInMM,'Left').CalcC2CSingleSide(CalcC2C_AvrgOfAll(pthF,folder,'Front',JobLength,PanelLengthInMM,'Left').CheckForAI('Left',f),f,DataAllMeanColorSET1left,DataAllMeanColorSET2left,DataAllMeanColorSET3left);
+#             C2CregRight,indexNumberFailedRight=CalcC2C_AvrgOfAll(pthF,folder,'Front',JobLength,PanelLengthInMM,'Left').CalcC2CSingleSide(CalcC2C_AvrgOfAll(pthF,folder,'Front',JobLength,PanelLengthInMM,'Left').CheckForAI('Right',f),f,DataAllMeanColorSET1right,DataAllMeanColorSET2right,DataAllMeanColorSET3right);
+#             C2CMaxLeftRight=[];
+#             for i in range(len(C2CregRight)):
+#                     tmp=[C2CregLeft[i],C2CregRight[i]];
+#                     C2CMaxLeftRight.append(np.max(tmp));
+#                     # C2CMaxLeftRight.append(tmp[np.argmax([abs(C2CregLeft[i]),abs(C2CregRight[i])])]);
+             
+#             stP[f]=C2CMaxLeftRight;
+#             flatNumberFailed[f]=list(OrderedDict.fromkeys(indexNumberFailedLeft+indexNumberFailedRight));
+#             flatNumberFailed_pp=pd.concat([flatNumberFailed_pp, flatNumberFailed[f]],axis=1);
+#             ImagePlacement_pp=pd.concat([ImagePlacement_pp, stP[f]],axis=1);
+#     except:
+#         continue;
+        
+    
+    
+    
+    
+    
 # MeregedDataAllMeanColorLeft= CalcC2C_AvrgOfAll(pthF,folder,'Front',JobLength,PanelLengthInMM,'Left').LoadMeanColorPos_PickSide('Left');
 # MeregedDataAllMeanColorRight= CalcC2C_AvrgOfAll(pthF,folder,'Front',JobLength,PanelLengthInMM,'Left').LoadMeanColorPos_PickSide('Right');
 

@@ -15,10 +15,10 @@ global DistBetweenSets,GlobalScale,PanelLengthInMM,JobLengthתcolor_combinations
 
 # For setting the min job length for Change Wave plot- this parameter should be used for setting the allowble moving avarage- for example set JobLengthWave= 100, MoveAveWave=20;
 JobLengthWave=100;
-MoveAveWave=10;
+MoveAveWave=31;
 S_g_Degree=1;
 
-MoveAveWaveScale=100;
+MoveAveWaveScale=1000;
 #For 252
 MarkSetVersion=252
 

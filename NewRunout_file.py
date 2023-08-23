@@ -45,6 +45,7 @@ ColorDic={0:'Magenta',1:'Yellow',2:'Blue',3:'Orange',4:'Cyan',5:'Green',6:'Black
 pixSize = 84.6666 # [um]
 sideDic={0:'Left Side',1:'Middle',2:'Right Side'}
 
+ColorDicNum={'Magenta':0,'Yellow':1,'Blue':2,'Orange':3,'Cyan':4,'Green':5,'Black':6}
 
 ############################################################################
 def plot_histogram(arr, num_bins='auto'):
@@ -373,7 +374,7 @@ class Circles():
 
         return C2Cmat
     
-    def calcDiffernceFromeTarget(self,ClrDF_rawSide,dymeanList):
+    def calcDiffernceFromeTarget(self,ClrDF_rawSide,dymeanList,colorInUseName):
         
         yTarget=[]
 
@@ -387,7 +388,7 @@ class Circles():
 
         yTargetDF=pd.DataFrame()
 
-        for col in ClrDF_rawSide.columns:
+        for col in colorInUseName:
             # dymean= np.mean(np.diff(ClrDF_rawSide[col])[:200])
             # dymeanList.append(dymean)
             yTarget = [i * np.mean(np.array(dymeanList)) + strartPos for i in range(len(ClrDF_rawSide[col]))]
@@ -618,7 +619,7 @@ def PlotSingleWstarvitsky(x,db,PlotTitle,fileName, ColList, PageSide, IntegralEr
      
    return fig  
 
-def PlotSingle_Wstarvitsky_allInOneGraph(x,dbwAll,PlotTitle,fileName):
+def PlotSingle_Wstarvitsky_allInOneGraph(x,dbwAll,PlotTitle,fileName,colorInUseName):
     
    fig = go.Figure()
    
@@ -628,7 +629,7 @@ def PlotSingle_Wstarvitsky_allInOneGraph(x,dbwAll,PlotTitle,fileName):
    for i in range(3):
        db=dbwAll[i]
        
-       for c in db.columns:  
+       for c in colorInUseName:  
            
            lineColor = c
                
@@ -878,7 +879,7 @@ def Plot_Panel_number(fig,ymax,indexPanelNameDic):
 ############################################################################################
 
 
-def FFT_Plot(db,PlotTitle,fileName, Fs, PageSide,freqUnits):
+def FFT_Plot(db,PlotTitle,fileName, Fs, PageSide,freqUnits,colorInUseName):
 
 
 
@@ -893,7 +894,7 @@ def FFT_Plot(db,PlotTitle,fileName, Fs, PageSide,freqUnits):
     x = np.linspace(0.0, N*T, N)
     y =pd.DataFrame();
     # Yfft=scipy.fftpack.fft(y)
-    for col in db.columns:
+    for col in colorInUseName:
         y[col]= np.fft.fft(db[col],axis=0)
         p1[col]=(1/(Fs*N))*pow(abs(y[col][:N//2]),2);
         
@@ -985,6 +986,21 @@ def CalcCumError(clrFomTarget,LngthLimit):
 
 
     return  x, cumSmPnl
+
+
+def Color_To_Black_4allPanel(ClrDF_fromTargetS_goly,Color_Black_Sgoly_allPanels,RefCl,colorInUseName):
+    
+    Color_Black_Sgoly={};
+
+    for i in range(3):
+        Color_Black_Sgoly[i]=pd.DataFrame()
+        for col in colorInUseName:
+            if RefCl == col:
+                continue;
+            Color_Black_Sgoly[i] = pd.concat([Color_Black_Sgoly[i], (ClrDF_fromTargetS_goly[i][RefCl]-ClrDF_fromTargetS_goly[i][col]).rename(RefCl+'-'+col)], axis=1)
+        Color_Black_Sgoly_allPanels[i]=pd.concat([Color_Black_Sgoly_allPanels[i], Color_Black_Sgoly[i]])
+
+    return Color_Black_Sgoly_allPanels
     
 ##############################################################################################################
 ##############################################################################################################
@@ -1015,6 +1031,11 @@ for ll in  sorted_indices_list:
     
 Pnl = sInputListSORTED[2]
 
+
+
+colorInUseName=['Magenta','Yellow','Cyan','Black']
+colorInUseNum=[ColorDicNum[itm] for itm in colorInUseName]
+
 # sInputListL=[sInputList[0]]
 
 # sInput = r'D:\MainProj\Undefined[22][29-06-2023 16-48-59]'
@@ -1037,6 +1058,7 @@ Cyan_Black_Sgoly_allPanels={};
 Green_Black_Sgoly_allPanels={};
 ClrDF_fromTargetS_goly_allPanels={}
 ClrDF_fromTarget_allPanels={}
+Color_Black_Sgoly_allPanels={}
 
 ClrDF_fromTargetPnl={}
 
@@ -1045,12 +1067,14 @@ for i in range(3):
     Green_Black_Sgoly_allPanels[i]=pd.DataFrame();
     ClrDF_fromTargetS_goly_allPanels[i]=pd.DataFrame();
     ClrDF_fromTarget_allPanels[i]=pd.DataFrame();
-
+    Color_Black_Sgoly_allPanels[i]=pd.DataFrame();
 
 indexPanelNameDic={}
 
 ImRoi= Circles(sInput+'\\'+pnl+fileNME).loadImage();
 Clr1='Cyan'
+
+
 
 # ImgClr,gray,circle_image,edges,ClrDF_raw = Circles(sInput).CalcIntegralError(ImRoi, Clr1)
 # dymeanList=[]
@@ -1100,7 +1124,7 @@ for Pnl in sInputListSORTED:
     
         # dymeanList=Circles(sInput+'\\'+Pnl+fileNME).CalcDiffTarget(ClrDF_raw[i],dymeanList)
     
-        ClrDF_fromTarget[i],ClrDF_fromTargetS_goly[i],dymeanListdic[i],yTargetDF = Circles(sInput+'\\'+Pnl+fileNME).calcDiffernceFromeTarget(ClrDF_raw[i],dymeanList);
+        ClrDF_fromTarget[i],ClrDF_fromTargetS_goly[i],dymeanListdic[i],yTargetDF = Circles(sInput+'\\'+Pnl+fileNME).calcDiffernceFromeTarget(ClrDF_raw[i],dymeanList,colorInUseName);
         x[i]=np.mean(dymeanListdic[i])
         ClrDF_fromTargetS_goly_allPanels[i]=pd.concat([ClrDF_fromTargetS_goly_allPanels[i], ClrDF_fromTargetS_goly[i]])
         ClrDF_fromTarget_allPanels[i]=pd.concat([ClrDF_fromTarget_allPanels[i], ClrDF_fromTarget[i]])
@@ -1110,28 +1134,24 @@ for Pnl in sInputListSORTED:
     for i in range(3):
         C2Cmat[sideDic[i]] = Circles(sInput+'\\'+Pnl+fileNME).calcC2C('Magenta', ClrDF_fromTargetS_goly[i]);
         
-    C2Cmat_allPanels= pd.concat([C2Cmat_allPanels, C2Cmat])    
-    Cyan_Black_Sgoly={};
+    C2Cmat_allPanels= pd.concat([C2Cmat_allPanels, C2Cmat])  
+    
     RefCl='Cyan'
-    for i in range(3):
-        Cyan_Black_Sgoly[i]=pd.DataFrame()
-        for col in ClrDF_fromTargetS_goly[i].columns:
-            if RefCl == col:
-                continue;
-            Cyan_Black_Sgoly[i] = pd.concat([Cyan_Black_Sgoly[i], (ClrDF_fromTargetS_goly[i][RefCl]-ClrDF_fromTargetS_goly[i][col]).rename(RefCl+'-'+col)], axis=1)
-        Cyan_Black_Sgoly_allPanels[i]=pd.concat([Cyan_Black_Sgoly_allPanels[i], Cyan_Black_Sgoly[i]])
+    Cyan_Black_Sgoly_allPanels=Color_To_Black_4allPanel(ClrDF_fromTargetS_goly,Cyan_Black_Sgoly_allPanels,RefCl,colorInUseName)
+    # Cyan_Black_Sgoly={};
+    # RefCl='Cyan'
+    # for i in range(3):
+    #     Cyan_Black_Sgoly[i]=pd.DataFrame()
+    #     for col in ClrDF_fromTargetS_goly[i].columns:
+    #         if RefCl == col:
+    #             continue;
+    #         Cyan_Black_Sgoly[i] = pd.concat([Cyan_Black_Sgoly[i], (ClrDF_fromTargetS_goly[i][RefCl]-ClrDF_fromTargetS_goly[i][col]).rename(RefCl+'-'+col)], axis=1)
+    #     Cyan_Black_Sgoly_allPanels[i]=pd.concat([Cyan_Black_Sgoly_allPanels[i], Cyan_Black_Sgoly[i]])
     
     
-    Green_Black_Sgoly={};
-    RefCl='Green'
-    for i in range(3):
-        Green_Black_Sgoly[i]=pd.DataFrame()
-        for col in ClrDF_fromTargetS_goly[i].columns:
-            if RefCl == col:
-                continue;
-            Green_Black_Sgoly[i] = pd.concat([Green_Black_Sgoly[i], (ClrDF_fromTargetS_goly[i][RefCl]-ClrDF_fromTargetS_goly[i][col]).rename(RefCl+'-'+col)], axis=1)
-        Green_Black_Sgoly_allPanels[i]=pd.concat([Green_Black_Sgoly_allPanels[i], Green_Black_Sgoly[i]])
-
+    RefCl='Magenta'
+    Color_Black_Sgoly_allPanels=Color_To_Black_4allPanel(ClrDF_fromTargetS_goly,Color_Black_Sgoly_allPanels,RefCl,colorInUseName)
+   
     
     
     
@@ -1144,28 +1164,28 @@ C2Cmat_allPanels= C2Cmat_allPanels.reset_index(drop=True)
 
 
 for i in range(3):
-    Green_Black_Sgoly_allPanels[i]=Green_Black_Sgoly_allPanels[i].reset_index(drop=True)
+    Color_Black_Sgoly_allPanels[i]=Color_Black_Sgoly_allPanels[i].reset_index(drop=True)
     Cyan_Black_Sgoly_allPanels[i]=Cyan_Black_Sgoly_allPanels[i].reset_index(drop=True) 
     ClrDF_fromTargetS_goly_allPanels[i]=ClrDF_fromTargetS_goly_allPanels[i].reset_index(drop=True) 
 
-Cyan_Black_Sgoly={};
-RefCl='Cyan'
-for i in range(3):
-    Cyan_Black_Sgoly[i]=pd.DataFrame()
-    for col in ClrDF_fromTargetS_goly[i].columns:
-        if RefCl == col:
-            continue;
-        Cyan_Black_Sgoly[i] = pd.concat([Cyan_Black_Sgoly[i], (ClrDF_fromTargetS_goly[i][RefCl]-ClrDF_fromTargetS_goly[i][col]).rename(RefCl+'-'+col)], axis=1)
+# Cyan_Black_Sgoly={};
+# RefCl='Cyan'
+# for i in range(3):
+#     Cyan_Black_Sgoly[i]=pd.DataFrame()
+#     for col in ClrDF_fromTargetS_goly[i].columns:
+#         if RefCl == col:
+#             continue;
+#         Cyan_Black_Sgoly[i] = pd.concat([Cyan_Black_Sgoly[i], (ClrDF_fromTargetS_goly[i][RefCl]-ClrDF_fromTargetS_goly[i][col]).rename(RefCl+'-'+col)], axis=1)
 
 
-Green_Black_Sgoly={};
-RefCl='Green'
-for i in range(3):
-    Green_Black_Sgoly[i]=pd.DataFrame()
-    for col in ClrDF_fromTargetS_goly[i].columns:
-        if RefCl == col:
-            continue;
-        Green_Black_Sgoly[i] = pd.concat([Green_Black_Sgoly[i], (ClrDF_fromTargetS_goly[i][RefCl]-ClrDF_fromTargetS_goly[i][col]).rename(RefCl+'-'+col)], axis=1)
+# Green_Black_Sgoly={};
+# RefCl='Green'
+# for i in range(3):
+#     Green_Black_Sgoly[i]=pd.DataFrame()
+#     for col in ClrDF_fromTargetS_goly[i].columns:
+#         if RefCl == col:
+#             continue;
+#         Green_Black_Sgoly[i] = pd.concat([Green_Black_Sgoly[i], (ClrDF_fromTargetS_goly[i][RefCl]-ClrDF_fromTargetS_goly[i][col]).rename(RefCl+'-'+col)], axis=1)
 
         
 
@@ -1209,14 +1229,19 @@ figC2C_multiPanel= PlotSingle_Basic_multiPanel(db,PlotTitle,fileName,indexPanelN
 ##########################################################################################
 ##########################################################################################
 db= Cyan_Black_Sgoly_allPanels;
-PlotTitle='2 color diff -Cyan Vs color'
+RefCl='Cyan'
+
+PlotTitle='2 color diff - '+RefCl +' Vs color'
 
 fileName=PlotTitle+'.html'
 figCyanVsClr_multiPanel_OP= PlotSingle_DiffFromRefclr_multiPanel(db,PlotTitle,fileName,indexPanelNameDic,100)
 
 ##########################################################################################
-db= Green_Black_Sgoly_allPanels;
-PlotTitle='2 color diff - Green Vs color'
+db= Color_Black_Sgoly_allPanels;
+
+RefCl='Magenta'
+
+PlotTitle='2 color diff -'+RefCl +' Vs color'
 
 fileName=PlotTitle+'.html'
 figCyanVsClr_multiPanel_OP= PlotSingle_DiffFromRefclr_multiPanel(db,PlotTitle,fileName,indexPanelNameDic,100)
@@ -1251,29 +1276,36 @@ figCyanVsClr_multiPanel_colorFromTarget= PlotSingle_BasicVsTraget_multiPanel(db,
 
 
 
+###########################  CumSum
+# CumSumClrDiff_fromTargetPnl={}
 
-CumSumClrDiff_fromTargetPnl={}
-
-for Pnl in sInputListSORTED:
-  CumSumClrDiff_fromTargetSide={}
+# for Pnl in sInputListSORTED:
+#   CumSumClrDiff_fromTargetSide={}
   
-  for i in range(3):      
-      x,CumSumClrDiff_fromTargetSide[i]= CalcCumError(ClrDF_fromTargetPnl[Pnl][i],200)
+#   for i in range(3):      
+#       x,CumSumClrDiff_fromTargetSide[i]= CalcCumError(ClrDF_fromTargetPnl[Pnl][i],200)
   
-  CumSumClrDiff_fromTargetPnl[Pnl] = CumSumClrDiff_fromTargetSide
+#   CumSumClrDiff_fromTargetPnl[Pnl] = CumSumClrDiff_fromTargetSide
   
-#############################################################################################
-#############################################################################################
-#############################################################################################
-for n in range(len(CumSumClrDiff_fromTargetPnl.keys())):
-    db= CumSumClrDiff_fromTargetPnl[sInputListSORTED[n]][0];
-    PlotTitle='CumSum for '+sInputListSORTED[n]+' '+sideDic[0]
-    fileName=PlotTitle+'.html'
+# #############################################################################################
+# #############################################################################################
+# #############################################################################################
+# for n in range(len(CumSumClrDiff_fromTargetPnl.keys())):
+#     db= CumSumClrDiff_fromTargetPnl[sInputListSORTED[n]][0];
+#     PlotTitle='CumSum for '+sInputListSORTED[n]+' '+sideDic[0]
+#     fileName=PlotTitle+'.html'
     
     
-    CumSumClrDiff_fig=PlotSingle_Basic(x,db,PlotTitle,fileName)
+#     CumSumClrDiff_fig=PlotSingle_Basic(x,db,PlotTitle,fileName)
     
 
+
+####################################################################################
+####################################################################################
+####################################################################################
+####################################################################################
+####################################################################################
+####################################################################################
 
 
 # clrFomTarget=ClrDF_fromTargetPnl[Pnl][i]
@@ -1569,7 +1601,7 @@ db= ClrDF_fromTarget_allPanels[0]*pixSize;
 PageSide='left-Side'
 PlotTitle='FFT '+RefCl
 fileName=PageSide+' '+RefCl+'FFT.html'
-FFT_TrgtM_Side= FFT_Plot(db,PlotTitle,fileName,1/((18*84.666*1e-6*0.9832)), PageSide,'[1/m]')
+FFT_TrgtM_Side= FFT_Plot(db,PlotTitle,fileName,1/((18*84.666*1e-6*0.9832)), PageSide,'[1/m]',colorInUseName)
 
 
 RefCl='Targe- Hz'
@@ -1578,7 +1610,7 @@ db= ClrDF_fromTarget_allPanels[0]*pixSize;
 PageSide='left-Side'
 PlotTitle='FFT '+RefCl
 fileName=PageSide+' '+RefCl+'FFT.html'
-FFT_TrgHz_Side= FFT_Plot(db,PlotTitle,fileName,439/((7549/12480)*0.504), PageSide,'[Hz]')
+FFT_TrgHz_Side= FFT_Plot(db,PlotTitle,fileName,439/((7549/12480)*0.504), PageSide,'[Hz]',colorInUseName)
 
 
 # DEBUG find_circles

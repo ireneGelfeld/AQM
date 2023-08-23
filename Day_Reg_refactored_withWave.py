@@ -15,7 +15,9 @@ global DistBetweenSets,GlobalScale,PanelLengthInMM,JobLengthתcolor_combinations
 
 # For setting the min job length for Change Wave plot- this parameter should be used for setting the allowble moving avarage- for example set JobLengthWave= 100, MoveAveWave=20;
 JobLengthWave=100;
-MoveAveWave=30;
+MoveAveWave=10;
+S_g_Degree=1;
+
 MoveAveWaveScale=100;
 #For 252
 MarkSetVersion=252
@@ -104,6 +106,7 @@ import pandas as pd
 from plotly.offline import download_plotlyjs, init_notebook_mode,  plot
 from plotly.subplots import make_subplots
 import re
+from scipy.signal import savgol_filter
 
 
 def remove_decimal_numbers(string):
@@ -1579,9 +1582,13 @@ class PlotPlotly():
            fig.data[len(fig.data)-1].visible = 'legendonly';
 
            
+           # fig.add_trace(
+           # go.Scatter(y=WaveChangeDF[clr].rolling(MoveAveWave).mean(),line_color= lineColor,
+           #             name='Wave Differance Left-Right- moving average of '+str(MoveAveWave)+' color '+clr))
+           
            fig.add_trace(
-           go.Scatter(y=WaveChangeDF[clr].rolling(MoveAveWave).mean(),line_color= lineColor,
-                       name='Wave Differance Left-Right- moving average of '+str(MoveAveWave)+' color '+clr))
+           go.Scatter(y=list(savgol_filter((WaveChangeDF[clr]), MoveAveWave, S_g_Degree)),line_color= lineColor,
+                       name='Wave Differance Left-Right- savgol of '+str(MoveAveWave)+' color '+clr))
            
            
            # ymax=max(WaveRawDataDic[ColorList[0]]-WaveDataWithMaxFilterDic[self.ColorList[0]])
@@ -1591,10 +1598,15 @@ class PlotPlotly():
                     name='C2C '))
        fig.data[len(fig.data)-1].visible = 'legendonly';
 
-        
+       
+       # fig.add_trace(
+       # go.Scatter(y=list(c2cChangeDF[0].rolling(MoveAveWave).mean()),line_color= '#8B0000',  # Coral
+       #              name='C2C moving average ')) 
+       
        fig.add_trace(
-       go.Scatter(y=list(c2cChangeDF[0].rolling(MoveAveWave).mean()),line_color= '#8B0000',  # Coral
-                    name='C2C moving average ')) 
+       go.Scatter(y=list(savgol_filter((c2cChangeDF[0]), MoveAveWave, S_g_Degree) ),line_color= '#8B0000',  # Coral
+                    name='C2C savgol ')) 
+       
        
        fig.add_trace(
         go.Scatter(y=list(ScaleChangeDFAverage),
@@ -1602,10 +1614,13 @@ class PlotPlotly():
        fig.data[len(fig.data)-1].visible = 'legendonly';
 
         
-       fig.add_trace(
-        go.Scatter(y=list(ScaleChangeDFAverage.rolling(MoveAveWaveScale).mean()), line_color = '#9370DB',# MediumPurple
-                    name='Scale Average moving average = '+str(MoveAveWaveScale)))  
+       # fig.add_trace(
+       #  go.Scatter(y=list(ScaleChangeDFAverage.rolling(MoveAveWaveScale).mean()), line_color = '#9370DB',# MediumPurple
+       #              name='Scale Average moving average = '+str(MoveAveWaveScale)))  
        
+       fig.add_trace(
+        go.Scatter(y=list(savgol_filter((ScaleChangeDFAverage), MoveAveWave, S_g_Degree) ), line_color = '#9370DB',# MediumPurple
+                    name='Scale savgol average = '+str(MoveAveWaveScale)))  
        
        # fig.add_trace(
        #  go.Scatter(y=list(ScaleChangeDFRight[0]),
@@ -1669,10 +1684,10 @@ class PlotPlotly():
                     name='C2C '))
         fig.data[len(fig.data)-1].visible = 'legendonly';
 
-        
+         
         fig.add_trace(
-        go.Scatter(y=list(c2cChangeDF[0].rolling(MoveAveWave).mean()),line_color= '#8B0000',  # Coral
-                    name='C2C moving average '))
+        go.Scatter(y=list(savgol_filter((c2cChangeDF[0]), MoveAveWave, S_g_Degree)),line_color= '#8B0000',  # Coral
+                    name='C2C savgol '))
            
            
            # ymax=max(WaveRawDataDic[ColorList[0]]-WaveDataWithMaxFilterDic[self.ColorList[0]])
@@ -1720,8 +1735,8 @@ class PlotPlotly():
 
         
         fig.add_trace(
-        go.Scatter(y=list(ScaleChangeDFAverage.rolling(MoveAveWaveScale).mean()), line_color = '#9370DB',# MediumPurple
-                    name='Scale Average moving average = '+str(MoveAveWaveScale)))         
+        go.Scatter(y=list(savgol_filter((ScaleChangeDFAverage), MoveAveWave, S_g_Degree)), line_color = '#9370DB',# MediumPurple
+                    name='Scale savgol average = '+str(MoveAveWaveScale)))         
      
       
         # fig.add_trace(
@@ -1785,10 +1800,9 @@ class PlotPlotly():
                    name='Scale Average'))
        fig.data[len(fig.data)-1].visible = 'legendonly';
 
-       
        fig.add_trace(
-       go.Scatter(y=list(ScaleChangeDFAverage.rolling(MoveAveWaveScale).mean()), line_color = '#9370DB',# MediumPurple
-                   name='Scale Average moving average = '+str(MoveAveWaveScale)))         
+       go.Scatter(y=list(savgol_filter((ScaleChangeDFAverage), MoveAveWave, S_g_Degree)), line_color = '#9370DB',# MediumPurple
+                   name='Scale savgol average = '+str(MoveAveWaveScale)))         
     
        try:
            fig.add_trace(
@@ -1796,10 +1810,10 @@ class PlotPlotly():
                        name='Scale Average CMYK'))
            fig.data[len(fig.data)-1].visible = 'legendonly';
     
-           
+          
            fig.add_trace(
-           go.Scatter(y=list(ScaleChangeDFCMYK.rolling(MoveAveWaveScale).mean()), line_color = '#FF7F50',# warm oraneg pink
-                       name='Scale Average moving average CMYK= '+str(MoveAveWaveScale)))         
+           go.Scatter(y=list( savgol_filter((ScaleChangeDFCMYK), MoveAveWave, S_g_Degree)), line_color = '#FF7F50',# warm oraneg pink
+                       name='Scale savgol average CMYK= '+str(MoveAveWaveScale)))         
            
            
            fig.add_trace(
@@ -1809,8 +1823,8 @@ class PlotPlotly():
     
            
            fig.add_trace(
-           go.Scatter(y=list(ScaleChangeDFOBG.rolling(MoveAveWaveScale).mean()*OBGfactor), line_color = '#008080',  # Aqua color code
-                       name='Scale Average moving average OBG= '+str(MoveAveWaveScale)+', OBGfactor='+str(OBGfactor))) 
+           go.Scatter(y=list(savgol_filter((ScaleChangeDFOBG), MoveAveWave, S_g_Degree)*OBGfactor), line_color = '#008080',  # Aqua color code
+                       name='Scale savgol average OBG= '+str(MoveAveWaveScale)+', OBGfactor='+str(OBGfactor))) 
            
        except:
            1
@@ -1869,8 +1883,8 @@ class PlotPlotly():
         for i,df in enumerate(dfList):
             fig.add_trace(go.Scatter(y= list(df), name= ListName[i]));
             fig.add_trace(
-            go.Scatter(y=list(df.rolling(MoveAveWave).mean()),
-                        name=ListName[i]+' moving average window='+str(MoveAveWave)))
+            go.Scatter(y=list(savgol_filter((df), MoveAveWave, S_g_Degree)),
+                        name=ListName[i]+' savgol window='+str(MoveAveWave)))
             
         
         # ymax=np.mean(list(df.rolling(MoveAveWave).mean())[MoveAveWave+10:])+20

@@ -1619,7 +1619,7 @@ class PlotPlotly():
        #              name='Scale Average moving average = '+str(MoveAveWaveScale)))  
        
        fig.add_trace(
-        go.Scatter(y=list(savgol_filter((ScaleChangeDFAverage), MoveAveWave, S_g_Degree) ), line_color = '#9370DB',# MediumPurple
+        go.Scatter(y=list(savgol_filter((ScaleChangeDFAverage), MoveAveWaveScale, S_g_Degree) ), line_color = '#9370DB',# MediumPurple
                     name='Scale savgol average = '+str(MoveAveWaveScale)))  
        
        # fig.add_trace(
@@ -1735,7 +1735,7 @@ class PlotPlotly():
 
         
         fig.add_trace(
-        go.Scatter(y=list(savgol_filter((ScaleChangeDFAverage), MoveAveWave, S_g_Degree)), line_color = '#9370DB',# MediumPurple
+        go.Scatter(y=list(savgol_filter((ScaleChangeDFAverage), MoveAveWaveScale, S_g_Degree)), line_color = '#9370DB',# MediumPurple
                     name='Scale savgol average = '+str(MoveAveWaveScale)))         
      
       
@@ -1801,7 +1801,7 @@ class PlotPlotly():
        fig.data[len(fig.data)-1].visible = 'legendonly';
 
        fig.add_trace(
-       go.Scatter(y=list(savgol_filter((ScaleChangeDFAverage), MoveAveWave, S_g_Degree)), line_color = '#9370DB',# MediumPurple
+       go.Scatter(y=list(savgol_filter((ScaleChangeDFAverage), MoveAveWaveScale, S_g_Degree)), line_color = '#9370DB',# MediumPurple
                    name='Scale savgol average = '+str(MoveAveWaveScale)))         
     
        try:
@@ -1812,7 +1812,7 @@ class PlotPlotly():
     
           
            fig.add_trace(
-           go.Scatter(y=list( savgol_filter((ScaleChangeDFCMYK), MoveAveWave, S_g_Degree)), line_color = '#FF7F50',# warm oraneg pink
+           go.Scatter(y=list( savgol_filter((ScaleChangeDFCMYK), MoveAveWaveScale, S_g_Degree)), line_color = '#FF7F50',# warm oraneg pink
                        name='Scale savgol average CMYK= '+str(MoveAveWaveScale)))         
            
            
@@ -1823,7 +1823,7 @@ class PlotPlotly():
     
            
            fig.add_trace(
-           go.Scatter(y=list(savgol_filter((ScaleChangeDFOBG), MoveAveWave, S_g_Degree)*OBGfactor), line_color = '#008080',  # Aqua color code
+           go.Scatter(y=list(savgol_filter((ScaleChangeDFOBG), MoveAveWaveScale, S_g_Degree)*OBGfactor), line_color = '#008080',  # Aqua color code
                        name='Scale savgol average OBG= '+str(MoveAveWaveScale)+', OBGfactor='+str(OBGfactor))) 
            
        except:

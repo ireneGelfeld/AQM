@@ -18,7 +18,7 @@ JobLengthWave=100;
 MoveAveWave=31;
 S_g_Degree=1;
 
-MoveAveWaveScale=1000;
+MoveAveWaveScale=200;
 #For 252
 MarkSetVersion=252
 

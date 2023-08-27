@@ -25,7 +25,7 @@ from plotly.offline import download_plotlyjs, init_notebook_mode,  plot
 from plotly.subplots import make_subplots
 import re
 from scipy.signal import savgol_filter
-
+import pickle
 
 
 # import plotly.io as pio
@@ -1167,6 +1167,23 @@ for i in range(3):
     Color_Black_Sgoly_allPanels[i]=Color_Black_Sgoly_allPanels[i].reset_index(drop=True)
     Cyan_Black_Sgoly_allPanels[i]=Cyan_Black_Sgoly_allPanels[i].reset_index(drop=True) 
     ClrDF_fromTargetS_goly_allPanels[i]=ClrDF_fromTargetS_goly_allPanels[i].reset_index(drop=True) 
+
+# path_FnameClrDF=r'E:\B2_17082023\PCCimage\Production[250][17-08-2023 11-34-07]\ClrDF_fromTargetPnl.pkl'
+# with open(path_FnameClrDF, 'wb') as f:
+#     pickle.dump(ClrDF_fromTargetPnl, f)
+
+
+path_ClrDF_fromTarget_allPanels=sInput+'\ClrDF_fromTarget_allPanels.pkl'
+path_indexPanelNameDic=sInput+'\indexPanelNameDic.pkl'
+with open(path_ClrDF_fromTarget_allPanels, 'wb') as f:
+    pickle.dump(ClrDF_fromTarget_allPanels, f)
+
+with open(path_indexPanelNameDic, 'wb') as f:
+    pickle.dump(indexPanelNameDic, f)
+
+path_ClrDF_fromTargetS_goly=sInput+'\ClrDF_fromTargetS_goly_allPanels.pkl'
+with open(path_ClrDF_fromTargetS_goly, 'wb') as f:
+    pickle.dump(ClrDF_fromTargetS_goly_allPanels, f)
 
 # Cyan_Black_Sgoly={};
 # RefCl='Cyan'

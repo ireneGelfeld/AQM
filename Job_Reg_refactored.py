@@ -10,7 +10,7 @@ Created on Sun Apr 24 12:35:16 2022
 #get_ipython().magic('reset -sf')
 
 #######################PARAMS#########################################
-global LoadTarget,GlobalScale,DistBetweenSets,JobLength,PanelNumber,DataPracent_toConcider
+global LoadTarget,GlobalScale,DistBetweenSets,JobLength,PanelNumber,DataPracent_toConcider,BaseDefult
 
 
 #For 252
@@ -52,6 +52,9 @@ Plot_Scale= 1;
 Plot_MinMaxScale= 1;
 Plot_MinMaxSETS= 1;
 
+
+BaseDefult= 40103.853777615
+
 ######################################################################
 
 import os
@@ -87,6 +90,24 @@ class CalcC2C():
         self.fname=fname;
         self.JobLength = JobLength;
         self.LoadTarget=LoadTarget;
+        
+        
+    def CheckForAI(self,pageSide):
+        
+        zip_file_path = self.pthF
+        sub_folder = self.side+'/'+'RawResults'  # Path to the subfolder within the zip
+        file_name = 'C2CRegistration_'+pageSide+'.csv'      # Name of the file you want to check
+        
+        with zipfile.ZipFile(zip_file_path, 'r') as zip_ref:
+            sub_folder_files = [name for name in zip_ref.namelist() if name.startswith(sub_folder)]
+        
+            if sub_folder+'/'+file_name in sub_folder_files:
+                fname = file_name
+            else:
+                
+                fname = 'Registration_'+pageSide+'.csv'
+        
+        return  fname;
     
     def LoadRawDataOLD(self):
         RawData=pd.read_csv(self.pthF+self.side+'/'+'RawResults'+'/'+self.fname);
@@ -503,11 +524,15 @@ class DispImagePlacment():
         zip_file_path = self.pthF+'/'+self.f
         subdir_name_in_zip = self.side+'/'+'AnalysisResults';
         file_name_in_zip = 'ImagePlacementAnalysis_'+self.side+'.csv';
-        
-        ImagePlacement_res=self.GetFileFromZip(zip_file_path,subdir_name_in_zip,file_name_in_zip);
+        try:
+            ImagePlacement_res=self.GetFileFromZip(zip_file_path,subdir_name_in_zip,file_name_in_zip);
+            dbtmpSentCrr=ImagePlacement_res[(ImagePlacement_res['Correction Sent-Applied']) == 'Sent'].reset_index(drop=True)
 
+        except:
+            ImagePlacement_res=pd.DataFrame(columns=['Expected X'])
+            ImagePlacement_res['Expected X']= [BaseDefult]
+            dbtmpSentCrr= pd.DataFrame(columns=['X Correction Moving Avarage'])
         BaseLine=ImagePlacement_res['Expected X'][0];
-        dbtmpSentCrr=ImagePlacement_res[(ImagePlacement_res['Correction Sent-Applied']) == 'Sent'].reset_index(drop=True)
 
         return BaseLine,dbtmpSentCrr;
     
@@ -631,7 +656,9 @@ except:
 
 ##################### Calc Reg for each Color
 side='Front';
-fname='Registration_Left.csv'
+
+fname = CalcC2C(pthF+'/'+f,side,'',JobLength,LoadTarget).CheckForAI('Left')
+# fname='Registration_Left.csv'
 # St1dataAllColorsFrontLeft,St2dataAllColorsFrontLeft,St3dataAllColorsFrontLeft,indexNumberFailed=CalcC2C(pthF+'/',side,fname,JobLength).CalcC2CSingleSidePerSet()
 
 
@@ -640,7 +667,9 @@ St1dataAllColorsFrontLeft,St2dataAllColorsFrontLeft,St3dataAllColorsFrontLeft,in
 
  
 side='Front';
-fname='Registration_Right.csv'
+fname = CalcC2C(pthF+'/'+f,side,'',JobLength,LoadTarget).CheckForAI('Right')
+
+# fname='Registration_Right.csv'
 # St1dataAllColorsFrontRight,St2dataAllColorsFrontRight,St3dataAllColorsFrontRight,indexNumberFailed=CalcC2C(pthF+'/',side,fname,JobLength).CalcC2CSingleSidePerSet()
 St1dataAllColorsFrontRight,St2dataAllColorsFrontRight,St3dataAllColorsFrontRight,indexNumberFailed,MeregedDataAllMeanColorFRONTRight=CalcC2C(pthF+'/'+f,side,fname,JobLength,LoadTarget).CalcC2CSingleSidePerSetDEFULTvalue()
 # 
@@ -657,11 +686,15 @@ for i in inx:
 
 try:
     side='Back';
-    fname='Registration_Left.csv'
+    # fname='Registration_Left.csv'
+    fname = CalcC2C(pthF+'/'+f,side,'',JobLength,LoadTarget).CheckForAI('Left')
+
     St1dataAllColorsBackLeft,St2dataAllColorsBackLeft,St3dataAllColorsBackLeft,indexNumberFailed,MeregedDataAllMeanColorBackLeft=CalcC2C(pthF+'/'+f ,side,fname,JobLength,LoadTarget).CalcC2CSingleSidePerSetDEFULTvalue()
         
     side='Back';
-    fname='Registration_Right.csv'
+    # fname='Registration_Right.csv'
+    fname = CalcC2C(pthF+'/'+f,side,fname,JobLength,LoadTarget).CheckForAI('Right')
+
     St1dataAllColorsBackRight,St2dataAllColorsBackRight,St3dataAllColorsBackRight,indexNumberFailed,MeregedDataAllMeanColorBackRight=CalcC2C(pthF+'/'+f ,side,fname,JobLength,LoadTarget).CalcC2CSingleSidePerSetDEFULTvalue()
     
     inx=list(St1dataAllColorsBackLeft.index)
@@ -737,7 +770,8 @@ if Plot_MinMaxSETS:
         1    
 ######################################### Debug
 side='Front';
-fname='Registration_Left.csv'
+# fname='Registration_Left.csv'
+fname = CalcC2C(pthF+'/'+f,side,'',JobLength,LoadTarget).CheckForAI('Left')
 
 RawDataSuccess,flatNumberFailed,l1= CalcC2C(pthF+'/'+f ,side,fname,JobLength,LoadTarget).LoadRawData();
         
@@ -828,7 +862,9 @@ RawDataSuccess,flatNumberFailed,l1= CalcC2C(pthF+'/'+f ,side,fname,JobLength,Loa
 ############################## calc SCALE
 if Plot_Scale:
     side='Front';
-    fname='Registration_Left.csv'
+    fname = CalcC2C(pthF+'/'+f,side,'',JobLength,LoadTarget).CheckForAI('Left')
+
+    # fname='Registration_Left.csv'
     PanelLengthInMM = 650;
     # St1dataAllColorsFrontLeft,St2dataAllColorsFrontLeft,St3dataAllColorsFrontLeft,indexNumberFailed=CalcC2C(pthF+'/',side,fname,JobLength).CalcC2CSingleSidePerSet()
     
@@ -838,7 +874,9 @@ if Plot_Scale:
     
         
     side='Front';
-    fname='Registration_Right.csv'
+    fname = CalcC2C(pthF+'/'+f,side,'',JobLength,LoadTarget).CheckForAI('Right')
+
+    # fname='Registration_Right.csv'
     #PanelLengthInMM = 650;
     # St1dataAllColorsFrontRight,St2dataAllColorsFrontRight,St3dataAllColorsFrontRight,indexNumberFailed=CalcC2C(pthF+'/',side,fname,JobLength).CalcC2CSingleSidePerSet()
     St1dataAllColorsFrontFullRight,St2dataAllColorsFrontFullRight,St3dataAllColorsFrontFullRight,RefSETlocRight,ScaleFRONTRight,ScaleRightFRONTMaxMin,colorDicRight=CalcC2C(pthF+'/'+f,side,fname,JobLength,LoadTarget).DataForCalcSCALE(PanelLengthInMM)
@@ -847,7 +885,9 @@ if Plot_Scale:
     
     try:
         side='Back';
-        fname='Registration_Left.csv'
+        # fname='Registration_Left.csv'
+        fname = CalcC2C(pthF+'/'+f,side,'',JobLength,LoadTarget).CheckForAI('Left')
+
     #    PanelLengthInMM = 650;
         # St1dataAllColorsFrontLeft,St2dataAllColorsFrontLeft,St3dataAllColorsFrontLeft,indexNumberFailed=CalcC2C(pthF+'/',side,fname,JobLength).CalcC2CSingleSidePerSet()
     
@@ -857,7 +897,9 @@ if Plot_Scale:
     
             
         side='Back';
-        fname='Registration_Right.csv'
+        # fname='Registration_Right.csv'
+        fname = CalcC2C(pthF+'/'+f,side,fname,JobLength,LoadTarget).CheckForAI('Right')
+
     #    PanelLengthInMM = 650;
         # St1dataAllColorsFrontRight,St2dataAllColorsFrontRight,St3dataAllColorsFrontRight,indexNumberFailed=CalcC2C(pthF+'/',side,fname,JobLength).CalcC2CSingleSidePerSet()
         St1dataAllColorsBackFullRight,St2dataAllColorsBackFullRight,St3dataAllColorsBackFullRight,RefSETlocRightBACK,ScaleBACKRight,ScaleRightBACKMaxMin,colorDicRight=CalcC2C(pthF+'/'+f,side,fname,JobLength,LoadTarget).DataForCalcSCALE(PanelLengthInMM)

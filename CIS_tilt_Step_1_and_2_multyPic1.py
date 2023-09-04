@@ -166,7 +166,7 @@ class ReduceNoise():
         return RawData_Tilt, tlt, z
 
 
-    def RemoveUnwantedData(self):
+    def RemoveUnwantedData(self,pName):
 
        
          RawData_Tilt, tlt, z = self.CalcAndRemoveTilT()
@@ -184,7 +184,7 @@ class ReduceNoise():
          RawDataCopy.drop(index=inx2delete, inplace=True)
          RawDataCopy = RawDataCopy.reset_index(drop=True)
         
-         plt.figure()
+         plt.figure(pName)
         
          plt.plot(self.RawData[0], self.RawData[1], 'o')
          plt.plot(RawDataCopy[0], RawDataCopy[1], 'x')
@@ -195,7 +195,7 @@ class ReduceNoise():
     def CutDataTo385Points(self):
 
         # Data385=pd.DataFrame();
-        RawDataCopy = self.RemoveUnwantedData()
+        RawDataCopy = self.RemoveUnwantedData('p385')
 
         DistBtwPFULL = int((self.RawData[0][len(self.RawData[0])-1])/385)
         XvalueMeanFULL = []
@@ -549,9 +549,9 @@ while 1:
     RawData_Tilt, tlt12k, z12k = ReduceNoise(
         RawData).CalcAndRemoveTilT()
     
-    
+    # RawData_Tilt_df=pd.DataFrame({0:RawData[0],1:RawData_Tilt})
     RawData_12k = ReduceNoise(
-        RawData).RemoveUnwantedData()
+        RawData).RemoveUnwantedData('p12k')
     
     
     Data385,  y, z1, tlt1, z, tlt = ReduceNoise(
@@ -578,8 +578,8 @@ while 1:
         print('Done')
         print('**************************************************************************')
         FileNameCSV = 'CURVE_' +MachineName+ '_385_'+current_date+'.csv'
-        Data385,  y, z1, tlt1, z, tlt = ReduceNoise(
-            RawData).PrepareData4Saving()
+        # Data385,  y, z1, tlt1, z, tlt = ReduceNoise(
+        #     RawData).PrepareData4Saving()
         
         yTotalPics385p=pd.concat([yTotalPics385p,pd.Series(y)],axis=1)
      

@@ -148,10 +148,25 @@ class ReduceNoise():
         tlt = (z[0]*(self.RawData[0])+z[1])
         RawData_Tilt = self.RawData[1]-tlt
 
+
+        # # Calculate the 1st percentile of the data
+        # percentile_limitDataCount = np.percentile(RawData_Tilt, limitDataCount)
+       
+        # # Filter out any values less than the 1st percentile
+        # filtered_data = [x for x in RawData_Tilt if x >= percentile_limitDataCount]      
+        
+        # plt.figure('12kpoints')
+        
+        # plt.plot(self.RawData[0], self.RawData[1], 'o')
+        # plt.plot(RawDataCopy[0], RawDataCopy[1], 'x')
+        # plt.title('LimitDataCount='+str(limitDataCount))
+        
+        
+
         return RawData_Tilt, tlt, z
 
 
-    def RemoveUnwantedData(self):
+    def RemoveUnwantedData(self,pName):
 
        
          RawData_Tilt, tlt, z = self.CalcAndRemoveTilT()
@@ -169,7 +184,7 @@ class ReduceNoise():
          RawDataCopy.drop(index=inx2delete, inplace=True)
          RawDataCopy = RawDataCopy.reset_index(drop=True)
         
-         plt.figure()
+         plt.figure(pName)
         
          plt.plot(self.RawData[0], self.RawData[1], 'o')
          plt.plot(RawDataCopy[0], RawDataCopy[1], 'x')
@@ -180,7 +195,7 @@ class ReduceNoise():
     def CutDataTo385Points(self):
 
         # Data385=pd.DataFrame();
-        RawDataCopy = self.RemoveUnwantedData()
+        RawDataCopy = self.RemoveUnwantedData('p385')
 
         DistBtwPFULL = int((self.RawData[0][len(self.RawData[0])-1])/385)
         XvalueMeanFULL = []
@@ -245,7 +260,12 @@ class ReduceNoise():
         return Data385,  y, z1, tlt1, z, tlt
 
     def PrepareData4Saving12k(self):
-
+        
+        # # Calculate the 1st percentile of the data
+        # percentile_limitDataCount = np.percentile(self.RawData[1], limitDataCount)
+        
+        # # Filter out any values less than the 1st percentile
+        # filtered_data = [x for x in self.RawData[1] if x >= percentile_limitDataCount]
 
         y = savgol_filter(self.RawData[1], CISsavgolWindow12k, SvGolPol)
 
@@ -418,6 +438,8 @@ root.withdraw()
 yTotalPics385p=pd.DataFrame();
 yTotalPics12kp=pd.DataFrame();
 
+MachineName =''
+
 # pthF = filedialog.askdirectory()
 while 1:
 
@@ -480,7 +502,7 @@ while 1:
     RawData = pd.DataFrame()
     
     max_val, max_index = CIScurveFromImage(ImageGL).AplyFilters(
-        float(T_Lum)+0.01, RecDimX, RecDimY)
+        float(T_Lum), RecDimX, RecDimY)
     
     RawData['Value'] = list(max_index)
     
@@ -493,11 +515,14 @@ while 1:
     
     
     # Step 2
+    
     print('**************************************************************************')
-    print('Please Enter  machine Name in the Dialog box')
-    MachineName = simpledialog.askstring(
-        "Input", "Enter The machine Name:", parent=root)
-    print('Done')
+    if not len(MachineName):
+        print('Please Enter  machine Name in the Dialog box')
+        MachineName = simpledialog.askstring(
+            "Input", "Enter The machine Name:", parent=root)
+        print('Done')
+    print('Machine Name: '+MachineName)
     print('**************************************************************************')
     
     print('**************************************************************************')
@@ -524,10 +549,17 @@ while 1:
     RawData_Tilt, tlt12k, z12k = ReduceNoise(
         RawData).CalcAndRemoveTilT()
     
+    # RawData_Tilt_df=pd.DataFrame({0:RawData[0],1:RawData_Tilt})
+    RawData_12k = ReduceNoise(
+        RawData).RemoveUnwantedData('p12k')
+    
+    
     Data385,  y, z1, tlt1, z, tlt = ReduceNoise(
         RawData).PrepareData4Saving()
     
-    
+     
+    current_date = datetime.now().date().strftime("%Y_%m_%d")
+
     # To Implament
     
     if plot385:
@@ -545,9 +577,9 @@ while 1:
             "Input", "Enter WindowSize value:", parent=root))
         print('Done')
         print('**************************************************************************')
-        FileNameCSV = 'CIS_'+MachineName+'_filter_'+str(CISsavgolWindow)+'.csv'
-        Data385,  y, z1, tlt1, z, tlt = ReduceNoise(
-            RawData).PrepareData4Saving()
+        FileNameCSV = 'CURVE_' +MachineName+ '_385_'+current_date+'.csv'
+        # Data385,  y, z1, tlt1, z, tlt = ReduceNoise(
+        #     RawData).PrepareData4Saving()
         
         yTotalPics385p=pd.concat([yTotalPics385p,pd.Series(y)],axis=1)
      
@@ -561,8 +593,8 @@ while 1:
     
     # 12k point
     if plot12k:
-        xdb = RawData[0]
-        ydb = RawData[1]
+        xdb = RawData_12k[0]
+        ydb = RawData_12k[1]
         plotTitle = pthF1+'-->'+f1+' Tilt in um=' + "{0:.3f}".format(tlt1[0]-tlt1[len(
             tlt1)-1])+" _12k points - For CIS (for implamentation) Slider switched to Step: "  # Can modify Plot title
         fileName = f1 + " CIS curve raw data and filter 12k implament" + ".html"
@@ -576,14 +608,18 @@ while 1:
         print('Done')
         print('**************************************************************************')
     
-        FileNameCSV12k = 'CIS_'+MachineName + \
-            '_filter12k_'+str(CISsavgolWindow12k)+'.csv'
-        y12k = ReduceNoise(RawData).PrepareData4Saving12k()
+        FileNameCSV12k = 'CURVE_' +MachineName+ '_12k_'+current_date+'.csv'
+        y12k = ReduceNoise(RawData_12k).PrepareData4Saving12k()
+    
+    
+        # y = savgol_filter(ReduceNoise(RawData_12k).RawData[1], CISsavgolWindow12k, SvGolPol)    
     
         yTotalPics12kp=pd.concat([yTotalPics12kp,pd.Series(y12k)],axis=1)
     
         # plt.figure()
-        # plt.plot(CIScurve12k.loc[0, :])
+        # plt.plot(ReduceNoise(RawData_12k).RawData[1])
+        # plt.plot(y)
+
         # plt.title('12k points'+' windowSize='+str(CISsavgolWindow12k))
     
     
@@ -597,7 +633,7 @@ while 1:
             ymean12kp = yTotalPics12kp.mean(axis=1)
             CIScurve12kp= ReduceNoise(RawData).SaveCSV(FileNameCSV12k, ymean12kp)
             
-            plt.figure()
+            plt.figure('12k points')
             plt.plot(CIScurve12kp.loc[0, :])
             plt.title('12k points'+' windowSize='+str(CISsavgolWindow12k))
             
@@ -606,7 +642,7 @@ while 1:
             ymean385p = yTotalPics385p.mean(axis=1)
             CIScurve385p= ReduceNoise(RawData).SaveCSV(FileNameCSV, ymean385p)
             
-            plt.figure()
+            plt.figure('385 points')
             plt.plot(CIScurve385p.loc[0, :])
             plt.title('385 points'+' windowSize='+str(CISsavgolWindow))
             

@@ -17,8 +17,15 @@ class DataVisualization:
         self.data = pd.read_csv(file_path,index_col=False)
 
     def filter_by_write_table(self):
-        self.filtered_data_write = self.data[self.data['Read table/write table'] == 'Write table']
-        self.filtered_data_read = self.data[self.data['Read table/write table'] == 'Read table']
+        self.filtered_data_write = self.data[self.data['Read table/write table'] == 'Write table'].reset_index(drop=True)
+        self.filtered_data_read = self.data[self.data['Read table/write table'] == 'Read table'].reset_index(drop=True)
+        
+
+    def create_dataframes_by_bar_id(self):
+        self.unique_bar_ids_write = self.filtered_data_write['Bar Id'].unique()
+        self.dataframes_write = {bar_id: self.filtered_data_write[self.filtered_data_write['Bar Id'] == bar_id].reset_index(drop=True) for bar_id in self.unique_bar_ids_write}
+        self.unique_bar_ids_read= self.filtered_data_read['Bar Id'].unique()
+        self.dataframes_read = {bar_id: self.filtered_data_read[self.filtered_data_read['Bar Id'] == bar_id].reset_index(drop=True) for bar_id in self.unique_bar_ids_read}
 
     def plot_data(self, color_list,colorListCode,plotTitle):
         fig = go.Figure()
@@ -52,12 +59,35 @@ class DataVisualization:
         average_trace_write = go.Scatter(x=list(range(8, len(average_values_write) + 8)), y=average_values_write, 
                                    mode='lines', name='Average write', line=dict(color='purple', width=4))
         
+        average_values_barID_write={}
+        average_values_barID_read={}
+        
+        average_barId_trace_write=[]
+        average_barId_trace_read=[]
+
+
+        for barID in self.unique_bar_ids_write:
+            average_values_barID_write[barID]= self.dataframes_write[barID].iloc[:, 7:].mean(axis=0)
+            average_barId_trace_write.append(go.Scatter(x=list(range(8, len(average_values_barID_write[barID]) + 8)), y=average_values_barID_write[barID], 
+                                       mode='lines', name='Write average bar '+str(barID), line=dict(color=color_list[barID], width=3)))
+            average_values_barID_read[barID]= self.dataframes_read[barID].iloc[:, 7:].mean(axis=0)
+            
+            average_barId_trace_read.append(go.Scatter(x=list(range(8, len(average_values_barID_read[barID]) + 8)), y=average_values_barID_read[barID], 
+                                       mode='lines', name='Read average bar '+str(barID), line=dict(color=color_list[barID], dash='dash', width=3)))
+
+        
         # Add the average trace to the figure
         fig.add_trace(average_trace_all)
         fig.add_trace(average_trace_read)
 
         fig.add_trace(average_trace_write)
 
+        for itm in average_barId_trace_write:
+            fig.add_trace(itm)
+            
+        for itm in average_barId_trace_read:
+            fig.add_trace(itm)
+            
         
         fig.update_layout(title=plotTitle,
                           xaxis_title='Column Index',
@@ -97,6 +127,15 @@ if __name__ == "__main__":
     # Instantiate the DataVisualization class and perform the steps
     data_visualization = DataVisualization(file_path)
     data_visualization.filter_by_write_table()
+    data_visualization.create_dataframes_by_bar_id()
     plotTitle=parts[len(parts)-1][:-4]+'_RunOut'
     data_visualization.plot_data(colorListNm,colorListCode,plotTitle)
+    
+ 
+    
 
+    
+    
+    
+    
+    

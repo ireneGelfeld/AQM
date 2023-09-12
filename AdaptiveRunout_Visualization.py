@@ -10,6 +10,13 @@ import plotly.graph_objects as go
 import numpy as np
 from plotly.offline import download_plotlyjs, init_notebook_mode,  plot
 import os
+###############################################################
+global PlotRead,PlotWrite,plot_Bar2show
+
+PlotRead = 1
+PlotWrite= 0
+plot_Bar2show= [2,3,4]
+    
 
 
 class DataVisualization:
@@ -33,7 +40,13 @@ class DataVisualization:
         for index, row in self.data.iterrows():
             date_time = row[' Date time']
             bar_id = row['Bar Id']
+            if not(bar_id in plot_Bar2show):
+                continue;
             read_write= row['Read table/write table']
+            if read_write == 'Write table' and not PlotWrite:
+                continue;
+            if read_write == 'Read table' and not PlotRead:
+                continue;
             color = color_list.get(bar_id, 'gray')  # Default to gray if not found in colorListNm
             
             # Extract values from the 8th column to the last column
@@ -52,12 +65,16 @@ class DataVisualization:
 
         average_trace_all = go.Scatter(x=list(range(8, len(average_values_all) + 8)), y=average_values_all, 
                                    mode='lines', name='Average all', line=dict(color='red', width=4))
-        
-        average_trace_read = go.Scatter(x=list(range(8, len(average_values_read) + 8)), y=average_values_read, 
+        if  PlotRead:
+            average_trace_read = go.Scatter(x=list(range(8, len(average_values_read) + 8)), y=average_values_read, 
                                    mode='lines', name='Average read', line=dict(color='green', width=4))
-        
-        average_trace_write = go.Scatter(x=list(range(8, len(average_values_write) + 8)), y=average_values_write, 
+            fig.add_trace(average_trace_read)
+            
+        if PlotWrite:
+            average_trace_write = go.Scatter(x=list(range(8, len(average_values_write) + 8)), y=average_values_write, 
                                    mode='lines', name='Average write', line=dict(color='purple', width=4))
+            fig.add_trace(average_trace_write)
+
         
         average_values_barID_write={}
         average_values_barID_read={}
@@ -67,26 +84,30 @@ class DataVisualization:
 
 
         for barID in self.unique_bar_ids_write:
-            average_values_barID_write[barID]= self.dataframes_write[barID].iloc[:, 7:].mean(axis=0)
-            average_barId_trace_write.append(go.Scatter(x=list(range(8, len(average_values_barID_write[barID]) + 8)), y=average_values_barID_write[barID], 
-                                       mode='lines', name='Write average bar '+str(barID), line=dict(color=color_list[barID], width=3)))
-            average_values_barID_read[barID]= self.dataframes_read[barID].iloc[:, 7:].mean(axis=0)
-            
-            average_barId_trace_read.append(go.Scatter(x=list(range(8, len(average_values_barID_read[barID]) + 8)), y=average_values_barID_read[barID], 
-                                       mode='lines', name='Read average bar '+str(barID), line=dict(color=color_list[barID], dash='dash', width=3)))
+            if not(barID in plot_Bar2show):
+                continue
+            if PlotWrite:
+                average_values_barID_write[barID]= self.dataframes_write[barID].iloc[:, 7:].mean(axis=0)
+                average_barId_trace_write.append(go.Scatter(x=list(range(8, len(average_values_barID_write[barID]) + 8)), y=average_values_barID_write[barID], 
+                                           mode='lines', name='Write average bar '+str(barID), line=dict(color=color_list[barID], width=3)))
+            if PlotRead:
+                average_values_barID_read[barID]= self.dataframes_read[barID].iloc[:, 7:].mean(axis=0)
+                
+                average_barId_trace_read.append(go.Scatter(x=list(range(8, len(average_values_barID_read[barID]) + 8)), y=average_values_barID_read[barID], 
+                                           mode='lines', name='Read average bar '+str(barID), line=dict(color=color_list[barID], dash='dash', width=3)))
 
         
         # Add the average trace to the figure
         fig.add_trace(average_trace_all)
-        fig.add_trace(average_trace_read)
+        
 
-        fig.add_trace(average_trace_write)
-
-        for itm in average_barId_trace_write:
-            fig.add_trace(itm)
-            
-        for itm in average_barId_trace_read:
-            fig.add_trace(itm)
+        if PlotWrite:
+            for itm in average_barId_trace_write:
+                fig.add_trace(itm)
+        
+        if PlotRead:    
+            for itm in average_barId_trace_read:
+                fig.add_trace(itm)
             
         
         fig.update_layout(title=plotTitle,

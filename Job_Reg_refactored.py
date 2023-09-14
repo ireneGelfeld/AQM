@@ -299,10 +299,11 @@ class CalcC2C():
 
          for c in St1dataAllColors.columns:
              for inx in St1dataAllColors.index:
-                 y= PanelColorSet[c][inx]
-                 z = np.polyfit(x, y, 1)
-                 p = np.poly1d(z)
                  try:
+                     y= PanelColorSet[c][inx]
+                     z = np.polyfit(x, y, 1)
+                     p = np.poly1d(z)
+                 
                      Scale[c][inx]=(RefSETloc['Slop'][inx]/list(p)[0]-1)*PanelLengthInMM*1000
                  except:
                      continue;
@@ -1768,42 +1769,6 @@ if Plot_MinMaxSETS:
         fig6.show()
     except:
         1;
-
-
-
-################## Histogram #####################
-# if Plot_MinMaxSETS:
-#     import scipy.stats
-#     import matplotlib.mlab as mlab
-    
-    
-    
-#     x=C2C_MaxFront.iloc[0][StatisticsCalcStartPage:];
-#     bins=30;
-#     # mu, sigma = scipy.stats.norm.fit(x)
-#     # best_fit_line = scipy.stats.norm.pdf(bins, mu, sigma)
-#     # plt.plot(bins, best_fit_line)
-    
-#     plt.title('C2C')
-#     plt.hist(x,bins)
-#     plt.show() 
-    
-#     try:
-#         xBack=C2C_MaxBack.iloc[0][StatisticsCalcStartPage:];
-        
-#         plt.hist(xBack,bins)
-#         plt.show() 
-#         plt.legend(['C2C_MaxFront','C2C_MaxBack'])
-#     except:
-#         1;
-    
-    
-    
-    
-    
-    
-    
-
 
 
 

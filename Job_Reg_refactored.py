@@ -1161,7 +1161,7 @@ if Plot_RegForAllColors_Left:
     
     
     for i in range(len(dbtmpSentCrrFRONT['X Correction Moving Avarage'])):
-        try:
+     
             ymin=np.min(list(db1.loc[inx[0]]))
             for clr in inx:
                 clrFRONT=PanelCorrectionFRONT[(PanelCorrectionFRONT['Color']) == clr].reset_index(drop=True)
@@ -1173,9 +1173,12 @@ if Plot_RegForAllColors_Left:
                    clrPnlnumFRONT=pd.concat((clrPnlnumFRONT, tmpdb['C2C_X Correction'].rename(str(j))), axis=1)
                 
                 cc=list(clrPnlnumFRONT.columns);
-                pctext=clr+':'+'<br>'+'p'+cc[0]+'='+"{:.2f}".format(clrPnlnumFRONT[cc[0]][i]);
-                for c in cc[1:]:
-                    pctext=pctext+'<br>'+'p'+c+'='+"{:.2f}".format(clrPnlnumFRONT[c][i]);
+                try:
+                    pctext=clr+':'+'<br>'+'p'+cc[0]+'='+"{:.2f}".format(clrPnlnumFRONT[cc[0]][i]);
+                    for c in cc[1:]:
+                        pctext=pctext+'<br>'+'p'+c+'='+"{:.2f}".format(clrPnlnumFRONT[c][i]);
+                except:
+                    continue;
                     
                     
                 fig.add_trace(go.Scatter(x=[dbtmpSentCrrFRONT['Flat Id'][i]-ImagePlacement_ppFRONT['Flat Id'][0]], y=[ymin],
@@ -1191,8 +1194,7 @@ if Plot_RegForAllColors_Left:
             
             
             fig.add_vline(x=dbtmpSentCrrFRONT['Flat Id'][i]-ImagePlacement_ppFRONT['Flat Id'][0], line_width=0.5, line_dash="dash", line_color="red")
-        except:
-            continue;
+       
     
     
     
@@ -1304,7 +1306,7 @@ if Plot_RegForAllColors_Right:
                         name=i+' set3'), row=3, col=1)    
             
         for i in range(len(dbtmpSentCrrBACK['X Correction Moving Avarage'])):
-            try:
+           
                 ymin=np.min(list(db1.loc[inx[0]]))
                 for clr in inx:
                     clrBACK=PanelCorrectionBACK[(PanelCorrectionBACK['Color']) == clr].reset_index(drop=True)
@@ -1315,11 +1317,13 @@ if Plot_RegForAllColors_Right:
                        tmpdb=clrBACK[clrBACK['Panel']==j].reset_index(drop=True);
                        clrPnlnumBACK=pd.concat((clrPnlnumBACK, tmpdb['C2C_X Correction'].rename(str(j))), axis=1)
                     
-                    cc=list(clrPnlnumBACK.columns);
-                    pctext=clr+':'+'<br>'+'p'+cc[0]+'='+"{:.2f}".format(clrPnlnumBACK[cc[0]][i]);
-                    for c in cc[1:]:
-                        pctext=pctext+'<br>'+'p'+c+'='+"{:.2f}".format(clrPnlnumBACK[c][i]);
-                        
+                    cc=list(clrPnlnumBACK.columns); 
+                    try:
+                        pctext=clr+':'+'<br>'+'p'+cc[0]+'='+"{:.2f}".format(clrPnlnumBACK[cc[0]][i]);
+                        for c in cc[1:]:
+                            pctext=pctext+'<br>'+'p'+c+'='+"{:.2f}".format(clrPnlnumBACK[c][i]);
+                    except:
+                       continue;     
                         
                     fig.add_trace(go.Scatter(x=[dbtmpSentCrrBACK['Flat Id'][i]-ImagePlacement_ppBACK['Flat Id'][0]], y=[ymin],
                                 marker=dict(color=clr, size=6),
@@ -1330,10 +1334,9 @@ if Plot_RegForAllColors_Right:
                     fig.data[len(fig.data)-1].showlegend = False
 
                     ymin=ymin-50;   
-            except:
-                continue;                 
+                             
         
-            fig.add_vline(x=dbtmpSentCrrBACK['Flat Id'][i]-ImagePlacement_ppBACK['Flat Id'][0], line_width=0.5, line_dash="dash", line_color="red")
+                fig.add_vline(x=dbtmpSentCrrBACK['Flat Id'][i]-ImagePlacement_ppBACK['Flat Id'][0], line_width=0.5, line_dash="dash", line_color="red")
     
         
         
@@ -1448,9 +1451,12 @@ if Plot_Scale:
                    clrPnlnumFRONT=pd.concat((clrPnlnumFRONT, tmpdb['Scaling Correction'].rename(str(j))), axis=1)
                 
                 cc=list(clrPnlnumFRONT.columns);
-                pctext=clr+':'+'<br>'+'p'+cc[0]+'='+"{:.1f}".format((clrPnlnumFRONT[cc[0]][i]-1)*PanelLengthInMM*1000);
-                for c in cc[1:]:
-                    pctext=pctext+'<br>'+'p'+c+'='+"{:.1f}".format((clrPnlnumFRONT[c][i]-1)*PanelLengthInMM*1000);
+                try:
+                    pctext=clr+':'+'<br>'+'p'+cc[0]+'='+"{:.1f}".format((clrPnlnumFRONT[cc[0]][i]-1)*PanelLengthInMM*1000);
+                    for c in cc[1:]:
+                        pctext=pctext+'<br>'+'p'+c+'='+"{:.1f}".format((clrPnlnumFRONT[c][i]-1)*PanelLengthInMM*1000);
+                except:
+                    continue;
                     
                     
                 fig.add_trace(go.Scatter(x=[dbtmpSentCrrFRONT['Flat Id'][i]-ImagePlacement_ppFRONT['Flat Id'][0]], y=[ymin],
@@ -1526,9 +1532,12 @@ if Plot_Scale:
                            clrPnlnumBACK=pd.concat((clrPnlnumBACK, tmpdb['Scaling Correction'].rename(str(j))), axis=1)
                         
                         cc=list(clrPnlnumBACK.columns);
-                        pctext=clr+':'+'<br>'+'p'+cc[0]+'='+"{:.1f}".format((clrPnlnumBACK[cc[0]][i]-1)*PanelLengthInMM*1000);
-                        for c in cc[1:]:
-                            pctext=pctext+'<br>'+'p'+c+'='+"{:.1f}".format((clrPnlnumBACK[c][i]-1)*PanelLengthInMM*1000);
+                        try:
+                            pctext=clr+':'+'<br>'+'p'+cc[0]+'='+"{:.1f}".format((clrPnlnumBACK[cc[0]][i]-1)*PanelLengthInMM*1000);
+                            for c in cc[1:]:
+                                pctext=pctext+'<br>'+'p'+c+'='+"{:.1f}".format((clrPnlnumBACK[c][i]-1)*PanelLengthInMM*1000);
+                        except:
+                            continue;
                             
                             
                         fig01.add_trace(go.Scatter(x=[dbtmpSentCrrBACK['Flat Id'][i]-ImagePlacement_ppBACK['Flat Id'][0]], y=[ymin],

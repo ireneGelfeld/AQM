@@ -1185,6 +1185,25 @@ path_ClrDF_fromTargetS_goly=sInput+'\ClrDF_fromTargetS_goly_allPanels.pkl'
 with open(path_ClrDF_fromTargetS_goly, 'wb') as f:
     pickle.dump(ClrDF_fromTargetS_goly_allPanels, f)
 
+
+
+
+
+# file_path = r'D:\BTDencoder\B2\04092026_poxy\ClrDF_fromTargetS_goly_allPanels.pkl'
+
+# # Open the file in binary read mode
+# with open(file_path, 'rb') as file:
+#     # Unpickle the object from the file
+#     ClrDF_fromTargetS_goly_allPanels = pickle.load(file)
+
+
+# file_path = r'D:\BTDencoder\B2\04092026_poxy\indexPanelNameDic.pkl'
+
+# # Open the file in binary read mode
+# with open(file_path, 'rb') as file:
+#     # Unpickle the object from the file
+#     indexPanelNameDic = pickle.load(file)
+
 # Cyan_Black_Sgoly={};
 # RefCl='Cyan'
 # for i in range(3):

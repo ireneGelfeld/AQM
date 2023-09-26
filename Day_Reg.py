@@ -2043,10 +2043,16 @@ os.chdir(pthF)
     
 #     except:
 #       1; 
+
+
+
+
 if WaveChangePlot:
-    WaveChangeListFRONT,indexJobNameDicFRONT,WaveJobPrintedDicFRONT,BlnketReplacmentDic=CalcC2C_AvrgOfAll(pthF,folder,'Front',JobLength,PanelLengthInMM,'Left').CreateWaveChangeDataWithBlanketRep(JobLengthWave,BlanketRepList);
     
-    # WaveChangeListFRONT,indexJobNameDicFRONT,WaveJobPrintedDicFRONT,BlnketReplacmentDic=CalcC2C_AvrgOfAll(pthF,folder,'Front',JobLength,PanelLengthInMM,'Left').CreateWaveChangeDataWithBlanketRep_v2(JobLengthWave, BlanketRepList);
+    if not len(BlanketRepList):
+        WaveChangeListFRONT,indexJobNameDicFRONT,WaveJobPrintedDicFRONT,BlnketReplacmentDic=CalcC2C_AvrgOfAll(pthF,folder,'Front',JobLength,PanelLengthInMM,'Left').CreateWaveChangeDataWithBlanketRep(JobLengthWave,BlanketRepList);
+    else:
+        WaveChangeListFRONT,indexJobNameDicFRONT,WaveJobPrintedDicFRONT,BlnketReplacmentDic=CalcC2C_AvrgOfAll(pthF,folder,'Front',JobLength,PanelLengthInMM,'Left').CreateWaveChangeDataWithBlanketRep_v2(JobLengthWave, BlanketRepList);
 
     WaveChangeDF_FRONT=pd.DataFrame(WaveChangeListFRONT)
     

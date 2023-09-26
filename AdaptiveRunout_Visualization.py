@@ -15,7 +15,7 @@ global PlotRead,PlotWrite,plot_Bar2show
 
 PlotRead = 1
 PlotWrite= 0
-plot_Bar2show= [2,3,4]
+plot_Bar2show= [2,3,4,5,6,7,8]
     
 
 

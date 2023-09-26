@@ -38,7 +38,7 @@ DataPracent_toConcider= 94 #in % --> for example => 90 % --> cuts Off 5 %  from 
 DataPracent_toConcider= 95 #in % --> for example => 90 % --> cuts Off 5 %  from top and 5 % from bottomm
 #DistBetweenSets =  126357  #102693 Duplex Drop3 = 125864,   Duplex-Drop5 126357
 #Simplex Drop3 = 125965,  Simplex Drop5 = 126256 
-LoadTarget = 0 ; #True from targets in the AQM or False - from the tabel 
+LoadTarget = 1 ; #True from targets in the AQM or False - from the tabel 
 
 StatisticsCalcStartPage = 100;
 

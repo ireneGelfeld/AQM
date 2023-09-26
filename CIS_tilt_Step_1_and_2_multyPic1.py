@@ -30,6 +30,9 @@ import chart_studio.plotly as py
 import webbrowser
 import shutil
 
+%matplotlib
+
+
 # url = "https://your-plotly-visualization-url" 
 # subprocess.Popen(['start', 'chrome', url], shell=True)
 
@@ -653,3 +656,5 @@ while 1:
 
 #########################################################################################
 
+plt.figure(2)
+plt.imshow(img)

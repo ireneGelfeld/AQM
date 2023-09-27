@@ -45,11 +45,11 @@ JobLength = 0;
 
 
 #### Plots
-I2Splot=1 # Plot I2S 
+I2Splot=0 # Plot I2S 
 C2Cplot=1 # Plot C2C
-ScalePlot=1 # Plot Scale
+ScalePlot=0 # Plot Scale
 WaveChangePlot=1 # Plot Wave Change
-c2cChangePlot = 1 # Plot c2c Change MUST be align with Plot Wave Change
+c2cChangePlot = 0 # Plot c2c Change MUST be align with Plot Wave Change
 scaleChangePlot = 1 # Plot scale Change MUST be align with Plot Wave Change
 
 YuriMethod=0
@@ -1187,19 +1187,27 @@ class CalcC2C_AvrgOfAll(DispImagePlacment):
     def CreateWaveBlanketRep_Dic(self,FilesInx, PrintedDic, ValidSortedJobListWithWave,indexJobNameDicRev):
         
         offset=0
+        n=1;
+
         for inx in FilesInx:
             n=1;
             offset=0
-            while 1:
-                if  ValidSortedJobListWithWave[inx+n] in indexJobNameDicRev.keys():
-                    if  indexJobNameDicRev[ValidSortedJobListWithWave[inx+n]]+offset in PrintedDic.keys():
-                        offset=offset+1
-                        continue;
-                    PrintedDic[indexJobNameDicRev[ValidSortedJobListWithWave[inx+n]]+offset]=[ValidSortedJobListWithWave[inx],inx]
-                    break;
-                else:
-                    n=n+1;
-                    
+            try:
+                while 1:
+                    if  ValidSortedJobListWithWave[inx+n] in indexJobNameDicRev.keys():
+                        if  indexJobNameDicRev[ValidSortedJobListWithWave[inx+n]]+offset in PrintedDic.keys():
+                            offset=offset+1
+                            continue;
+                        PrintedDic[indexJobNameDicRev[ValidSortedJobListWithWave[inx+n]]+offset]=[ValidSortedJobListWithWave[inx],inx]
+                        break;
+                    else:
+                        n=n+1;
+                        
+                
+            except:
+                continue
+            
+                        
         return PrintedDic
 
     def CreateWaveChangeDataWithBlanketRep_v2(self,JobLengthWave,BlanketRepList):

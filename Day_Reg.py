@@ -11,7 +11,7 @@ Created on Wed Jun 16 16:30:46 2021
 # pio.renderers
 # pio.renderers.default='browser'
 ##############################################################################
-global DistBetweenSets,GlobalScale,PanelLengthInMM,JobLengthתcolor_combinations,FullColorList,JobLengthWave,MoveAveWave,MoveAveWaveScale,OBGfactor;
+global geometry,DistBetweenSets,GlobalScale,PanelLengthInMM,JobLengthתcolor_combinations,FullColorList,JobLengthWave,MoveAveWave,MoveAveWaveScale,OBGfactor,colorID_aqm,firstSetDistance;
 
 # For setting the min job length for Change Wave plot- this parameter should be used for setting the allowble moving avarage- for example set JobLengthWave= 100, MoveAveWave=20;
 JobLengthWave=100;
@@ -24,6 +24,11 @@ MarkSetVersion=252
 
 OBGfactor= 1.22
 
+colorID_aqm={'Cyan':1,'Magenta':2,'Yellow':3,'Black':4,'Orange':5,'Blue':6,'Green':7}  
+
+
+geometry = {'X': {'Black':-1,'Blue':1,'Cyan':0,'Green':1,'Magenta':-1,'Orange':2,'Yellow':0},
+            'Y': {'Black':0,'Blue':1,'Cyan':0,'Green':0,'Magenta':1,'Orange':1,'Yellow':1}}
 ### Job name markers location
 ymax=200 # Job name location
 ymaxWaveJob=180 # Wave job location
@@ -33,12 +38,14 @@ if MarkSetVersion==252:
     
     GlobalScale = 0.9983 # Drop3 simplex = 0.9976, Duplex = 0.9984 ,,,, Drop5 Simplex = 0.9953, Duplex = 0.9945 
     DistBetweenSets =  125686/GlobalScale; 
+    firstSetDistance=31053/GlobalScale; 
     
 else:
 #For 201
     GlobalScale = 0.9983
     DistBetweenSets =  102693; 
-    
+    firstSetDistance=31159;
+
 
 PanelLengthInMM = 650;
 JobLength = 0;
@@ -408,7 +415,12 @@ class CalcC2C_AvrgOfAll(DispImagePlacment):
     def LoadMeanColorPos(self):
        
         # RecPath= pthComp[0]+'/'+pthComp[1]+'/'+pthComp[2]+'/'+pthComp[3]+'/'+pthComp[4]+'/'+pthComp[5]+'/'+pthComp[6]+'/'+pthComp[7]+'/'+pthComp[8];
-        MeregedDataAllMeanColor = pd.read_csv(self.pthF +'/'+'MeregedDataAllMeanColor_'+self.side+'_'+self.pageSide+'.csv')
+        MeregedDataAllMeanColorRight = pd.read_csv(self.pthF +'/'+'MeregedDataAllMeanColor_'+self.side+'_Right.csv')
+        MeregedDataAllMeanColorLeft= pd.read_csv(self.pthF +'/'+'MeregedDataAllMeanColor_'+self.side+'_Left.csv')
+
+        
+        MeregedDataAllMeanColor = (MeregedDataAllMeanColorRight[['Set #1 X', 'Set #2 X', 'Set #3 X']]+MeregedDataAllMeanColorLeft[['Set #1 X', 'Set #2 X', 'Set #3 X']])/2
+        MeregedDataAllMeanColor.insert(0, 'Ink\\Sets', list(MeregedDataAllMeanColorRight['Ink\\Sets']))  
         
         return MeregedDataAllMeanColor
     
@@ -416,23 +428,75 @@ class CalcC2C_AvrgOfAll(DispImagePlacment):
     def LoadMeanColorPos_PickSide(self,pageSide):
        
         # RecPath= pthComp[0]+'/'+pthComp[1]+'/'+pthComp[2]+'/'+pthComp[3]+'/'+pthComp[4]+'/'+pthComp[5]+'/'+pthComp[6]+'/'+pthComp[7]+'/'+pthComp[8];
-        MeregedDataAllMeanColor = pd.read_csv(self.pthF +'/'+'MeregedDataAllMeanColor_'+self.side+'_'+pageSide+'.csv')
+        # MeregedDataAllMeanColor = pd.read_csv(self.pthF +'/'+'MeregedDataAllMeanColor_'+self.side+'_'+pageSide+'.csv')
+        MeregedDataAllMeanColorRight = pd.read_csv(self.pthF +'/'+'MeregedDataAllMeanColor_'+self.side+'_Right.csv')
+        MeregedDataAllMeanColorLeft= pd.read_csv(self.pthF +'/'+'MeregedDataAllMeanColor_'+self.side+'_Left.csv')
+
+        
+        MeregedDataAllMeanColor = (MeregedDataAllMeanColorRight[['Set #1 X', 'Set #2 X', 'Set #3 X']]+MeregedDataAllMeanColorLeft[['Set #1 X', 'Set #2 X', 'Set #3 X']])/2
+        MeregedDataAllMeanColor.insert(0, 'Ink\\Sets', list(MeregedDataAllMeanColorRight['Ink\\Sets']))  
         
         return MeregedDataAllMeanColor
     
-    def f(self,XYS,ink,value):
+    def extract_TargetParameters(self,geometry,fname):
+        
+        
+        zip_file_path = self.pthF+'/'+fname
+        subdir_name_in_zip = self.side+'/'+'RawResults';
+        file_name_in_zip = 'AnalyzerVersion.csv';
+
+        AnalyzerVersion=self.GetFileFromZip(zip_file_path, subdir_name_in_zip, file_name_in_zip);
+        
+        indexC2C = next((i for i, row in enumerate(AnalyzerVersion['Parameter']) if row == 'C2C ColorId Mapping'), -1)
+        
+        indexRef = next((i for i, row in enumerate(AnalyzerVersion['Parameter']) if row == 'Relative Ink Name'), -1)
+        
+        C2C_colorId= [int(num) for num in AnalyzerVersion['Value'][indexC2C].split('-')]
+        
+        index = C2C_colorId.index(colorID_aqm[AnalyzerVersion['Value'][indexRef]])
+        
+        for i in range(7):
+            
+           a= i-index 
+           if a < -1:
+               geometry['X'][self.get_key(colorID_aqm,C2C_colorId[i])]=-1
+            
+           if a ==0 or a == -1:
+               geometry['X'][self.get_key(colorID_aqm,C2C_colorId[i])]=0
+               
+           if a == 1 or a == 2:
+               geometry['X'][self.get_key(colorID_aqm,C2C_colorId[i])]=1
+               
+           if a > 2:
+                geometry['X'][self.get_key(colorID_aqm,C2C_colorId[i])]=2
+
+
+        
+        indexGlobalScale = next((i for i, row in enumerate(AnalyzerVersion['Parameter']) if row == 'X Press Global Scaling'), -1)
+        indexDistBetweenSets = next((i for i, row in enumerate(AnalyzerVersion['Parameter']) if row == 'Registration Distance Between Sets In Microns'), -1)
+        # indexfirstSetDistance = next((i for i, row in enumerate(AnalyzerVersion['Parameter']) if row == 'Registration Y Distance Between Patterns In MM'), -1)
+
+        GlobalScale =  float(AnalyzerVersion['Value'][indexGlobalScale]) # Drop3 simplex = 0.9976, Duplex = 0.9984 ,,,, Drop5 Simplex = 0.9953, Duplex = 0.9945 
+        DistBetweenSets =  int(AnalyzerVersion['Value'][indexDistBetweenSets]); 
+        # firstSetDistance=float(AnalyzerVersion['Value'][indexfirstSetDistance])*10000; 
+        firstSetDistance_val = firstSetDistance
+
+
+        return GlobalScale,DistBetweenSets,firstSetDistance_val,geometry
+    
+    def f(self,geometry,XYS,ink,value):
         # geometry = {'X': {'Black':0,'Blue':2,'Cyan':1,'Green':2,'Magenta':0,'Orange':3,'Yellow':1},
         #             'Y': {'Black':1,'Blue':0,'Cyan':1,'Green':1,'Magenta':0,'Orange':0,'Yellow':0}}
         # geometry = {'X': {'Black':0,'Blue':2,'Cyan':1,'Green':2,'Magenta':0,'Orange':3,'Yellow':1},
         #             'Y': {'Black':0,'Blue':1,'Cyan':0,'Green':0,'Magenta':1,'Orange':1,'Yellow':1}}
         
-        geometry = {'X': {'Black':-1,'Blue':1,'Cyan':0,'Green':1,'Magenta':-1,'Orange':2,'Yellow':0},
-                    'Y': {'Black':0,'Blue':1,'Cyan':0,'Green':0,'Magenta':1,'Orange':1,'Yellow':1}}
+        # geometry = {'X': {'Black':-1,'Blue':1,'Cyan':0,'Green':1,'Magenta':-1,'Orange':2,'Yellow':0},
+        #             'Y': {'Black':0,'Blue':1,'Cyan':0,'Green':0,'Magenta':1,'Orange':1,'Yellow':1}}
         
         # geometry = {'X': {'Black':-1,'Cyan':0,'Yellow':0,'Magenta':-1},
         #             'Y': {'Black':0,'Cyan':0,'Yellow':-1,'Magenta':-1}}
         target_distance = {'X':144.4,'Y':64} 
-        return value + (geometry[XYS][ink]) * target_distance[XYS] * (21.16666666 / GlobalScale * 0.9976)
+        return value + (geometry[XYS][ink]) * target_distance[XYS] * (21.16666666 )
     
     def get_key(self,my_dict,val):
         for key, value in my_dict.items():
@@ -440,7 +504,7 @@ class CalcC2C_AvrgOfAll(DispImagePlacment):
                  return key
     
                 
-    def CalcScaleFromTarget(self):
+    def CalcScaleFromTarget(self,fname):
          
          
          
@@ -450,16 +514,29 @@ class CalcC2C_AvrgOfAll(DispImagePlacment):
          for i,cl in enumerate(MeregedDataAllMeanColor['Ink\Sets']):
              colorDic[i]=cl
          
-         valueSet1= MeregedDataAllMeanColor['Set #1 X'][self.get_key(colorDic,'Cyan')]
+         
+         geometry = {'X': {'Black':-1,'Blue':1,'Cyan':0,'Green':1,'Magenta':-1,'Orange':2,'Yellow':0},
+                     'Y': {'Black':0,'Blue':1,'Cyan':0,'Green':0,'Magenta':1,'Orange':1,'Yellow':1}}
+         
+         GlobalScale,DistBetweenSets,firstSetDistance,geometry = self.extract_TargetParameters(geometry,fname)
 
-         valueSet2= valueSet1+(DistBetweenSets/GlobalScale);
+         
+         valueSet1= firstSetDistance;
 
-         valueSet3= valueSet2+(DistBetweenSets/GlobalScale);
+         valueSet2= valueSet1+(DistBetweenSets);
+
+         valueSet3= valueSet2+(DistBetweenSets);
+         
+         # valueSet1= MeregedDataAllMeanColor['Set #1 X'][self.get_key(colorDic,'Cyan')]
+
+         # valueSet2= valueSet1+(DistBetweenSets/GlobalScale);
+
+         # valueSet3= valueSet2+(DistBetweenSets/GlobalScale);
          
          for key, value in colorDic.items():
-             MeregedDataAllMeanColor['Set #1 X'][self.get_key(colorDic,value)]= self.f('X',value,valueSet1)
-             MeregedDataAllMeanColor['Set #2 X'][self.get_key(colorDic,value)]= self.f('X',value,valueSet2)
-             MeregedDataAllMeanColor['Set #3 X'][self.get_key(colorDic,value)]= self.f('X',value,valueSet3)
+             MeregedDataAllMeanColor['Set #1 X'][self.get_key(colorDic,value)]= self.f(geometry,'X',value,valueSet1)
+             MeregedDataAllMeanColor['Set #2 X'][self.get_key(colorDic,value)]= self.f(geometry,'X',value,valueSet2)
+             MeregedDataAllMeanColor['Set #3 X'][self.get_key(colorDic,value)]= self.f(geometry,'X',value,valueSet3)
 
          
          DataAllMeanColorSET1=MeregedDataAllMeanColor[['Set #1 X','Ink\Sets']].rename(index=colorDic);
@@ -588,16 +665,29 @@ class CalcC2C_AvrgOfAll(DispImagePlacment):
          for i,cl in enumerate(MeregedDataAllMeanColor['Ink\Sets']):
              colorDic[i]=cl
          
-         valueSet1= MeregedDataAllMeanColor['Set #1 X'][self.get_key(colorDic,'Cyan')]
+            
+         geometry = {'X': {'Black':-1,'Blue':1,'Cyan':0,'Green':1,'Magenta':-1,'Orange':2,'Yellow':0},
+                     'Y': {'Black':0,'Blue':1,'Cyan':0,'Green':0,'Magenta':1,'Orange':1,'Yellow':1}}
+         
+         GlobalScale,DistBetweenSets,firstSetDistance,geometry = self.extract_TargetParameters(geometry,fname)
 
-         valueSet2= valueSet1+(DistBetweenSets/GlobalScale);
+         
+         valueSet1= firstSetDistance;
 
-         valueSet3= valueSet2+(DistBetweenSets/GlobalScale);
+         valueSet2= valueSet1+(DistBetweenSets);
+
+         valueSet3= valueSet2+(DistBetweenSets);
+         
+         # valueSet1= MeregedDataAllMeanColor['Set #1 X'][self.get_key(colorDic,'Cyan')]
+
+         # valueSet2= valueSet1+(DistBetweenSets/GlobalScale);
+
+         # valueSet3= valueSet2+(DistBetweenSets/GlobalScale);
          
          for key, value in colorDic.items():
-             MeregedDataAllMeanColor['Set #1 X'][self.get_key(colorDic,value)]= self.f('X',value,valueSet1)
-             MeregedDataAllMeanColor['Set #2 X'][self.get_key(colorDic,value)]= self.f('X',value,valueSet2)
-             MeregedDataAllMeanColor['Set #3 X'][self.get_key(colorDic,value)]= self.f('X',value,valueSet3)
+             MeregedDataAllMeanColor['Set #1 X'][self.get_key(colorDic,value)]= self.f(geometry,'X',value,valueSet1)
+             MeregedDataAllMeanColor['Set #2 X'][self.get_key(colorDic,value)]= self.f(geometry,'X',value,valueSet2)
+             MeregedDataAllMeanColor['Set #3 X'][self.get_key(colorDic,value)]= self.f(geometry,'X',value,valueSet3)
 
          
          DataAllMeanColorSET1=MeregedDataAllMeanColor[['Set #1 X','Ink\Sets']].rename(index=colorDic);
@@ -703,13 +793,14 @@ class CalcC2C_AvrgOfAll(DispImagePlacment):
         # fname= 'Registration_'+self.pageSide+'.csv';
         
         
-        DataAllMeanColorSET1,DataAllMeanColorSET2,DataAllMeanColorSET3,colorDic,RefSETloc = self.CalcScaleFromTarget();
 
         for f in self.fldrs:
            stP=pd.DataFrame();
            fname= self.CheckForAI(self.pageSide,f);
-
+           
            try:
+               DataAllMeanColorSET1,DataAllMeanColorSET2,DataAllMeanColorSET3,colorDic,RefSETloc = self.CalcScaleFromTarget(f);
+
                St1dataAllColors,St2dataAllColors,St3dataAllColors,RefSETloc,Scale,ScaleMaxMin,colorDic=self.DataForCalcSCALE_FromData(DataAllMeanColorSET1,DataAllMeanColorSET2,DataAllMeanColorSET3,colorDic,RefSETloc,fname,f);
              
                stP[f]=ScaleMaxMin;
@@ -729,8 +820,8 @@ class CalcC2C_AvrgOfAll(DispImagePlacment):
         colorDicOBG={}
         colorDicCMYK={}
         
-        
-        DataAllMeanColorSET1,DataAllMeanColorSET2,DataAllMeanColorSET3,colorDic,RefSETloc = self.CalcScaleFromTarget();
+        DataAllMeanColorSET1,DataAllMeanColorSET2,DataAllMeanColorSET3,colorDic,RefSETloc = self.CalcScaleFromTarget(self.fldrs[0]);
+
         
         
         # colorDic={1:'Magenta',2:'Black',3:'Yellow',4:'Cyan',5:'Blue',6:'Orange',7:'Green'}
@@ -751,6 +842,8 @@ class CalcC2C_AvrgOfAll(DispImagePlacment):
            fname= self.CheckForAI(self.pageSide,f);
 
            try:
+               DataAllMeanColorSET1,DataAllMeanColorSET2,DataAllMeanColorSET3,colorDic,RefSETloc = self.CalcScaleFromTarget(f);
+
                St1dataAllColors,St2dataAllColors,St3dataAllColors,RefSETloc,Scale,ScaleMaxMin,colorDic=self.DataForCalcSCALE_FromData(DataAllMeanColorSET1,DataAllMeanColorSET2,DataAllMeanColorSET3,colorDic,RefSETloc,fname,f);
                ScaleMaxMinDF = pd.concat([ScaleMaxMinDF, pd.Series(ScaleMaxMin, name=f)], axis=1)
 
@@ -2125,6 +2218,50 @@ print(endCalc - startCalc)
 #             BlanketRepList.append('BlanketReplacment '+newString+'    ')
         
 
+ScaleMaxMinDF=pd.DataFrame();
+ScaleMaxMinDFOBG=pd.DataFrame();
+ScaleMaxMinDFCMYK=pd.DataFrame();
+
+Obg=['Blue','Orange','Green']
+colorDicOBG={}
+colorDicCMYK={}
+
+DataAllMeanColorSET1,DataAllMeanColorSET2,DataAllMeanColorSET3,colorDic,RefSETloc = CalcC2C_AvrgOfAll(pthF,folder,'Front',JobLength,PanelLengthInMM,'Left').CalcScaleFromTarget(CalcC2C_AvrgOfAll(pthF,folder,'Front',JobLength,PanelLengthInMM,'Left').fldrs[0]);
+
+
+
+# colorDic={1:'Magenta',2:'Black',3:'Yellow',4:'Cyan',5:'Blue',6:'Orange',7:'Green'}
+
+if len(colorDic.keys())>4:
+    for key,value in colorDic.items():
+        if value in Obg:
+            colorDicOBG[key]=value;
+        else:                     
+            colorDicCMYK[key]=value;
+
+
+
+
+for f in CalcC2C_AvrgOfAll(pthF,folder,'Front',JobLength,PanelLengthInMM,'Left').fldrs:
+   # stP=pd.DataFrame();
+
+   fname= CalcC2C_AvrgOfAll(pthF,folder,'Front',JobLength,PanelLengthInMM,'Left').CheckForAI(CalcC2C_AvrgOfAll(pthF,folder,'Front',JobLength,PanelLengthInMM,'Left').pageSide,f);
+
+   try:
+       DataAllMeanColorSET1,DataAllMeanColorSET2,DataAllMeanColorSET3,colorDic,RefSETloc = CalcC2C_AvrgOfAll(pthF,folder,'Front',JobLength,PanelLengthInMM,'Left').CalcScaleFromTarget(f);
+
+       St1dataAllColors,St2dataAllColors,St3dataAllColors,RefSETloc,Scale,ScaleMaxMin,colorDic=CalcC2C_AvrgOfAll(pthF,folder,'Front',JobLength,PanelLengthInMM,'Left').DataForCalcSCALE_FromData(DataAllMeanColorSET1,DataAllMeanColorSET2,DataAllMeanColorSET3,colorDic,RefSETloc,fname,f);
+       ScaleMaxMinDF = pd.concat([ScaleMaxMinDF, pd.Series(ScaleMaxMin, name=f)], axis=1)
+
+       St1dataAllColors,St2dataAllColors,St3dataAllColors,RefSETloc,Scale,ScaleMaxMinOBG,colorDicOBG=CalcC2C_AvrgOfAll(pthF,folder,'Front',JobLength,PanelLengthInMM,'Left').DataForCalcSCALE_FromData(DataAllMeanColorSET1,DataAllMeanColorSET2,DataAllMeanColorSET3,colorDicOBG,RefSETloc,fname,f);
+       ScaleMaxMinDFOBG = pd.concat([ScaleMaxMinDFOBG, pd.Series(ScaleMaxMinOBG, name=f)], axis=1)
+       St1dataAllColors,St2dataAllColors,St3dataAllColors,RefSETloc,Scale,ScaleMaxMinCMYK,colorDicCMYK=CalcC2C_AvrgOfAll(pthF,folder,'Front',JobLength,PanelLengthInMM,'Left').DataForCalcSCALE_FromData(DataAllMeanColorSET1,DataAllMeanColorSET2,DataAllMeanColorSET3,colorDicCMYK,RefSETloc,fname,f);
+       ScaleMaxMinDFCMYK = pd.concat([ScaleMaxMinDFCMYK, pd.Series(ScaleMaxMinCMYK, name=f)], axis=1)
+       # stP[f]=ScaleMaxMin;
+       # ScaleMaxMinDF=pd.concat([ScaleMaxMinDF, stP[f]],axis=1);
+   except:
+       continue;
+    
 
 
 

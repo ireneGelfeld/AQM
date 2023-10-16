@@ -10,7 +10,7 @@ Created on Sun Apr 24 12:35:16 2022
 #get_ipython().magic('reset -sf')
 
 #######################PARAMS#########################################
-global LoadTarget,GlobalScale,DistBetweenSets,JobLength,PanelNumber,DataPracent_toConcider,BaseDefult
+global LoadTarget,GlobalScale,DistBetweenSets,JobLength,PanelNumber,DataPracent_toConcider,BaseDefultתgeometry,geometry
 
 
 #For 252
@@ -19,7 +19,7 @@ MarkSetVersion=252
 if MarkSetVersion==252:
 
     
-    GlobalScale = 0.9945 # Drop3 simplex = 0.9976, Duplex = 0.9984 ,,,, Drop5 Simplex = 0.9953, Duplex = 0.9945 
+    GlobalScale =  0.9983 # Drop3 simplex = 0.9976, Duplex = 0.9984 ,,,, Drop5 Simplex = 0.9953, Duplex = 0.9945 
     DistBetweenSets =  125686/GlobalScale; 
     firstSetDistance=31053/GlobalScale; 
 
@@ -29,6 +29,13 @@ else:
     DistBetweenSets =  102693;     
     firstSetDistance=31159;
 
+colorID_aqm={'Cyan':1,'Magenta':2,'Yellow':3,'Black':4,'Orange':5,'Blue':6,'Green':7}       
+# geometry = {'X': {'Black':-1,'Blue':1,'Cyan':0,'Green':1,'Magenta':-1,'Orange':2,'Yellow':0},
+#             'Y': {'Black':0,'Blue':1,'Cyan':0,'Green':0,'Magenta':1,'Orange':1,'Yellow':1}}
+
+
+geometry = {'X': {'Black':-1,'Blue':1,'Cyan':0,'Green':1,'Magenta':-1,'Orange':2,'Yellow':0},
+            'Y': {'Black':0,'Blue':1,'Cyan':0,'Green':0,'Magenta':1,'Orange':1,'Yellow':1}}
 
 
 JobLength = 0;
@@ -165,24 +172,79 @@ class CalcC2C():
         LLname=Lname[0].split('_');
         pthComp=self.pthF.replace(self.pthF.split('/')[len(self.pthF.split('/'))-1],"")[:-1]
            
-        MeregedDataAllMeanColor = pd.read_csv(pthComp +'/'+'MeregedDataAllMeanColor_'+self.side+'_'+LLname[1]+'.csv')    
-            
+        MeregedDataAllMeanColorRight = pd.read_csv(pthComp +'/'+'MeregedDataAllMeanColor_'+self.side+'_Right.csv')    
+        MeregedDataAllMeanColorLeft = pd.read_csv(pthComp +'/'+'MeregedDataAllMeanColor_'+self.side+'_Left.csv')    
+    
+        MeregedDataAllMeanColor = (MeregedDataAllMeanColorRight[['Set #1 X', 'Set #2 X', 'Set #3 X']]+MeregedDataAllMeanColorLeft[['Set #1 X', 'Set #2 X', 'Set #3 X']])/2
+        MeregedDataAllMeanColor.insert(0, 'Ink\\Sets', list(MeregedDataAllMeanColorRight['Ink\\Sets']))           
             
         return MeregedDataAllMeanColor
     
-    def f(self,XYS,ink,value):
+    def f(self,geometry,XYS,ink,value):
         # geometry = {'X': {'Black':0,'Blue':2,'Cyan':1,'Green':2,'Magenta':0,'Orange':3,'Yellow':1},
         #             'Y': {'Black':1,'Blue':0,'Cyan':1,'Green':1,'Magenta':0,'Orange':0,'Yellow':0}}
         # geometry = {'X': {'Black':0,'Blue':2,'Cyan':1,'Green':2,'Magenta':0,'Orange':3,'Yellow':1},
         #             'Y': {'Black':0,'Blue':1,'Cyan':0,'Green':0,'Magenta':1,'Orange':1,'Yellow':1}}
         
-        geometry = {'X': {'Black':-1,'Blue':1,'Cyan':0,'Green':1,'Magenta':-1,'Orange':2,'Yellow':0},
-                    'Y': {'Black':0,'Blue':1,'Cyan':0,'Green':0,'Magenta':1,'Orange':1,'Yellow':1}}
+        # geometry = {'X': {'Black':-1,'Blue':1,'Cyan':0,'Green':1,'Magenta':-1,'Orange':2,'Yellow':0},
+        #             'Y': {'Black':0,'Blue':1,'Cyan':0,'Green':0,'Magenta':1,'Orange':1,'Yellow':1}}
         
         # geometry = {'X': {'Black':-1,'Cyan':0,'Yellow':0,'Magenta':-1},
         #             'Y': {'Black':0,'Cyan':0,'Yellow':-1,'Magenta':-1}}
         target_distance = {'X':144.4,'Y':64} 
-        return value + (geometry[XYS][ink]) * target_distance[XYS] * (21.16666666 * 0.9976 / GlobalScale)
+        return value + (geometry[XYS][ink]) * target_distance[XYS] * (21.16666666 )
+    
+    def extract_TargetParameters(self,geometry):
+        
+        
+        zip_file_path = self.pthF
+        subdir_name_in_zip = self.side+'/'+'RawResults';
+        file_name_in_zip = 'AnalyzerVersion.csv';
+
+        AnalyzerVersion=self.GetFileFromZip(zip_file_path, subdir_name_in_zip, file_name_in_zip);
+        
+        indexC2C = next((i for i, row in enumerate(AnalyzerVersion['Parameter']) if row == 'C2C ColorId Mapping'), -1)
+        
+        indexRef = next((i for i, row in enumerate(AnalyzerVersion['Parameter']) if row == 'Relative Ink Name'), -1)
+        
+        C2C_colorId= [int(num) for num in AnalyzerVersion['Value'][indexC2C].split('-')]
+        
+        index = C2C_colorId.index(colorID_aqm[AnalyzerVersion['Value'][indexRef]])
+        
+        for i in range(7):
+            
+           a= i-index 
+           if a < -1:
+               geometry['X'][self.get_key(colorID_aqm,C2C_colorId[i])]=-1
+            
+           if a ==0 or a == -1:
+               geometry['X'][self.get_key(colorID_aqm,C2C_colorId[i])]=0
+               
+           if a == 1 or a == 2:
+               geometry['X'][self.get_key(colorID_aqm,C2C_colorId[i])]=1
+               
+           if a > 2:
+                geometry['X'][self.get_key(colorID_aqm,C2C_colorId[i])]=2
+
+
+        
+        indexGlobalScale = next((i for i, row in enumerate(AnalyzerVersion['Parameter']) if row == 'X Press Global Scaling'), -1)
+        indexDistBetweenSets = next((i for i, row in enumerate(AnalyzerVersion['Parameter']) if row == 'Registration Distance Between Sets In Microns'), -1)
+        # indexfirstSetDistance = next((i for i, row in enumerate(AnalyzerVersion['Parameter']) if row == 'Registration Y Distance Between Patterns In MM'), -1)
+
+        GlobalScale =  float(AnalyzerVersion['Value'][indexGlobalScale]) # Drop3 simplex = 0.9976, Duplex = 0.9984 ,,,, Drop5 Simplex = 0.9953, Duplex = 0.9945 
+        DistBetweenSets =  int(AnalyzerVersion['Value'][indexDistBetweenSets]); 
+        # firstSetDistance=float(AnalyzerVersion['Value'][indexfirstSetDistance])*10000; 
+        firstSetDistance_val = firstSetDistance
+
+
+        return GlobalScale,DistBetweenSets,firstSetDistance_val,geometry
+        
+        
+        
+        
+
+        
     
     def get_key(self,my_dict,val):
         for key, value in my_dict.items():
@@ -202,12 +264,16 @@ class CalcC2C():
          #     colorDic[i]=cl
          
          #valueSet1= MeregedDataAllMeanColor['Set #1 X'][self.get_key(colorDic,'Cyan')]
+         geometry = {'X': {'Black':-1,'Blue':1,'Cyan':0,'Green':1,'Magenta':-1,'Orange':2,'Yellow':0},
+                     'Y': {'Black':0,'Blue':1,'Cyan':0,'Green':0,'Magenta':1,'Orange':1,'Yellow':1}}
+         
+         GlobalScale,DistBetweenSets,firstSetDistance,geometry = self.extract_TargetParameters(geometry)
 
-         valueSet1= 31451/GlobalScale;
+         valueSet1= firstSetDistance;
 
-         valueSet2= valueSet1+(125686/GlobalScale);
+         valueSet2= valueSet1+(DistBetweenSets);
 
-         valueSet3= valueSet2+(125686/GlobalScale);
+         valueSet3= valueSet2+(DistBetweenSets);
          
          if LoadTarget:
             ColorList=RawDataSuccess.iloc[:,4].unique().tolist()
@@ -219,9 +285,13 @@ class CalcC2C():
             MeregedDataAllMeanColor['Ink\Sets']=ColorList
             
             for key, value in colorDic.items():
-                MeregedDataAllMeanColor['Set #1 X'][self.get_key(colorDic,value)]= self.f('X',value,valueSet1)
-                MeregedDataAllMeanColor['Set #2 X'][self.get_key(colorDic,value)]= self.f('X',value,valueSet2)
-                MeregedDataAllMeanColor['Set #3 X'][self.get_key(colorDic,value)]= self.f('X',value,valueSet3)
+                MeregedDataAllMeanColor['Set #1 X'][self.get_key(colorDic,value)]= self.f(geometry,'X',value,valueSet1)
+                MeregedDataAllMeanColor['Set #2 X'][self.get_key(colorDic,value)]= self.f(geometry,'X',value,valueSet2)
+                MeregedDataAllMeanColor['Set #3 X'][self.get_key(colorDic,value)]= self.f(geometry,'X',value,valueSet3)
+            
+            # print(self.pthF)
+            sp=self.pthF.split('/')
+            MeregedDataAllMeanColor.to_csv(sp[0]+'\\'+sp[1]+'\\'+'MeregedDataAllMeanColor_fromTargt.csv')    
          else:
             MeregedDataAllMeanColor= self.LoadMeanColorPos();
             colorDic={}
@@ -336,11 +406,17 @@ class CalcC2C():
         #     colorDic[i]=cl
         
         #valueSet1= MeregedDataAllMeanColor['Set #1 X'][self.get_key(colorDic,'Cyan')]
-        valueSet1= 31451/GlobalScale;
+        geometry = {'X': {'Black':-1,'Blue':1,'Cyan':0,'Green':1,'Magenta':-1,'Orange':2,'Yellow':0},
+                    'Y': {'Black':0,'Blue':1,'Cyan':0,'Green':0,'Magenta':1,'Orange':1,'Yellow':1}}
+        
+        GlobalScale,DistBetweenSets,firstSetDistance,geometry = self.extract_TargetParameters(geometry)
 
-        valueSet2= valueSet1+(125686/GlobalScale);
+        
+        valueSet1= firstSetDistance;
 
-        valueSet3= valueSet2+(125686/GlobalScale);
+        valueSet2= valueSet1+(DistBetweenSets);
+
+        valueSet3= valueSet2+(DistBetweenSets);
         
         if LoadTarget:
             ColorList=RawDataSuccess.iloc[:,4].unique().tolist()
@@ -352,9 +428,12 @@ class CalcC2C():
             MeregedDataAllMeanColor['Ink\Sets']=ColorList
             
             for key, value in colorDic.items():
-                MeregedDataAllMeanColor['Set #1 X'][self.get_key(colorDic,value)]= self.f('X',value,valueSet1)
-                MeregedDataAllMeanColor['Set #2 X'][self.get_key(colorDic,value)]= self.f('X',value,valueSet2)
-                MeregedDataAllMeanColor['Set #3 X'][self.get_key(colorDic,value)]= self.f('X',value,valueSet3)
+                MeregedDataAllMeanColor['Set #1 X'][self.get_key(colorDic,value)]= self.f(geometry,'X',value,valueSet1)
+                MeregedDataAllMeanColor['Set #2 X'][self.get_key(colorDic,value)]= self.f(geometry,'X',value,valueSet2)
+                MeregedDataAllMeanColor['Set #3 X'][self.get_key(colorDic,value)]= self.f(geometry,'X',value,valueSet3)
+            # sp=self.pthF.split('/')
+            # MeregedDataAllMeanColor.to_csv(sp[0]+'\\'+sp[1]+'\\'+'MeregedDataAllMeanColor_fromTargt1.csv')    
+
         else:
             MeregedDataAllMeanColor= self.LoadMeanColorPos();
             colorDic={}
@@ -853,13 +932,16 @@ RawDataSuccess,flatNumberFailed,l1= CalcC2C(pthF+'/'+f ,side,fname,JobLength,Loa
 #             St3dataAllColors[str(j)]=0
 
 #return St1dataAllColors,St2dataAllColors,St3dataAllColors,indexNumberFailed;          
-        
 
+Lname=CalcC2C(pthF+'/'+f,side,'',JobLength,LoadTarget).fname.split('.');
+LLname=Lname[0].split('_');
+pthComp=CalcC2C(pthF+'/'+f,side,'',JobLength,LoadTarget).pthF.replace(CalcC2C(pthF+'/'+f,side,'',JobLength,LoadTarget).pthF.split('/')[len(CalcC2C(pthF+'/'+f,side,'',JobLength,LoadTarget).pthF.split('/'))-1],"")[:-1]
+   
+MeregedDataAllMeanColorRight = pd.read_csv(pthComp +'/'+'MeregedDataAllMeanColor_'+CalcC2C(pthF+'/'+f,side,'',JobLength,LoadTarget).side+'_Right.csv')    
+MeregedDataAllMeanColorLeft = pd.read_csv(pthComp +'/'+'MeregedDataAllMeanColor_'+CalcC2C(pthF+'/'+f,side,'',JobLength,LoadTarget).side+'_Left.csv')    
 
-
-
-     
-
+MeregedDataAllMeanColor = (MeregedDataAllMeanColorRight[['Set #1 X', 'Set #2 X', 'Set #3 X']]+MeregedDataAllMeanColorLeft[['Set #1 X', 'Set #2 X', 'Set #3 X']])/2
+MeregedDataAllMeanColor.insert(0, 'Ink\\Sets', list(MeregedDataAllMeanColorRight['Ink\\Sets']))           
 ############################## calc SCALE
 if Plot_Scale:
     side='Front';

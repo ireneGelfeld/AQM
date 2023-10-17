@@ -21,7 +21,9 @@ if MarkSetVersion==252:
     
     GlobalScale =  0.9983 # Drop3 simplex = 0.9976, Duplex = 0.9984 ,,,, Drop5 Simplex = 0.9953, Duplex = 0.9945 
     DistBetweenSets =  125686/GlobalScale; 
-    firstSetDistance=31053/GlobalScale; 
+    # firstSetDistance=31053/GlobalScale; 
+    firstSetDistance=0; 
+
 
 else:
 #For 201
@@ -230,12 +232,17 @@ class CalcC2C():
         
         indexGlobalScale = next((i for i, row in enumerate(AnalyzerVersion['Parameter']) if row == 'X Press Global Scaling'), -1)
         indexDistBetweenSets = next((i for i, row in enumerate(AnalyzerVersion['Parameter']) if row == 'Registration Distance Between Sets In Microns'), -1)
-        # indexfirstSetDistance = next((i for i, row in enumerate(AnalyzerVersion['Parameter']) if row == 'Registration Y Distance Between Patterns In MM'), -1)
+        indexfirstSetDistance = next((i for i, row in enumerate(AnalyzerVersion['Parameter']) if row == 'Registration Y Distance Between Patterns In MM'), -1)
 
         GlobalScale =  float(AnalyzerVersion['Value'][indexGlobalScale]) # Drop3 simplex = 0.9976, Duplex = 0.9984 ,,,, Drop5 Simplex = 0.9953, Duplex = 0.9945 
         DistBetweenSets =  int(AnalyzerVersion['Value'][indexDistBetweenSets]); 
-        # firstSetDistance=float(AnalyzerVersion['Value'][indexfirstSetDistance])*10000; 
-        firstSetDistance_val = firstSetDistance
+        if firstSetDistance:
+            firstSetDistance_val = firstSetDistance
+        else:
+            firstSetDistance_val=float(AnalyzerVersion['Value'][indexfirstSetDistance])*10000; 
+
+        # print('firstSetDistance_val '+str(firstSetDistance_val))
+        # print('firstSetDistance '+str(firstSetDistance))
 
 
         return GlobalScale,DistBetweenSets,firstSetDistance_val,geometry

@@ -11,14 +11,14 @@ Created on Wed Jun 16 16:30:46 2021
 # pio.renderers
 # pio.renderers.default='browser'
 ##############################################################################
-global DistBetweenSets,GlobalScale,PanelLengthInMM,JobLengthתcolor_combinations,FullColorList,JobLengthWave,MoveAveWave,MoveAveWaveScale,OBGfactor;
+global DistBetweenSets,GlobalScale,PanelLengthInMM,JobLengthתcolor_combinations,FullColorList,JobLengthWave,MoveAveWave,MoveAveWaveScale,OBGfactor,LoadTarget,colorID_aqm,geometry;
 
 # For setting the min job length for Change Wave plot- this parameter should be used for setting the allowble moving avarage- for example set JobLengthWave= 100, MoveAveWave=20;
 JobLengthWave=100;
 MoveAveWave=51;
 S_g_Degree=1;
 
-MoveAveWaveScale=200;
+MoveAveWaveScale=50;
 #For 252
 MarkSetVersion=252
 
@@ -33,16 +33,28 @@ if MarkSetVersion==252:
     
     GlobalScale = 0.9983 # Drop3 simplex = 0.9976, Duplex = 0.9984 ,,,, Drop5 Simplex = 0.9953, Duplex = 0.9945 
     DistBetweenSets =  125686/GlobalScale; 
-    
+    firstSetDistance=31053/GlobalScale; 
+
 else:
 #For 201
     GlobalScale = 0.9983
     DistBetweenSets =  102693; 
-    
+    firstSetDistance=31159;
+
+
+
+colorID_aqm={'Cyan':1,'Magenta':2,'Yellow':3,'Black':4,'Orange':5,'Blue':6,'Green':7}       
+# geometry = {'X': {'Black':-1,'Blue':1,'Cyan':0,'Green':1,'Magenta':-1,'Orange':2,'Yellow':0},
+#             'Y': {'Black':0,'Blue':1,'Cyan':0,'Green':0,'Magenta':1,'Orange':1,'Yellow':1}}
+
+
+geometry = {'X': {'Black':-1,'Blue':1,'Cyan':0,'Green':1,'Magenta':-1,'Orange':2,'Yellow':0},
+            'Y': {'Black':0,'Blue':1,'Cyan':0,'Green':0,'Magenta':1,'Orange':1,'Yellow':1}}
 
 PanelLengthInMM = 650;
 JobLength = 0;
 
+LoadTarget = 0 ; #True from targets in the AQM or False - from the tabel 
 
 #### Plots
 I2Splot=0 # Plot I2S 
@@ -276,6 +288,7 @@ class CalcC2C_AvrgOfAll(DispImagePlacment):
     def  __init__(self, pthF,fldrs,side,JobLength,PanelLengthInMM,pageSide): 
         super().__init__(pthF,fldrs,side,pageSide,JobLength)
         self.PanelLengthInMM = PanelLengthInMM;
+        self.colorDic= {}
   
     def LoadRawDataOLD(self,fname,f):
         RawData=pd.read_csv(self.pthF+f+'/'+self.side+'/'+'RawResults'+'/'+fname);
@@ -396,6 +409,7 @@ class CalcC2C_AvrgOfAll(DispImagePlacment):
         DataAllMeanColorSET3=DataAllMeanColorSET3.rename(index=colorDic)
         
         ln = len(RawDataSuccess['Set #1 X']);
+        self.colorDic=colorDic
         
         return DataAllMeanColorSET1,DataAllMeanColorSET2,DataAllMeanColorSET3,ln,colorDic;
     
@@ -408,7 +422,12 @@ class CalcC2C_AvrgOfAll(DispImagePlacment):
     def LoadMeanColorPos(self):
        
         # RecPath= pthComp[0]+'/'+pthComp[1]+'/'+pthComp[2]+'/'+pthComp[3]+'/'+pthComp[4]+'/'+pthComp[5]+'/'+pthComp[6]+'/'+pthComp[7]+'/'+pthComp[8];
-        MeregedDataAllMeanColor = pd.read_csv(self.pthF +'/'+'MeregedDataAllMeanColor_'+self.side+'_'+self.pageSide+'.csv')
+        MeregedDataAllMeanColorRight = pd.read_csv(self.pthF +'/'+'MeregedDataAllMeanColor_'+self.side+'_Right.csv')
+        MeregedDataAllMeanColorLeft = pd.read_csv(self.pthF +'/'+'MeregedDataAllMeanColor_'+self.side+'_Left.csv')
+        MeregedDataAllMeanColor = (MeregedDataAllMeanColorRight[['Set #1 X', 'Set #2 X', 'Set #3 X']]+MeregedDataAllMeanColorLeft[['Set #1 X', 'Set #2 X', 'Set #3 X']])/2
+        MeregedDataAllMeanColor.insert(0, 'Ink\\Sets', list(MeregedDataAllMeanColorRight['Ink\\Sets']))           
+
+        
         
         return MeregedDataAllMeanColor
     
@@ -416,7 +435,13 @@ class CalcC2C_AvrgOfAll(DispImagePlacment):
     def LoadMeanColorPos_PickSide(self,pageSide):
        
         # RecPath= pthComp[0]+'/'+pthComp[1]+'/'+pthComp[2]+'/'+pthComp[3]+'/'+pthComp[4]+'/'+pthComp[5]+'/'+pthComp[6]+'/'+pthComp[7]+'/'+pthComp[8];
-        MeregedDataAllMeanColor = pd.read_csv(self.pthF +'/'+'MeregedDataAllMeanColor_'+self.side+'_'+pageSide+'.csv')
+        # MeregedDataAllMeanColor = pd.read_csv(self.pthF +'/'+'MeregedDataAllMeanColor_'+self.side+'_'+pageSide+'.csv')
+        MeregedDataAllMeanColorRight = pd.read_csv(self.pthF +'/'+'MeregedDataAllMeanColor_'+self.side+'_Right.csv')
+        MeregedDataAllMeanColorLeft = pd.read_csv(self.pthF +'/'+'MeregedDataAllMeanColor_'+self.side+'_Left.csv')
+
+        MeregedDataAllMeanColor = (MeregedDataAllMeanColorRight[['Set #1 X', 'Set #2 X', 'Set #3 X']]+MeregedDataAllMeanColorLeft[['Set #1 X', 'Set #2 X', 'Set #3 X']])/2
+        MeregedDataAllMeanColor.insert(0, 'Ink\\Sets', list(MeregedDataAllMeanColorRight['Ink\\Sets']))           
+        
         
         return MeregedDataAllMeanColor
     
@@ -443,14 +468,16 @@ class CalcC2C_AvrgOfAll(DispImagePlacment):
     def CalcScaleFromTarget(self):
          
          
-         
-         MeregedDataAllMeanColor= self.LoadMeanColorPos();
-         
-         colorDic={}
-         for i,cl in enumerate(MeregedDataAllMeanColor['Ink\Sets']):
-             colorDic[i]=cl
-         
-         valueSet1= MeregedDataAllMeanColor['Set #1 X'][self.get_key(colorDic,'Cyan')]
+         if not LoadTarget:
+             MeregedDataAllMeanColor= self.LoadMeanColorPos();
+             
+             colorDic={}
+             for i,cl in enumerate(MeregedDataAllMeanColor['Ink\Sets']):
+                 colorDic[i]=cl
+             
+             valueSet1= MeregedDataAllMeanColor['Set #1 X'][self.get_key(colorDic,'Cyan')]
+         else:
+            valueSet1=  firstSetDistance
 
          valueSet2= valueSet1+(DistBetweenSets/GlobalScale);
 
@@ -986,6 +1013,8 @@ class CalcC2C_AvrgOfAll(DispImagePlacment):
             
         return WaveChangeList,indexJobNameDic,WaveJobPrintedDic;
     
+
+    
     def CreatWaveBlankwtDic(self,k,i,Inx,Dic,RefDic,ValidSortedJobList):
         
             if len(Inx)>0:
@@ -1148,6 +1177,8 @@ class CalcC2C_AvrgOfAll(DispImagePlacment):
         indexJobNameDicRev={}
         for i,f in enumerate(ValidSortedJobListWithWave):
             try:
+                
+                
  
                 C2Creg,indexNumberFailed = self.CalcC2CSingleSideColorPair(self.CheckForAI('Left',f),self.CheckForAI('Right',f),f,DataAllMeanColorSET1Left,DataAllMeanColorSET2Left,DataAllMeanColorSET3Left,DataAllMeanColorSET1Right,DataAllMeanColorSET2Right,DataAllMeanColorSET3Right)
                 WaveChangeList=WaveChangeList+C2Creg
@@ -1183,6 +1214,140 @@ class CalcC2C_AvrgOfAll(DispImagePlacment):
         
         
         return WaveChangeList,indexJobNameDic,WaveJobPrintedDic,BlnketReplacmentDic;
+    
+    def CreateWaveChangeDataWithBlanketRep_v3_withTraget(self,JobLengthWave,BlanketRepList):
+        
+        WaveChangeList=[];
+        indexJobNameDic={}
+        indexJobNameDicRev={}
+
+        # DataAllMeanColorSET1Left,DataAllMeanColorSET2Left,DataAllMeanColorSET3Left,colorDic = self.CalcMeanByColorForAllJobs('Registration_Left.csv')
+        # DataAllMeanColorSET1Right,DataAllMeanColorSET2Right,DataAllMeanColorSET3Right,colorDic = self.CalcMeanByColorForAllJobs('Registration_Right.csv')
+
+
+
+        if not LoadTarget:
+            MeregedDataAllMeanColorLeft= self.LoadMeanColorPos_PickSide('Left');
+            MeregedDataAllMeanColorRight= self.LoadMeanColorPos_PickSide('Right');
+            
+            
+            colorDic={}
+            
+            for i in MeregedDataAllMeanColorLeft.index:
+               colorDic[i]= MeregedDataAllMeanColorLeft['Ink\Sets'][i]
+            
+            DataAllMeanColorSET1Left=MeregedDataAllMeanColorLeft[['Ink\Sets','Set #1 X']].rename(index=colorDic)
+            DataAllMeanColorSET2Left=MeregedDataAllMeanColorLeft[['Ink\Sets','Set #2 X']].rename(index=colorDic)
+            DataAllMeanColorSET3Left=MeregedDataAllMeanColorLeft[['Ink\Sets','Set #3 X']].rename(index=colorDic)
+    
+    
+            DataAllMeanColorSET1Right=MeregedDataAllMeanColorRight[['Ink\Sets','Set #1 X']].rename(index=colorDic)
+            DataAllMeanColorSET2Right=MeregedDataAllMeanColorRight[['Ink\Sets','Set #2 X']].rename(index=colorDic)
+            DataAllMeanColorSET3Right=MeregedDataAllMeanColorRight[['Ink\Sets','Set #3 X']].rename(index=colorDic)
+
+        # MeregedDataAllMeanColor= self.LoadMeanColorPos();
+        
+        
+
+        ValidSortedJobListWithWave=[]
+
+        for f in self.fldrs:
+            vlid,lngth=self.CheckIfFileValid_forWave(f,JobLengthWave)
+            if vlid or ('WaveCalibration' in f):
+                    ValidSortedJobListWithWave.append(f)
+                    
+        ValidSortedJobListWithWave= list(self.SortJobsByTime(ValidSortedJobListWithWave + BlanketRepList).values())
+            
+        WaveFilesInx=self.find_indexes_with_substring(ValidSortedJobListWithWave, 'WaveCalibration')
+        BlanketRepInx=self.find_indexes_with_substring(ValidSortedJobListWithWave, 'BlanketReplacment')
+
+        WaveJobPrintedDic={}
+        BlnketReplacmentDic={}
+
+
+        k=0
+        kb=0
+        inxForW=0
+        indexJobNameDicRev={}
+        for i,f in enumerate(ValidSortedJobListWithWave):
+            try:
+                
+                if LoadTarget:
+                    DataAllMeanColorSET1Right,DataAllMeanColorSET2Right,DataAllMeanColorSET3Right,colorDic=self.CalcMaenByColor_FromTarget()
+                    DataAllMeanColorSET1Left=DataAllMeanColorSET1Right
+                    DataAllMeanColorSET2Left=DataAllMeanColorSET2Right
+                    DataAllMeanColorSET3Left=DataAllMeanColorSET3Right
+ 
+                C2Creg,indexNumberFailed = self.CalcC2CSingleSideColorPair(self.CheckForAI('Left',f),self.CheckForAI('Right',f),f,DataAllMeanColorSET1Left,DataAllMeanColorSET2Left,DataAllMeanColorSET3Left,DataAllMeanColorSET1Right,DataAllMeanColorSET2Right,DataAllMeanColorSET3Right)
+                WaveChangeList=WaveChangeList+C2Creg
+                indexJobNameDic[len(WaveChangeList)-1]=[f,lngth]
+                indexJobNameDicRev[f]=len(WaveChangeList)-1
+                
+                # k,WaveJobPrintedDic= self.CreatWaveBlankwtDic(k,i,WaveFilesInx,WaveJobPrintedDic,indexJobNameDic,ValidSortedJobListWithWave)
+     
+   
+            except:
+                    continue;
+            
+        WaveJobPrintedDic={}
+        BlnketReplacmentDic={}   
+        
+        WaveJobPrintedDic= self.CreateWaveBlanketRep_Dic(WaveFilesInx, WaveJobPrintedDic, ValidSortedJobListWithWave,indexJobNameDicRev)
+        
+        BlnketReplacmentDic= self.CreateWaveBlanketRep_Dic(BlanketRepInx, BlnketReplacmentDic, ValidSortedJobListWithWave,indexJobNameDicRev)
+        
+        # offset=0
+        # for inx in WaveFilesInx:
+        #     n=1;
+        #     offset=0
+        #     while 1:
+        #         if  ValidSortedJobListWithWave[inx+n] in indexJobNameDicRev.keys():
+        #             if  indexJobNameDic[ValidSortedJobListWithWave[inx+n]]+offset in WaveJobPrintedDic.keys()::
+        #                 offset=offset+1
+        #                 continue;
+        #             WaveJobPrintedDic[indexJobNameDic[ValidSortedJobListWithWave[inx+n]]+offset]=ValidSortedJobListWithWave[inx]
+        #             break;
+        #         else:
+        #             n=n+1;
+        
+        
+        return WaveChangeList,indexJobNameDic,WaveJobPrintedDic,BlnketReplacmentDic;
+    
+    def CreateWaveBlanketRep_Dic_v1(self,FilesInx, PrintedDic, ValidSortedJobListWithWave,indexJobNameDicRev):
+        
+        offset=0
+        n=1;
+
+        for inx in FilesInx:
+            n=1;
+            offset=0
+            try:
+                Lkeys= list(indexJobNameDicRev.keys())
+                while 1:
+                    if  ValidSortedJobListWithWave[inx+n] in Lkeys:
+                        
+                        if  indexJobNameDicRev[ValidSortedJobListWithWave[inx+n]]+offset in PrintedDic.keys():
+                            offset=offset+1
+                            inxL=Lkeys.index(ValidSortedJobListWithWave[inx+n]+offset)
+
+                            continue;
+                        inxL=Lkeys.index(ValidSortedJobListWithWave[inx+n])
+
+                        if inxL == 0:
+                           val = offset
+                        else:
+                           val = Lkeys[inxL-1] + offset
+                        PrintedDic[val]=[ValidSortedJobListWithWave[inx],inx]
+                        break;
+                    else:
+                        n=n+1;
+                        
+                
+            except:
+                continue
+            
+                        
+        return PrintedDic
     
     def CreateWaveBlanketRep_Dic(self,FilesInx, PrintedDic, ValidSortedJobListWithWave,indexJobNameDicRev):
         
@@ -1372,19 +1537,120 @@ class CalcC2C_AvrgOfAll(DispImagePlacment):
             vlid=False;
             
         return vlid,lngth;
+    
+    def ff(self,geometry,XYS,ink,value):
+        # geometry = {'X': {'Black':0,'Blue':2,'Cyan':1,'Green':2,'Magenta':0,'Orange':3,'Yellow':1},
+        #             'Y': {'Black':1,'Blue':0,'Cyan':1,'Green':1,'Magenta':0,'Orange':0,'Yellow':0}}
+        # geometry = {'X': {'Black':0,'Blue':2,'Cyan':1,'Green':2,'Magenta':0,'Orange':3,'Yellow':1},
+        #             'Y': {'Black':0,'Blue':1,'Cyan':0,'Green':0,'Magenta':1,'Orange':1,'Yellow':1}}
+        
+        # geometry = {'X': {'Black':-1,'Blue':1,'Cyan':0,'Green':1,'Magenta':-1,'Orange':2,'Yellow':0},
+        #             'Y': {'Black':0,'Blue':1,'Cyan':0,'Green':0,'Magenta':1,'Orange':1,'Yellow':1}}
+        
+        # geometry = {'X': {'Black':-1,'Cyan':0,'Yellow':0,'Magenta':-1},
+        #             'Y': {'Black':0,'Cyan':0,'Yellow':-1,'Magenta':-1}}
+        target_distance = {'X':144.4,'Y':64} 
+        return value + (geometry[XYS][ink]) * target_distance[XYS] * (21.16666666 )
+    
+    def extract_TargetParameters(self,geometry):
+        
+        
+        zip_file_path = self.pthF
+        subdir_name_in_zip = self.side+'/'+'RawResults';
+        file_name_in_zip = 'AnalyzerVersion.csv';
+
+        AnalyzerVersion=self.GetFileFromZip(zip_file_path, subdir_name_in_zip, file_name_in_zip);
+        
+        indexC2C = next((i for i, row in enumerate(AnalyzerVersion['Parameter']) if row == 'C2C ColorId Mapping'), -1)
+        
+        indexRef = next((i for i, row in enumerate(AnalyzerVersion['Parameter']) if row == 'Relative Ink Name'), -1)
+        
+        C2C_colorId= [int(num) for num in AnalyzerVersion['Value'][indexC2C].split('-')]
+        
+        index = C2C_colorId.index(colorID_aqm[AnalyzerVersion['Value'][indexRef]])
+        
+        for i in range(7):
+            
+           a= i-index 
+           if a < -1:
+               geometry['X'][self.get_key(colorID_aqm,C2C_colorId[i])]=-1
+            
+           if a ==0 or a == -1:
+               geometry['X'][self.get_key(colorID_aqm,C2C_colorId[i])]=0
+               
+           if a == 1 or a == 2:
+               geometry['X'][self.get_key(colorID_aqm,C2C_colorId[i])]=1
+               
+           if a > 2:
+                geometry['X'][self.get_key(colorID_aqm,C2C_colorId[i])]=2
+
+
+        
+        indexGlobalScale = next((i for i, row in enumerate(AnalyzerVersion['Parameter']) if row == 'X Press Global Scaling'), -1)
+        indexDistBetweenSets = next((i for i, row in enumerate(AnalyzerVersion['Parameter']) if row == 'Registration Distance Between Sets In Microns'), -1)
+        # indexfirstSetDistance = next((i for i, row in enumerate(AnalyzerVersion['Parameter']) if row == 'Registration Y Distance Between Patterns In MM'), -1)
+
+        GlobalScale =  float(AnalyzerVersion['Value'][indexGlobalScale]) # Drop3 simplex = 0.9976, Duplex = 0.9984 ,,,, Drop5 Simplex = 0.9953, Duplex = 0.9945 
+        DistBetweenSets =  int(AnalyzerVersion['Value'][indexDistBetweenSets]); 
+        # firstSetDistance=float(AnalyzerVersion['Value'][indexfirstSetDistance])*10000; 
+        firstSetDistance_val = firstSetDistance
+
+
+        return GlobalScale,DistBetweenSets,firstSetDistance_val,geometry
+    def CalcMaenByColor_FromTarget(self):
+        
+         geometry = {'X': {'Black':-1,'Blue':1,'Cyan':0,'Green':1,'Magenta':-1,'Orange':2,'Yellow':0},
+                     'Y': {'Black':0,'Blue':1,'Cyan':0,'Green':0,'Magenta':1,'Orange':1,'Yellow':1}}
+         
+         GlobalScale,DistBetweenSets,firstSetDistance,geometry = self.extract_TargetParameters(geometry)
+
+         valueSet1= firstSetDistance;
+
+         valueSet2= valueSet1+(DistBetweenSets);
+
+         valueSet3= valueSet2+(DistBetweenSets);
+         
+         
+         ColorList=RawDataSuccess.iloc[:,4].unique().tolist()
+         colorDic={}
+         for i,cl in enumerate(ColorList):
+            colorDic[i]=cl            
+         col=['Ink\Sets', 'Set #1 X', 'Set #2 X', 'Set #3 X'];            
+         MeregedDataAllMeanColor= pd.DataFrame(columns=col)            
+         MeregedDataAllMeanColor['Ink\Sets']=ColorList
+        
+         for key, value in colorDic.items():
+            MeregedDataAllMeanColor['Set #1 X'][self.get_key(colorDic,value)]= self.ff(geometry,'X',value,valueSet1)
+            MeregedDataAllMeanColor['Set #2 X'][self.get_key(colorDic,value)]= self.ff(geometry,'X',value,valueSet2)
+            MeregedDataAllMeanColor['Set #3 X'][self.get_key(colorDic,value)]= self.ff(geometry,'X',value,valueSet3)
+            
+            # print(self.pthF)
+            sp=self.pthF.split('/')
+            MeregedDataAllMeanColor.to_csv(sp[0]+'\\'+sp[1]+'\\'+'MeregedDataAllMeanColor_fromTargt.csv')    
+        
+         DataAllMeanColorSET1=MeregedDataAllMeanColor[['Set #1 X','Ink\Sets']].rename(index=colorDic);
+         DataAllMeanColorSET2=MeregedDataAllMeanColor[['Set #2 X','Ink\Sets']].rename(index=colorDic);
+         DataAllMeanColorSET3=MeregedDataAllMeanColor[['Set #3 X','Ink\Sets']].rename(index=colorDic);
+        
+         return DataAllMeanColorSET1,DataAllMeanColorSET2,DataAllMeanColorSET3,colorDic
 
     def CalcC2CregForLeftRight(self):
         ImagePlacement_pp=pd.DataFrame()
         flatNumberFailed_pp=pd.DataFrame();
         
-        
-        DataAllMeanColorSET1left,DataAllMeanColorSET2left,DataAllMeanColorSET3left,colorDic = self.CalcMeanByColorForAllJobs('Left')
-        DataAllMeanColorSET1right,DataAllMeanColorSET2right,DataAllMeanColorSET3right,colorDic = self.CalcMeanByColorForAllJobs('Right')
+        if not LoadTarget:
+            DataAllMeanColorSET1left,DataAllMeanColorSET2left,DataAllMeanColorSET3left,colorDic = self.CalcMeanByColorForAllJobs('Left')
+            DataAllMeanColorSET1right,DataAllMeanColorSET2right,DataAllMeanColorSET3right,colorDic = self.CalcMeanByColorForAllJobs('Right')
         
         for f in self.fldrs:
             stP=pd.DataFrame();
             flatNumberFailed=pd.DataFrame();
             try:
+                if LoadTarget:
+                    DataAllMeanColorSET1left,DataAllMeanColorSET2left,DataAllMeanColorSET3left,colorDic = self.CalcMaenByColor_FromTarget()
+                    DataAllMeanColorSET1right,DataAllMeanColorSET2right,DataAllMeanColorSET3right,colorDic = self.CalcMaenByColor_FromTarget()
+                    
+                    
                 if self.CheckIfFileValid(f):
                     C2CregLeft,indexNumberFailedLeft=self.CalcC2CSingleSide(self.CheckForAI('Left',f),f,DataAllMeanColorSET1left,DataAllMeanColorSET2left,DataAllMeanColorSET3left);
                     C2CregRight,indexNumberFailedRight=self.CalcC2CSingleSide(self.CheckForAI('Right',f),f,DataAllMeanColorSET1right,DataAllMeanColorSET2right,DataAllMeanColorSET3right);
@@ -2047,6 +2313,15 @@ try:
 except:
     1
 
+
+
+
+
+
+
+###################################
+###################################
+
 ###################################################################################################################
 
 
@@ -2175,12 +2450,12 @@ if WaveChangePlot:
 # # else:
 #     WaveChangeListFRONT,indexJobNameDicFRONT,WaveJobPrintedDicFRONT,BlnketReplacmentDic=CalcC2C_AvrgOfAll(pthF,folder,'Front',JobLength,PanelLengthInMM,'Left').CreateWaveChangeDataWithBlanketRep_v2(JobLengthWave, BlanketRepList);
 
-    WaveChangeListFRONT,indexJobNameDicFRONT,WaveJobPrintedDicFRONT,BlnketReplacmentDic=CalcC2C_AvrgOfAll(pthF,folder,'Front',JobLength,PanelLengthInMM,'Left').CreateWaveChangeDataWithBlanketRep_v3(JobLengthWave, BlanketRepList);
+    WaveChangeListFRONT,indexJobNameDicFRONT,WaveJobPrintedDicFRONT,BlnketReplacmentDic=CalcC2C_AvrgOfAll(pthF,folder,'Front',JobLength,PanelLengthInMM,'Left').CreateWaveChangeDataWithBlanketRep_v3_withTraget(JobLengthWave, BlanketRepList);
 
     WaveChangeDF_FRONT=pd.DataFrame(WaveChangeListFRONT)
     
     try:
-       WaveChangeListBACK,indexJobNameDicBACK,WaveJobPrintedDicBACK,BlnketReplacmentDic=CalcC2C_AvrgOfAll(pthF,folder,'Back',JobLength,PanelLengthInMM,'Left').CreateWaveChangeDataWithBlanketRep_v3(JobLengthWave,BlanketRepList);
+       WaveChangeListBACK,indexJobNameDicBACK,WaveJobPrintedDicBACK,BlnketReplacmentDic=CalcC2C_AvrgOfAll(pthF,folder,'Back',JobLength,PanelLengthInMM,'Left').CreateWaveChangeDataWithBlanketRep_v3_withTraget(JobLengthWave,BlanketRepList);
        WaveChangeDF_BACK=pd.DataFrame(WaveChangeListBACK)
     
     except:

@@ -11,38 +11,78 @@ import numpy as np
 from plotly.offline import download_plotlyjs, init_notebook_mode,  plot
 import os
 ###############################################################
-global PlotRead,PlotWrite,plot_Bar2show
+global PlotRead,PlotWrite,plot_Bar2show,Title_dictionary
 
 PlotRead = 1
 PlotWrite= 0
 plot_Bar2show= [2,3,4,5,6,7,8]
     
-
+Title_dictionary = {
+    "Read table/write table": 0,
+    "Date time": 1,
+    "Bar Id": 2,
+    "Press speed": 3,
+    "Is auto calibration": 4,
+    "Num of revolutions": 5,
+    "Calibration weight": 6,
+    "Sector 1": 7,
+    "Sector 2": 8,
+    "Sector 3": 9,
+    "Sector 4": 10,
+    "Sector 5": 11,
+    "Sector 6": 12,
+    "Sector 7": 13,
+    "Sector 8": 14,
+    "Sector 9": 15,
+    "Sector 10": 16,
+    "Sector 11": 17,
+    "Sector 12": 18,
+    "Sector 13": 19,
+    "Sector 14": 20,
+    "Sector 15": 21,
+    "Sector 16": 22,
+    "Sector 17": 23,
+    "Sector 18": 24,
+    "Sector 19": 25,
+    "Sector 20": 26,
+    "Sector 21": 27,
+    "Sector 22": 28,
+    "Sector 23": 29,
+    "Sector 24": 30,
+    "Sector 25": 31,
+    "Sector 26": 32,
+    "Sector 27": 33,
+    "Sector 28": 34,
+    "Sector 29": 35,
+    "Sector 30": 36,
+    "Sector 31": 37,
+    "Sector 32": 38
+}
 
 class DataVisualization:
     def __init__(self, file_path):
         self.data = pd.read_csv(file_path,index_col=False)
 
     def filter_by_write_table(self):
-        self.filtered_data_write = self.data[self.data['Read table/write table'] == 'Write table'].reset_index(drop=True)
-        self.filtered_data_read = self.data[self.data['Read table/write table'] == 'Read table'].reset_index(drop=True)
+        self.filtered_data_write = self.data[self.data.iloc[:, Title_dictionary['Read table/write table']] == 'Write table'].reset_index(drop=True)
+        self.filtered_data_read = self.data[self.data.iloc[:, Title_dictionary['Read table/write table']] == 'Read table'].reset_index(drop=True)
         
 
     def create_dataframes_by_bar_id(self):
-        self.unique_bar_ids_write = self.filtered_data_write['Bar Id'].unique()
-        self.dataframes_write = {bar_id: self.filtered_data_write[self.filtered_data_write['Bar Id'] == bar_id].reset_index(drop=True) for bar_id in self.unique_bar_ids_write}
-        self.unique_bar_ids_read= self.filtered_data_read['Bar Id'].unique()
-        self.dataframes_read = {bar_id: self.filtered_data_read[self.filtered_data_read['Bar Id'] == bar_id].reset_index(drop=True) for bar_id in self.unique_bar_ids_read}
+        self.unique_bar_ids_write = self.filtered_data_write.iloc[:, Title_dictionary['Bar Id']].unique()
+        self.dataframes_write = {bar_id: self.filtered_data_write[self.filtered_data_write.iloc[:, Title_dictionary['Bar Id']] == bar_id].reset_index(drop=True) for bar_id in self.unique_bar_ids_write}
+        self.unique_bar_ids_read= self.filtered_data_read.iloc[:, Title_dictionary['Bar Id']].unique()
+        self.dataframes_read = {bar_id: self.filtered_data_read[self.filtered_data_read.iloc[:, Title_dictionary['Bar Id']] == bar_id].reset_index(drop=True) for bar_id in self.unique_bar_ids_read}
 
     def plot_data(self, color_list,colorListCode,plotTitle):
         fig = go.Figure()
         
         for index, row in self.data.iterrows():
-            date_time = row[' Date time']
-            bar_id = row['Bar Id']
+            date_time = row[Title_dictionary['Date time']]
+            bar_id = row[Title_dictionary['Bar Id']]
             if not(bar_id in plot_Bar2show):
                 continue;
-            read_write= row['Read table/write table']
+            read_write= row[Title_dictionary['Read table/write table']]
             if read_write == 'Write table' and not PlotWrite:
                 continue;
             if read_write == 'Read table' and not PlotRead:

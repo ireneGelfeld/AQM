@@ -213,7 +213,7 @@ class CalcC2C():
         
         index = C2C_colorId.index(colorID_aqm[AnalyzerVersion['Value'][indexRef]])
         
-        for i in range(7):
+        for i in range(len(C2C_colorId)):
             
            a= i-index 
            if a < -1:

@@ -22,7 +22,7 @@ if MarkSetVersion==252:
     GlobalScale =  0.9983 # Drop3 simplex = 0.9976, Duplex = 0.9984 ,,,, Drop5 Simplex = 0.9953, Duplex = 0.9945 
     DistBetweenSets =  125686/GlobalScale; 
     # firstSetDistance=31053/GlobalScale; 
-    firstSetDistance=0; 
+    firstSetDistance=0; # if value = 0 --Take automatic from logfile, otherwize need to write the value (31053)
 
 
 else:

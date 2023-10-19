@@ -306,8 +306,8 @@ class CalcC2C():
                 MeregedDataAllMeanColor['Set #3 X'][self.get_key(colorDic,value)]= self.f(geometry,'X',value,valueSet3)
             
             # print(self.pthF)
-            sp=self.pthF.split('/')
-            MeregedDataAllMeanColor.to_csv(sp[0]+'\\'+sp[1]+'\\'+'MeregedDataAllMeanColor_fromTargt.csv')    
+            # sp=self.pthF.split('/')
+            # MeregedDataAllMeanColor.to_csv(sp[0]+'\\'+sp[1]+'\\'+'MeregedDataAllMeanColor_fromTargt.csv')    
          else:
             MeregedDataAllMeanColor= self.LoadMeanColorPos();
             colorDic={}
@@ -457,8 +457,8 @@ class CalcC2C():
                 MeregedDataAllMeanColor['Set #1 X'][self.get_key(colorDic,value)]= self.f(geometry,'X',value,valueSet1)
                 MeregedDataAllMeanColor['Set #2 X'][self.get_key(colorDic,value)]= self.f(geometry,'X',value,valueSet2)
                 MeregedDataAllMeanColor['Set #3 X'][self.get_key(colorDic,value)]= self.f(geometry,'X',value,valueSet3)
-            sp=self.pthF.split('/')
-            MeregedDataAllMeanColor.to_csv(sp[0]+'\\'+sp[1]+'\\'+'MeregedDataAllMeanColor_fromTargt1.csv')    
+            # sp=self.pthF.split('/')
+            # MeregedDataAllMeanColor.to_csv(sp[0]+'\\'+sp[1]+'\\'+'MeregedDataAllMeanColor_fromTargt1.csv')    
 
         else:
             MeregedDataAllMeanColor= self.LoadMeanColorPos();

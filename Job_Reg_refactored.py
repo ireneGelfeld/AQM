@@ -20,9 +20,9 @@ if MarkSetVersion==252:
 
     
     GlobalScale =  0.9983 # Drop3 simplex = 0.9976, Duplex = 0.9984 ,,,, Drop5 Simplex = 0.9953, Duplex = 0.9945 
-    DistBetweenSets =  125686/GlobalScale; 
+    DistBetweenSets =  125686;
     # firstSetDistance=31053/GlobalScale; 
-    firstSetDistance=0; # if value = 0 --Take automatic from logfile, otherwize need to write the value (31053)
+    firstSetDistance=31053; # if value = 0 --Take automatic from logfile, otherwize need to write the value (31053)
 
 
 else:
@@ -236,15 +236,14 @@ class CalcC2C():
 
         GlobalScale =  float(AnalyzerVersion['Value'][indexGlobalScale]) # Drop3 simplex = 0.9976, Duplex = 0.9984 ,,,, Drop5 Simplex = 0.9953, Duplex = 0.9945 
         DistBetweenSets =  int(AnalyzerVersion['Value'][indexDistBetweenSets]); 
-        if firstSetDistance:
-            firstSetDistance_val = firstSetDistance
-        else:
-            firstSetDistance_val=float(AnalyzerVersion['Value'][indexfirstSetDistance])*10000; 
+        # if firstSetDistance:
+        #     firstSetDistance_val = firstSetDistance
+        # else:
+        #     firstSetDistance_val=float(AnalyzerVersion['Value'][indexfirstSetDistance])*10000; 
+        
+        firstSetDistance_val=float(AnalyzerVersion['Value'][indexfirstSetDistance])*10000; 
 
-        # print('firstSetDistance_val '+str(firstSetDistance_val))
-        # print('firstSetDistance '+str(firstSetDistance))
-
-
+   
         return GlobalScale,DistBetweenSets,firstSetDistance_val,geometry
         
         
@@ -274,9 +273,19 @@ class CalcC2C():
          geometry = {'X': {'Black':-1,'Blue':1,'Cyan':0,'Green':1,'Magenta':-1,'Orange':2,'Yellow':0},
                      'Y': {'Black':0,'Blue':1,'Cyan':0,'Green':0,'Magenta':1,'Orange':1,'Yellow':1}}
          
-         GlobalScale,DistBetweenSets,firstSetDistance,geometry = self.extract_TargetParameters(geometry)
+         GlobalScale,DistBetweenSets,firstSetDistance_val,geometry = self.extract_TargetParameters(geometry)
+         
+         if firstSetDistance:
+             firstSetDistance_val = firstSetDistance /GlobalScale
 
-         valueSet1= firstSetDistance;
+         print('firstSetDistance_val '+str(firstSetDistance_val))
+         print('firstSetDistance '+str(firstSetDistance))
+
+         print('GlobalScale '+str(GlobalScale))
+         print('DistBetweenSets '+str(DistBetweenSets))
+
+
+         valueSet1= firstSetDistance_val;
 
          valueSet2= valueSet1+(DistBetweenSets);
 
@@ -416,10 +425,20 @@ class CalcC2C():
         geometry = {'X': {'Black':-1,'Blue':1,'Cyan':0,'Green':1,'Magenta':-1,'Orange':2,'Yellow':0},
                     'Y': {'Black':0,'Blue':1,'Cyan':0,'Green':0,'Magenta':1,'Orange':1,'Yellow':1}}
         
-        GlobalScale,DistBetweenSets,firstSetDistance,geometry = self.extract_TargetParameters(geometry)
+        GlobalScale,DistBetweenSets,firstSetDistance_val,geometry = self.extract_TargetParameters(geometry)
 
+        if firstSetDistance:
+            firstSetDistance_val = firstSetDistance /GlobalScale
+            
         
-        valueSet1= firstSetDistance;
+        print('firstSetDistance_val '+str(firstSetDistance_val))
+        print('firstSetDistance '+str(firstSetDistance))
+
+        print('GlobalScale '+str(GlobalScale))
+        print('DistBetweenSets '+str(DistBetweenSets))
+        
+        
+        valueSet1= firstSetDistance_val;
 
         valueSet2= valueSet1+(DistBetweenSets);
 
@@ -438,8 +457,8 @@ class CalcC2C():
                 MeregedDataAllMeanColor['Set #1 X'][self.get_key(colorDic,value)]= self.f(geometry,'X',value,valueSet1)
                 MeregedDataAllMeanColor['Set #2 X'][self.get_key(colorDic,value)]= self.f(geometry,'X',value,valueSet2)
                 MeregedDataAllMeanColor['Set #3 X'][self.get_key(colorDic,value)]= self.f(geometry,'X',value,valueSet3)
-            # sp=self.pthF.split('/')
-            # MeregedDataAllMeanColor.to_csv(sp[0]+'\\'+sp[1]+'\\'+'MeregedDataAllMeanColor_fromTargt1.csv')    
+            sp=self.pthF.split('/')
+            MeregedDataAllMeanColor.to_csv(sp[0]+'\\'+sp[1]+'\\'+'MeregedDataAllMeanColor_fromTargt1.csv')    
 
         else:
             MeregedDataAllMeanColor= self.LoadMeanColorPos();

@@ -1001,7 +1001,9 @@ def Color_To_Black_4allPanel(ClrDF_fromTargetS_goly,Color_Black_Sgoly_allPanels,
         Color_Black_Sgoly_allPanels[i]=pd.concat([Color_Black_Sgoly_allPanels[i], Color_Black_Sgoly[i]])
 
     return Color_Black_Sgoly_allPanels
-    
+
+
+
 ##############################################################################################################
 ##############################################################################################################
 ##############################################################################################################
@@ -1029,11 +1031,13 @@ sInputListSORTED=[]
 for ll in  sorted_indices_list:
     sInputListSORTED.append(sInputList[ll])
     
-Pnl = sInputListSORTED[2]
+Pnl = sInputListSORTED[0]
 
 
+colorInUseName=['Magenta','Yellow','Blue','Orange','Cyan','Green','Black']
 
-colorInUseName=['Magenta','Yellow','Cyan','Black']
+
+# colorInUseName=['Magenta','Yellow','Cyan','Black']
 colorInUseNum=[ColorDicNum[itm] for itm in colorInUseName]
 
 # sInputListL=[sInputList[0]]
@@ -1136,8 +1140,8 @@ for Pnl in sInputListSORTED:
         
     C2Cmat_allPanels= pd.concat([C2Cmat_allPanels, C2Cmat])  
     
-    RefCl='Cyan'
-    Cyan_Black_Sgoly_allPanels=Color_To_Black_4allPanel(ClrDF_fromTargetS_goly,Cyan_Black_Sgoly_allPanels,RefCl,colorInUseName)
+    RefC01='Blue'
+    Cyan_Black_Sgoly_allPanels=Color_To_Black_4allPanel(ClrDF_fromTargetS_goly,Cyan_Black_Sgoly_allPanels,RefC01,colorInUseName)
     # Cyan_Black_Sgoly={};
     # RefCl='Cyan'
     # for i in range(3):
@@ -1149,8 +1153,10 @@ for Pnl in sInputListSORTED:
     #     Cyan_Black_Sgoly_allPanels[i]=pd.concat([Cyan_Black_Sgoly_allPanels[i], Cyan_Black_Sgoly[i]])
     
     
-    RefCl='Magenta'
-    Color_Black_Sgoly_allPanels=Color_To_Black_4allPanel(ClrDF_fromTargetS_goly,Color_Black_Sgoly_allPanels,RefCl,colorInUseName)
+    # RefCl='Magenta'
+    RefCl11='Magenta'
+
+    Color_Black_Sgoly_allPanels=Color_To_Black_4allPanel(ClrDF_fromTargetS_goly,Color_Black_Sgoly_allPanels,RefCl11,colorInUseName)
    
     
     
@@ -1187,7 +1193,7 @@ with open(path_ClrDF_fromTargetS_goly, 'wb') as f:
 
 
 
-
+Side2Side=ClrDF_fromTargetS_goly_allPanels[0]-ClrDF_fromTargetS_goly_allPanels[2]
 
 # file_path = r'D:\BTDencoder\B2\04092026_poxy\ClrDF_fromTargetS_goly_allPanels.pkl'
 
@@ -1256,6 +1262,63 @@ with open(path_ClrDF_fromTargetS_goly, 'wb') as f:
 # ClrDF_fromTarget,ClrDF_fromTargetS_goly,dymeanList,yTargetDF=Circles(sInput).calcDiffernceFromeTarget(ClrDF_raw[2])
 ##################################################################
 
+db= Side2Side;
+# RefCl='Cyan'
+
+PlotTitle='Side_2_Side'
+
+fileName=PlotTitle+'.html'
+
+##################################################################
+ymax=100
+
+fig = go.Figure()
+
+for c in db.columns:  
+   
+    lineColor=c
+        
+    if lineColor=='Yellow':
+        lineColor='gold';
+        
+    fig.add_trace(go.Scatter(y=list(db[c]*pixSize), line=dict(color=lineColor, dash='solid')  ,name=c))
+        
+
+ 
+fig= Plot_Panel_number(fig,ymax,indexPanelNameDic)
+ 
+
+titleColor=c.split('-')[0]
+if titleColor == 'Cyan':
+     titleColor = '#008B8B';
+ 
+if titleColor == 'Yellow':
+     titleColor = 'gold'; 
+ 
+fig.update_layout(title={
+      'text': PlotTitle,
+      'font': {'color': titleColor}
+  })
+  #fig_back.update_layout(title='ImagePlacement_Left-Back')
+  
+  
+fig.update_layout(
+      hoverlabel=dict(
+          namelength=-1
+      )
+  )
+  
+  # datetime object containing current date and time
+ 
+plot(fig,auto_play=True,filename=fileName)  
+  # plot(fig)  
+ 
+  #plot(fig_back,filename="AQM-Back.html")  
+fig.show()
+
+
+##################################################################
+
 db= C2Cmat_allPanels;
 PlotTitle='C2C'
 fileName=PlotTitle+'.html'
@@ -1265,7 +1328,8 @@ figC2C_multiPanel= PlotSingle_Basic_multiPanel(db,PlotTitle,fileName,indexPanelN
 ##########################################################################################
 ##########################################################################################
 db= Cyan_Black_Sgoly_allPanels;
-RefCl='Cyan'
+# RefCl='Cyan'
+RefCl=RefC01
 
 PlotTitle='2 color diff - '+RefCl +' Vs color'
 
@@ -1275,7 +1339,9 @@ figCyanVsClr_multiPanel_OP= PlotSingle_DiffFromRefclr_multiPanel(db,PlotTitle,fi
 ##########################################################################################
 db= Color_Black_Sgoly_allPanels;
 
-RefCl='Magenta'
+# RefCl='Magenta'
+RefCl=RefCl11
+
 
 PlotTitle='2 color diff -'+RefCl +' Vs color'
 

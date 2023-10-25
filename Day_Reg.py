@@ -11,11 +11,11 @@ Created on Wed Jun 16 16:30:46 2021
 # pio.renderers
 # pio.renderers.default='browser'
 ##############################################################################
-global DistBetweenSets,GlobalScale,PanelLengthInMM,JobLengthתcolor_combinations,FullColorList,JobLengthWave,MoveAveWave,MoveAveWaveScale,OBGfactor;
+global DistBetweenSets,GlobalScale,PanelLengthInMM,JobLengthתcolor_combinations,FullColorList,JobLengthWave,MoveAveWave,MoveAveWaveScale,OBGfactor,colorID_aqm;
 
 # For setting the min job length for Change Wave plot- this parameter should be used for setting the allowble moving avarage- for example set JobLengthWave= 100, MoveAveWave=20;
-JobLengthWave=100;
-MoveAveWave=51;
+JobLengthWave=50;
+MoveAveWave=20;
 S_g_Degree=1;
 
 MoveAveWaveScale=200;
@@ -28,28 +28,33 @@ OBGfactor= 1.22
 ymax=200 # Job name location
 ymaxWaveJob=180 # Wave job location
 
+LoadTarget = 1 ; #True from targets in the AQM or False - from the tabel 
+
 if MarkSetVersion==252:
 
     
     GlobalScale = 0.9983 # Drop3 simplex = 0.9976, Duplex = 0.9984 ,,,, Drop5 Simplex = 0.9953, Duplex = 0.9945 
     DistBetweenSets =  125686/GlobalScale; 
-    
+    firstSetDistance=31053; # if value = 0 --Take automatic from logfile, otherwize need to write the value (31053)
+
 else:
 #For 201
     GlobalScale = 0.9983
     DistBetweenSets =  102693; 
-    
+    firstSetDistance=31159;
+
 
 PanelLengthInMM = 650;
 JobLength = 0;
 
+colorID_aqm={'Cyan':1,'Magenta':2,'Yellow':3,'Black':4,'Orange':5,'Blue':6,'Green':7}       
 
 #### Plots
 I2Splot=0 # Plot I2S 
 C2Cplot=1 # Plot C2C
 ScalePlot=0 # Plot Scale
 WaveChangePlot=1 # Plot Wave Change
-c2cChangePlot = 0 # Plot c2c Change MUST be align with Plot Wave Change
+c2cChangePlot = 1 # Plot c2c Change MUST be align with Plot Wave Change
 scaleChangePlot = 1 # Plot scale Change MUST be align with Plot Wave Change
 
 YuriMethod=0
@@ -408,7 +413,13 @@ class CalcC2C_AvrgOfAll(DispImagePlacment):
     def LoadMeanColorPos(self):
        
         # RecPath= pthComp[0]+'/'+pthComp[1]+'/'+pthComp[2]+'/'+pthComp[3]+'/'+pthComp[4]+'/'+pthComp[5]+'/'+pthComp[6]+'/'+pthComp[7]+'/'+pthComp[8];
-        MeregedDataAllMeanColor = pd.read_csv(self.pthF +'/'+'MeregedDataAllMeanColor_'+self.side+'_'+self.pageSide+'.csv')
+        # MeregedDataAllMeanColor = pd.read_csv(self.pthF +'/'+'MeregedDataAllMeanColor_'+self.side+'_'+self.pageSide+'.csv')
+        MeregedDataAllMeanColorRight = pd.read_csv(self.pthF +'/'+'MeregedDataAllMeanColor_'+self.side+'_Right.csv')    
+        MeregedDataAllMeanColorLeft = pd.read_csv(self.pthF +'/'+'MeregedDataAllMeanColor_'+self.side+'_Left.csv')    
+    
+        MeregedDataAllMeanColor = (MeregedDataAllMeanColorRight[['Set #1 X', 'Set #2 X', 'Set #3 X']]+MeregedDataAllMeanColorLeft[['Set #1 X', 'Set #2 X', 'Set #3 X']])/2
+        MeregedDataAllMeanColor.insert(0, 'Ink\\Sets', list(MeregedDataAllMeanColorRight['Ink\\Sets']))           
+
         
         return MeregedDataAllMeanColor
     
@@ -416,7 +427,13 @@ class CalcC2C_AvrgOfAll(DispImagePlacment):
     def LoadMeanColorPos_PickSide(self,pageSide):
        
         # RecPath= pthComp[0]+'/'+pthComp[1]+'/'+pthComp[2]+'/'+pthComp[3]+'/'+pthComp[4]+'/'+pthComp[5]+'/'+pthComp[6]+'/'+pthComp[7]+'/'+pthComp[8];
-        MeregedDataAllMeanColor = pd.read_csv(self.pthF +'/'+'MeregedDataAllMeanColor_'+self.side+'_'+pageSide+'.csv')
+        # MeregedDataAllMeanColor = pd.read_csv(self.pthF +'/'+'MeregedDataAllMeanColor_'+self.side+'_'+pageSide+'.csv')
+        MeregedDataAllMeanColorRight = pd.read_csv(self.pthF +'/'+'MeregedDataAllMeanColor_'+self.side+'_Right.csv')    
+        MeregedDataAllMeanColorLeft = pd.read_csv(self.pthF +'/'+'MeregedDataAllMeanColor_'+self.side+'_Left.csv')    
+    
+        MeregedDataAllMeanColor = (MeregedDataAllMeanColorRight[['Set #1 X', 'Set #2 X', 'Set #3 X']]+MeregedDataAllMeanColorLeft[['Set #1 X', 'Set #2 X', 'Set #3 X']])/2
+        MeregedDataAllMeanColor.insert(0, 'Ink\\Sets', list(MeregedDataAllMeanColorRight['Ink\\Sets']))           
+
         
         return MeregedDataAllMeanColor
     
@@ -439,7 +456,61 @@ class CalcC2C_AvrgOfAll(DispImagePlacment):
              if val == value:
                  return key
     
-                
+    
+    def CalcScaleFromTarget_WhenLoadTarget(self,fname):
+         
+         
+         
+         MeregedDataAllMeanColor= self.Target_calc(fname);
+         
+         colorDic={}
+         for i,cl in enumerate(MeregedDataAllMeanColor['Ink\Sets']):
+             colorDic[i]=cl
+         
+         valueSet1= MeregedDataAllMeanColor['Set #1 X'][self.get_key(colorDic,'Cyan')]
+
+         valueSet2= valueSet1+(DistBetweenSets/GlobalScale);
+
+         valueSet3= valueSet2+(DistBetweenSets/GlobalScale);
+         
+         # print('Target valueSet1 '+ str(valueSet1))
+         # print('Target valueSet2 '+ str(valueSet2))
+         # print('Target valueSet3 '+ str(valueSet3))
+
+         
+         
+         for key, value in colorDic.items():
+             MeregedDataAllMeanColor['Set #1 X'][self.get_key(colorDic,value)]= self.f('X',value,valueSet1)
+             MeregedDataAllMeanColor['Set #2 X'][self.get_key(colorDic,value)]= self.f('X',value,valueSet2)
+             MeregedDataAllMeanColor['Set #3 X'][self.get_key(colorDic,value)]= self.f('X',value,valueSet3)
+
+         
+         DataAllMeanColorSET1=MeregedDataAllMeanColor[['Set #1 X','Ink\Sets']].rename(index=colorDic);
+         DataAllMeanColorSET2=MeregedDataAllMeanColor[['Set #2 X','Ink\Sets']].rename(index=colorDic);
+         DataAllMeanColorSET3=MeregedDataAllMeanColor[['Set #3 X','Ink\Sets']].rename(index=colorDic);
+         
+         RefSETloc=DataAllMeanColorSET1;
+         RefSETloc.insert(1,'Set #2 X' ,list(DataAllMeanColorSET2['Set #2 X']))
+         RefSETloc.insert(2,'Set #3 X' ,list(DataAllMeanColorSET3['Set #3 X']))
+         RefSETloc=RefSETloc.drop(columns=['Ink\Sets'])
+         
+        ####### Calc Scale 
+         x=[0,1,2];
+
+         slp=[]
+
+            
+         for inx in DataAllMeanColorSET1.index:
+             y=list(RefSETloc.iloc[self.get_key(colorDic,inx),:])
+             z = np.polyfit(x, y, 1)
+             p = np.poly1d(z)
+             slp.append(list(p)[0])
+             
+         RefSETloc.insert(3,'Slop' ,slp)
+         
+         
+         return DataAllMeanColorSET1,DataAllMeanColorSET2,DataAllMeanColorSET3,colorDic,RefSETloc
+            
     def CalcScaleFromTarget(self):
          
          
@@ -455,6 +526,12 @@ class CalcC2C_AvrgOfAll(DispImagePlacment):
          valueSet2= valueSet1+(DistBetweenSets/GlobalScale);
 
          valueSet3= valueSet2+(DistBetweenSets/GlobalScale);
+         
+         # print('valueSet1 '+ str(valueSet1))
+         # print('valueSet2 '+ str(valueSet2))
+         # print('valueSet3 '+ str(valueSet3))
+
+         
          
          for key, value in colorDic.items():
              MeregedDataAllMeanColor['Set #1 X'][self.get_key(colorDic,value)]= self.f('X',value,valueSet1)
@@ -594,6 +671,13 @@ class CalcC2C_AvrgOfAll(DispImagePlacment):
 
          valueSet3= valueSet2+(DistBetweenSets/GlobalScale);
          
+         
+         # print('valueSet1 '+ str(valueSet1))
+         # print('valueSet2 '+ str(valueSet2))
+         # print('valueSet3 '+ str(valueSet3))
+
+         
+         
          for key, value in colorDic.items():
              MeregedDataAllMeanColor['Set #1 X'][self.get_key(colorDic,value)]= self.f('X',value,valueSet1)
              MeregedDataAllMeanColor['Set #2 X'][self.get_key(colorDic,value)]= self.f('X',value,valueSet2)
@@ -702,12 +786,15 @@ class CalcC2C_AvrgOfAll(DispImagePlacment):
         
         # fname= 'Registration_'+self.pageSide+'.csv';
         
-        
-        DataAllMeanColorSET1,DataAllMeanColorSET2,DataAllMeanColorSET3,colorDic,RefSETloc = self.CalcScaleFromTarget();
+        if not LoadTarget:
+            DataAllMeanColorSET1,DataAllMeanColorSET2,DataAllMeanColorSET3,colorDic,RefSETloc = self.CalcScaleFromTarget();
 
         for f in self.fldrs:
            stP=pd.DataFrame();
            fname= self.CheckForAI(self.pageSide,f);
+           if LoadTarget:
+               DataAllMeanColorSET1,DataAllMeanColorSET2,DataAllMeanColorSET3,colorDic,RefSETloc = self.CalcScaleFromTarget_WhenLoadTarget(f);
+
 
            try:
                St1dataAllColors,St2dataAllColors,St3dataAllColors,RefSETloc,Scale,ScaleMaxMin,colorDic=self.DataForCalcSCALE_FromData(DataAllMeanColorSET1,DataAllMeanColorSET2,DataAllMeanColorSET3,colorDic,RefSETloc,fname,f);
@@ -729,18 +816,21 @@ class CalcC2C_AvrgOfAll(DispImagePlacment):
         colorDicOBG={}
         colorDicCMYK={}
         
-        
-        DataAllMeanColorSET1,DataAllMeanColorSET2,DataAllMeanColorSET3,colorDic,RefSETloc = self.CalcScaleFromTarget();
+        if not LoadTarget:
+            DataAllMeanColorSET1,DataAllMeanColorSET2,DataAllMeanColorSET3,colorDic,RefSETloc = self.CalcScaleFromTarget();
+            
+            if len(colorDic.keys())>4:
+                for key,value in colorDic.items():
+                    if value in Obg:
+                        colorDicOBG[key]=value;
+                    else:                     
+                        colorDicCMYK[key]=value;
+ 
         
         
         # colorDic={1:'Magenta',2:'Black',3:'Yellow',4:'Cyan',5:'Blue',6:'Orange',7:'Green'}
         
-        if len(colorDic.keys())>4:
-            for key,value in colorDic.items():
-                if value in Obg:
-                    colorDicOBG[key]=value;
-                else:                     
-                    colorDicCMYK[key]=value;
+
 
 
         
@@ -749,8 +839,21 @@ class CalcC2C_AvrgOfAll(DispImagePlacment):
            # stP=pd.DataFrame();
 
            fname= self.CheckForAI(self.pageSide,f);
+           
+
+
 
            try:
+               if LoadTarget:
+                   DataAllMeanColorSET1,DataAllMeanColorSET2,DataAllMeanColorSET3,colorDic,RefSETloc = self.CalcScaleFromTarget_WhenLoadTarget(f);
+                   
+                   if len(colorDic.keys())>4:
+                       for key,value in colorDic.items():
+                           if value in Obg:
+                               colorDicOBG[key]=value;
+                           else:                     
+                               colorDicCMYK[key]=value;
+
                St1dataAllColors,St2dataAllColors,St3dataAllColors,RefSETloc,Scale,ScaleMaxMin,colorDic=self.DataForCalcSCALE_FromData(DataAllMeanColorSET1,DataAllMeanColorSET2,DataAllMeanColorSET3,colorDic,RefSETloc,fname,f);
                ScaleMaxMinDF = pd.concat([ScaleMaxMinDF, pd.Series(ScaleMaxMin, name=f)], axis=1)
 
@@ -1112,15 +1215,17 @@ class CalcC2C_AvrgOfAll(DispImagePlacment):
         
         for i in MeregedDataAllMeanColorLeft.index:
            colorDic[i]= MeregedDataAllMeanColorLeft['Ink\Sets'][i]
+           
+        if not LoadTarget:
         
-        DataAllMeanColorSET1Left=MeregedDataAllMeanColorLeft[['Ink\Sets','Set #1 X']].rename(index=colorDic)
-        DataAllMeanColorSET2Left=MeregedDataAllMeanColorLeft[['Ink\Sets','Set #2 X']].rename(index=colorDic)
-        DataAllMeanColorSET3Left=MeregedDataAllMeanColorLeft[['Ink\Sets','Set #3 X']].rename(index=colorDic)
-
-
-        DataAllMeanColorSET1Right=MeregedDataAllMeanColorRight[['Ink\Sets','Set #1 X']].rename(index=colorDic)
-        DataAllMeanColorSET2Right=MeregedDataAllMeanColorRight[['Ink\Sets','Set #2 X']].rename(index=colorDic)
-        DataAllMeanColorSET3Right=MeregedDataAllMeanColorRight[['Ink\Sets','Set #3 X']].rename(index=colorDic)
+            DataAllMeanColorSET1Left=MeregedDataAllMeanColorLeft[['Ink\Sets','Set #1 X']].rename(index=colorDic)
+            DataAllMeanColorSET2Left=MeregedDataAllMeanColorLeft[['Ink\Sets','Set #2 X']].rename(index=colorDic)
+            DataAllMeanColorSET3Left=MeregedDataAllMeanColorLeft[['Ink\Sets','Set #3 X']].rename(index=colorDic)
+    
+    
+            DataAllMeanColorSET1Right=MeregedDataAllMeanColorRight[['Ink\Sets','Set #1 X']].rename(index=colorDic)
+            DataAllMeanColorSET2Right=MeregedDataAllMeanColorRight[['Ink\Sets','Set #2 X']].rename(index=colorDic)
+            DataAllMeanColorSET3Right=MeregedDataAllMeanColorRight[['Ink\Sets','Set #3 X']].rename(index=colorDic)
 
         # MeregedDataAllMeanColor= self.LoadMeanColorPos();
         
@@ -1148,6 +1253,18 @@ class CalcC2C_AvrgOfAll(DispImagePlacment):
         indexJobNameDicRev={}
         for i,f in enumerate(ValidSortedJobListWithWave):
             try:
+                
+                if LoadTarget:
+                    MeregedDataAllMeanColor=self.Target_calc(f);
+                    DataAllMeanColorSET1Left=MeregedDataAllMeanColor[['Ink\Sets','Set #1 X']].rename(index=colorDic)
+                    DataAllMeanColorSET2Left=MeregedDataAllMeanColor[['Ink\Sets','Set #2 X']].rename(index=colorDic)
+                    DataAllMeanColorSET3Left=MeregedDataAllMeanColor[['Ink\Sets','Set #3 X']].rename(index=colorDic)
+            
+            
+                    DataAllMeanColorSET1Right=MeregedDataAllMeanColor[['Ink\Sets','Set #1 X']].rename(index=colorDic)
+                    DataAllMeanColorSET2Right=MeregedDataAllMeanColor[['Ink\Sets','Set #2 X']].rename(index=colorDic)
+                    DataAllMeanColorSET3Right=MeregedDataAllMeanColor[['Ink\Sets','Set #3 X']].rename(index=colorDic)
+                    
  
                 C2Creg,indexNumberFailed = self.CalcC2CSingleSideColorPair(self.CheckForAI('Left',f),self.CheckForAI('Right',f),f,DataAllMeanColorSET1Left,DataAllMeanColorSET2Left,DataAllMeanColorSET3Left,DataAllMeanColorSET1Right,DataAllMeanColorSET2Right,DataAllMeanColorSET3Right)
                 WaveChangeList=WaveChangeList+C2Creg
@@ -1207,8 +1324,25 @@ class CalcC2C_AvrgOfAll(DispImagePlacment):
             except:
                 continue
             
-                        
-        return PrintedDic
+        value_indexJobNameDicRev = list(indexJobNameDicRev.values())
+        PrintedDic_shifted={}
+        currentValue=0
+        for key in PrintedDic.keys():
+            try:
+                inx = value_indexJobNameDicRev.index(key)
+            except:
+                currentValue=currentValue+1    
+                PrintedDic_shifted[currentValue]=  PrintedDic[key]
+                continue
+
+            if inx == 0:
+                currentValue=0
+            else:
+                currentValue=value_indexJobNameDicRev[inx-1]
+            PrintedDic_shifted[currentValue]=  PrintedDic[key] 
+
+             
+        return PrintedDic_shifted
 
     def CreateWaveChangeDataWithBlanketRep_v2(self,JobLengthWave,BlanketRepList):
         
@@ -1372,6 +1506,121 @@ class CalcC2C_AvrgOfAll(DispImagePlacment):
             vlid=False;
             
         return vlid,lngth;
+    
+    def CalcMeanSet(self,DataAllMeanColorSETleft,DataAllMeanColorSETright):
+        
+        col= list(DataAllMeanColorSETleft.columns)
+        DataAllMeanColor = (DataAllMeanColorSETleft[col[1:]]+DataAllMeanColorSETright[col[1:]])/2
+        DataAllMeanColor.insert(0, 'Ink\\Sets', list(DataAllMeanColorSETleft['Ink\\Sets']))  
+        
+        return DataAllMeanColor         
+
+    
+    def ff(self,geometry,XYS,ink,value):
+        # geometry = {'X': {'Black':0,'Blue':2,'Cyan':1,'Green':2,'Magenta':0,'Orange':3,'Yellow':1},
+        #             'Y': {'Black':1,'Blue':0,'Cyan':1,'Green':1,'Magenta':0,'Orange':0,'Yellow':0}}
+        # geometry = {'X': {'Black':0,'Blue':2,'Cyan':1,'Green':2,'Magenta':0,'Orange':3,'Yellow':1},
+        #             'Y': {'Black':0,'Blue':1,'Cyan':0,'Green':0,'Magenta':1,'Orange':1,'Yellow':1}}
+        
+        # geometry = {'X': {'Black':-1,'Blue':1,'Cyan':0,'Green':1,'Magenta':-1,'Orange':2,'Yellow':0},
+        #             'Y': {'Black':0,'Blue':1,'Cyan':0,'Green':0,'Magenta':1,'Orange':1,'Yellow':1}}
+        
+        # geometry = {'X': {'Black':-1,'Cyan':0,'Yellow':0,'Magenta':-1},
+        #             'Y': {'Black':0,'Cyan':0,'Yellow':-1,'Magenta':-1}}
+        target_distance = {'X':144.4,'Y':64} 
+        return value + (geometry[XYS][ink]) * target_distance[XYS] * (21.16666666 )
+    
+    def extract_TargetParameters(self,geometry,fname):
+        
+        
+        zip_file_path = self.pthF+'/'+fname
+        subdir_name_in_zip = self.side+'/'+'RawResults';
+        file_name_in_zip = 'AnalyzerVersion.csv';
+
+        AnalyzerVersion=self.GetFileFromZip(zip_file_path, subdir_name_in_zip, file_name_in_zip);
+        
+        indexC2C = next((i for i, row in enumerate(AnalyzerVersion['Parameter']) if row == 'C2C ColorId Mapping'), -1)
+        
+        indexRef = next((i for i, row in enumerate(AnalyzerVersion['Parameter']) if row == 'Relative Ink Name'), -1)
+        
+        C2C_colorId= [int(num) for num in AnalyzerVersion['Value'][indexC2C].split('-')]
+        
+        index = C2C_colorId.index(colorID_aqm[AnalyzerVersion['Value'][indexRef]])
+        
+        for i in range(len(C2C_colorId)):
+            
+           a= i-index 
+           if a < -1:
+               geometry['X'][self.get_key(colorID_aqm,C2C_colorId[i])]=-1
+            
+           if a ==0 or a == -1:
+               geometry['X'][self.get_key(colorID_aqm,C2C_colorId[i])]=0
+               
+           if a == 1 or a == 2:
+               geometry['X'][self.get_key(colorID_aqm,C2C_colorId[i])]=1
+               
+           if a > 2:
+                geometry['X'][self.get_key(colorID_aqm,C2C_colorId[i])]=2
+
+
+        
+        indexGlobalScale = next((i for i, row in enumerate(AnalyzerVersion['Parameter']) if row == 'X Press Global Scaling'), -1)
+        indexDistBetweenSets = next((i for i, row in enumerate(AnalyzerVersion['Parameter']) if row == 'Registration Distance Between Sets In Microns'), -1)
+        indexfirstSetDistance = next((i for i, row in enumerate(AnalyzerVersion['Parameter']) if row == 'Registration Y Distance Between Patterns In MM'), -1)
+
+        GlobalScale =  float(AnalyzerVersion['Value'][indexGlobalScale]) # Drop3 simplex = 0.9976, Duplex = 0.9984 ,,,, Drop5 Simplex = 0.9953, Duplex = 0.9945 
+        DistBetweenSets =  int(AnalyzerVersion['Value'][indexDistBetweenSets]); 
+        # if firstSetDistance:
+        #     firstSetDistance_val = firstSetDistance
+        # else:
+        #     firstSetDistance_val=float(AnalyzerVersion['Value'][indexfirstSetDistance])*10000; 
+        
+        firstSetDistance_val=float(AnalyzerVersion['Value'][indexfirstSetDistance])*10000; 
+
+        ColorList  = [self.get_key(colorID_aqm,C2C_colorId[i]) for i in range(len(C2C_colorId))]
+        return GlobalScale,DistBetweenSets,firstSetDistance_val,geometry,ColorList   
+
+    def Target_calc(self,fname):
+        
+
+         geometry = {'X': {'Black':-1,'Blue':1,'Cyan':0,'Green':1,'Magenta':-1,'Orange':2,'Yellow':0},
+                     'Y': {'Black':0,'Blue':1,'Cyan':0,'Green':0,'Magenta':1,'Orange':1,'Yellow':1}}
+         
+         GlobalScale,DistBetweenSets,firstSetDistance_val,geometry,ColorList = self.extract_TargetParameters(geometry,fname)
+         
+         if firstSetDistance:
+             firstSetDistance_val = firstSetDistance /GlobalScale
+
+         # print('firstSetDistance_val '+str(firstSetDistance_val))
+         # print('firstSetDistance '+str(firstSetDistance))
+
+         # print('GlobalScale '+str(GlobalScale))
+         # print('DistBetweenSets '+str(DistBetweenSets))
+
+
+         valueSet1= firstSetDistance_val;
+
+         valueSet2= valueSet1+(DistBetweenSets);
+
+         valueSet3= valueSet2+(DistBetweenSets);
+         
+        
+         # ColorList=RawDataSuccess.iloc[:,4].unique().tolist()
+         colorDic={}
+         for i,cl in enumerate(ColorList):
+            colorDic[i]=cl            
+         col=['Ink\Sets', 'Set #1 X', 'Set #2 X', 'Set #3 X'];            
+         MeregedDataAllMeanColor= pd.DataFrame(columns=col)            
+         MeregedDataAllMeanColor['Ink\Sets']=ColorList
+        
+         for key, value in colorDic.items():
+            MeregedDataAllMeanColor['Set #1 X'][self.get_key(colorDic,value)]= self.ff(geometry,'X',value,valueSet1)
+            MeregedDataAllMeanColor['Set #2 X'][self.get_key(colorDic,value)]= self.ff(geometry,'X',value,valueSet2)
+            MeregedDataAllMeanColor['Set #3 X'][self.get_key(colorDic,value)]= self.ff(geometry,'X',value,valueSet3)
+            
+            
+         return MeregedDataAllMeanColor
+
 
     def CalcC2CregForLeftRight(self):
         ImagePlacement_pp=pd.DataFrame()
@@ -1381,10 +1630,51 @@ class CalcC2C_AvrgOfAll(DispImagePlacment):
         DataAllMeanColorSET1left,DataAllMeanColorSET2left,DataAllMeanColorSET3left,colorDic = self.CalcMeanByColorForAllJobs('Left')
         DataAllMeanColorSET1right,DataAllMeanColorSET2right,DataAllMeanColorSET3right,colorDic = self.CalcMeanByColorForAllJobs('Right')
         
+        self.DataAllMeanColorSET1=self.CalcMeanSet(DataAllMeanColorSET1left, DataAllMeanColorSET1right) 
+        self.DataAllMeanColorSET2= self.CalcMeanSet(DataAllMeanColorSET2left, DataAllMeanColorSET2right) 
+        self.DataAllMeanColorSET3= self.CalcMeanSet(DataAllMeanColorSET3left, DataAllMeanColorSET3right) 
+
+        if not LoadTarget:
+            # DataAllMeanColorSET1left= MeregedDataAllMeanColor[['Ink\Sets', 'Set #1 X']].set_index(pd.Index(MeregedDataAllMeanColor['Ink\Sets']))
+            # DataAllMeanColorSET1right= MeregedDataAllMeanColor[['Ink\Sets', 'Set #1 X']].set_index(pd.Index(MeregedDataAllMeanColor['Ink\Sets']))
+            
+            # DataAllMeanColorSET2left= MeregedDataAllMeanColor[['Ink\Sets', 'Set #2 X']].set_index(pd.Index(MeregedDataAllMeanColor['Ink\Sets']))
+            # DataAllMeanColorSET2right= MeregedDataAllMeanColor[['Ink\Sets', 'Set #2 X']].set_index(pd.Index(MeregedDataAllMeanColor['Ink\Sets']))
+            
+            # DataAllMeanColorSET3left= MeregedDataAllMeanColor[['Ink\Sets', 'Set #3 X']].set_index(pd.Index(MeregedDataAllMeanColor['Ink\Sets']))
+            # DataAllMeanColorSET3right= MeregedDataAllMeanColor[['Ink\Sets', 'Set #3 X']].set_index(pd.Index(MeregedDataAllMeanColor['Ink\Sets']))
+            
+           
+            DataAllMeanColorSET1left= self.DataAllMeanColorSET1
+            DataAllMeanColorSET1right= self.DataAllMeanColorSET1
+            
+            DataAllMeanColorSET2left= self.DataAllMeanColorSET2
+            DataAllMeanColorSET2right= self.DataAllMeanColorSET2
+            
+            DataAllMeanColorSET3left= self.DataAllMeanColorSET3
+            DataAllMeanColorSET3right= self.DataAllMeanColorSET3
+        
+        
+        
+        
         for f in self.fldrs:
             stP=pd.DataFrame();
             flatNumberFailed=pd.DataFrame();
+                
+                
+                
             try:
+                if LoadTarget:
+                    MeregedDataAllMeanColor= self.Target_calc(f)
+                    DataAllMeanColorSET1left= MeregedDataAllMeanColor[['Ink\Sets', 'Set #1 X']].set_index(pd.Index(MeregedDataAllMeanColor['Ink\Sets']))
+                    DataAllMeanColorSET1right= MeregedDataAllMeanColor[['Ink\Sets', 'Set #1 X']].set_index(pd.Index(MeregedDataAllMeanColor['Ink\Sets']))
+                    
+                    DataAllMeanColorSET2left= MeregedDataAllMeanColor[['Ink\Sets', 'Set #2 X']].set_index(pd.Index(MeregedDataAllMeanColor['Ink\Sets']))
+                    DataAllMeanColorSET2right= MeregedDataAllMeanColor[['Ink\Sets', 'Set #2 X']].set_index(pd.Index(MeregedDataAllMeanColor['Ink\Sets']))
+                    
+                    DataAllMeanColorSET3left= MeregedDataAllMeanColor[['Ink\Sets', 'Set #3 X']].set_index(pd.Index(MeregedDataAllMeanColor['Ink\Sets']))
+                    DataAllMeanColorSET3right= MeregedDataAllMeanColor[['Ink\Sets', 'Set #3 X']].set_index(pd.Index(MeregedDataAllMeanColor['Ink\Sets']))
+                
                 if self.CheckIfFileValid(f):
                     C2CregLeft,indexNumberFailedLeft=self.CalcC2CSingleSide(self.CheckForAI('Left',f),f,DataAllMeanColorSET1left,DataAllMeanColorSET2left,DataAllMeanColorSET3left);
                     C2CregRight,indexNumberFailedRight=self.CalcC2CSingleSide(self.CheckForAI('Right',f),f,DataAllMeanColorSET1right,DataAllMeanColorSET2right,DataAllMeanColorSET3right);
@@ -1447,17 +1737,23 @@ class myThread (threading.Thread):
       global ScaleMaxMinDF_BACKFLeft,ScaleMaxMinDF_BACKRight;
       global ImagePlacement_Leftpp,ImagePlacement_Rightpp;
       global ImagePlacement_Leftpp_BACK,ImagePlacement_Rightpp_BACK;
+      global calcC2C_AvrgOfAll_front,calcC2C_AvrgOfAll_back
 
 
     
           
       if self.name == "Thread-C2C":
           print ("Starting " + self.name)
-          DataPivotFront,flatNumberFailedFront=CalcC2C_AvrgOfAll(pthF,folder,'Front',JobLength,PanelLengthInMM,'Left').CalcC2CregForLeftRight();
+          
+          # calcC2C_AvrgOfAll_front = CalcC2C_AvrgOfAll(pthF,folder,'Front',JobLength,PanelLengthInMM,'Left')
+          
+          # DataPivotFront,flatNumberFailedFront=calcC2C_AvrgOfAll_front.CalcC2CregForLeftRight();
 
-        
+          DataPivotFront,flatNumberFailedFront=CalcC2C_AvrgOfAll(pthF,folder,'Front',JobLength,PanelLengthInMM,'Left').CalcC2CregForLeftRight();
           try:
-            DataPivotBack,flatNumberFailedBack=CalcC2C_AvrgOfAll(pthF,folder,'Back',JobLength,PanelLengthInMM,'Left').CalcC2CregForLeftRight();
+            calcC2C_AvrgOfAll_back = CalcC2C_AvrgOfAll(pthF,folder,'Back',JobLength,PanelLengthInMM,'Left')
+  
+            DataPivotBack,flatNumberFailedBack=calcC2C_AvrgOfAll_back.CalcC2CregForLeftRight();
             
         
           except:
@@ -2103,6 +2399,11 @@ print(endCalc - startCalc)
 
 
 
+
+
+# a= calcC2C_AvrgOfAll_front.DataAllMeanColorSET1
+
+
 # Column and value to filter
 # column_name = 'ok'
 # filter_value = 'ok'
@@ -2473,3 +2774,147 @@ print(endFigure - startFigure)
 
 # 
 ##### TILL HERE!!!!
+
+
+# WaveChangeList=[];
+# indexJobNameDic={}
+# indexJobNameDicRev={}
+
+# # DataAllMeanColorSET1Left,DataAllMeanColorSET2Left,DataAllMeanColorSET3Left,colorDic = self.CalcMeanByColorForAllJobs('Registration_Left.csv')
+# # DataAllMeanColorSET1Right,DataAllMeanColorSET2Right,DataAllMeanColorSET3Right,colorDic = self.CalcMeanByColorForAllJobs('Registration_Right.csv')
+
+
+
+
+# MeregedDataAllMeanColorLeft= CalcC2C_AvrgOfAll(pthF,folder,'Front',JobLength,PanelLengthInMM,'Left').LoadMeanColorPos_PickSide('Left');
+# MeregedDataAllMeanColorRight= CalcC2C_AvrgOfAll(pthF,folder,'Front',JobLength,PanelLengthInMM,'Left').LoadMeanColorPos_PickSide('Right');
+
+
+# colorDic={}
+
+# for i in MeregedDataAllMeanColorLeft.index:
+#    colorDic[i]= MeregedDataAllMeanColorLeft['Ink\Sets'][i]
+   
+# if not LoadTarget:
+
+#     DataAllMeanColorSET1Left=MeregedDataAllMeanColorLeft[['Ink\Sets','Set #1 X']].rename(index=colorDic)
+#     DataAllMeanColorSET2Left=MeregedDataAllMeanColorLeft[['Ink\Sets','Set #2 X']].rename(index=colorDic)
+#     DataAllMeanColorSET3Left=MeregedDataAllMeanColorLeft[['Ink\Sets','Set #3 X']].rename(index=colorDic)
+
+
+#     DataAllMeanColorSET1Right=MeregedDataAllMeanColorRight[['Ink\Sets','Set #1 X']].rename(index=colorDic)
+#     DataAllMeanColorSET2Right=MeregedDataAllMeanColorRight[['Ink\Sets','Set #2 X']].rename(index=colorDic)
+#     DataAllMeanColorSET3Right=MeregedDataAllMeanColorRight[['Ink\Sets','Set #3 X']].rename(index=colorDic)
+
+# # MeregedDataAllMeanColor= self.LoadMeanColorPos();
+
+
+
+# ValidSortedJobListWithWave=[]
+
+# for f in CalcC2C_AvrgOfAll(pthF,folder,'Front',JobLength,PanelLengthInMM,'Left').fldrs:
+#     vlid,lngth=CalcC2C_AvrgOfAll(pthF,folder,'Front',JobLength,PanelLengthInMM,'Left').CheckIfFileValid_forWave(f,JobLengthWave)
+#     if vlid or ('WaveCalibration' in f):
+#             ValidSortedJobListWithWave.append(f)
+            
+# ValidSortedJobListWithWave= list(CalcC2C_AvrgOfAll(pthF,folder,'Front',JobLength,PanelLengthInMM,'Left').SortJobsByTime(ValidSortedJobListWithWave + BlanketRepList).values())
+    
+# WaveFilesInx=CalcC2C_AvrgOfAll(pthF,folder,'Front',JobLength,PanelLengthInMM,'Left').find_indexes_with_substring(ValidSortedJobListWithWave, 'WaveCalibration')
+# BlanketRepInx=CalcC2C_AvrgOfAll(pthF,folder,'Front',JobLength,PanelLengthInMM,'Left').find_indexes_with_substring(ValidSortedJobListWithWave, 'BlanketReplacment')
+
+# WaveJobPrintedDic={}
+# BlnketReplacmentDic={}
+
+
+# k=0
+# kb=0
+# inxForW=0
+# indexJobNameDicRev={}
+# for i,f in enumerate(ValidSortedJobListWithWave):
+#     try:
+        
+#         if LoadTarget:
+#             MeregedDataAllMeanColor=CalcC2C_AvrgOfAll(pthF,folder,'Front',JobLength,PanelLengthInMM,'Left').Target_calc(f);
+#             DataAllMeanColorSET1Left=MeregedDataAllMeanColor[['Ink\Sets','Set #1 X']].rename(index=colorDic)
+#             DataAllMeanColorSET2Left=MeregedDataAllMeanColor[['Ink\Sets','Set #2 X']].rename(index=colorDic)
+#             DataAllMeanColorSET3Left=MeregedDataAllMeanColor[['Ink\Sets','Set #3 X']].rename(index=colorDic)
+    
+    
+#             DataAllMeanColorSET1Right=MeregedDataAllMeanColor[['Ink\Sets','Set #1 X']].rename(index=colorDic)
+#             DataAllMeanColorSET2Right=MeregedDataAllMeanColor[['Ink\Sets','Set #2 X']].rename(index=colorDic)
+#             DataAllMeanColorSET3Right=MeregedDataAllMeanColor[['Ink\Sets','Set #3 X']].rename(index=colorDic)
+            
+ 
+#         C2Creg,indexNumberFailed = CalcC2C_AvrgOfAll(pthF,folder,'Front',JobLength,PanelLengthInMM,'Left').CalcC2CSingleSideColorPair(CalcC2C_AvrgOfAll(pthF,folder,'Front',JobLength,PanelLengthInMM,'Left').CheckForAI('Left',f),CalcC2C_AvrgOfAll(pthF,folder,'Front',JobLength,PanelLengthInMM,'Left').CheckForAI('Right',f),f,DataAllMeanColorSET1Left,DataAllMeanColorSET2Left,DataAllMeanColorSET3Left,DataAllMeanColorSET1Right,DataAllMeanColorSET2Right,DataAllMeanColorSET3Right)
+#         WaveChangeList=WaveChangeList+C2Creg
+#         indexJobNameDic[len(WaveChangeList)-1]=[f,lngth]
+#         indexJobNameDicRev[f]=len(WaveChangeList)-1
+        
+#         # k,WaveJobPrintedDic= self.CreatWaveBlankwtDic(k,i,WaveFilesInx,WaveJobPrintedDic,indexJobNameDic,ValidSortedJobListWithWave)
+ 
+   
+#     except:
+#             continue;
+    
+# WaveJobPrintedDic={}
+# BlnketReplacmentDic={}   
+
+# WaveJobPrintedDic= CalcC2C_AvrgOfAll(pthF,folder,'Front',JobLength,PanelLengthInMM,'Left').CreateWaveBlanketRep_Dic(WaveFilesInx, WaveJobPrintedDic, ValidSortedJobListWithWave,indexJobNameDicRev)
+
+# BlnketReplacmentDic= CalcC2C_AvrgOfAll(pthF,folder,'Front',JobLength,PanelLengthInMM,'Left').CreateWaveBlanketRep_Dic(BlanketRepInx, BlnketReplacmentDic, ValidSortedJobListWithWave,indexJobNameDicRev)
+
+
+
+
+
+
+
+
+# ###########################
+# FilesInx=WaveFilesInx
+# PrintedDic=WaveJobPrintedDic
+# ValidSortedJobListWithWave=ValidSortedJobListWithWave
+# indexJobNameDicRev=indexJobNameDicRev
+
+# a=list(indexJobNameDicRev.keys())
+
+# offset=0
+# n=1;
+
+# for inx in FilesInx:
+#     n=1;
+#     offset=0
+#     try:
+#         while 1:
+#             if  ValidSortedJobListWithWave[inx+n] in indexJobNameDicRev.keys():
+#                 if  indexJobNameDicRev[ValidSortedJobListWithWave[inx+n]]+offset in PrintedDic.keys():
+#                     offset=offset+1
+#                     continue;
+#                 PrintedDic[indexJobNameDicRev[ValidSortedJobListWithWave[inx+n]]+offset]=[ValidSortedJobListWithWave[inx],inx]
+#                 break;
+#             else:
+#                 n=n+1;
+                
+        
+#     except:
+#         continue
+
+# value_indexJobNameDicRev = list(indexJobNameDicRev.values())
+# PrintedDic_shifted={}
+# for key in PrintedDic.keys():
+#     try:
+#         inx = value_indexJobNameDicRev.index(key)
+#     except:
+#         currentValue=currentValue+1    
+#         PrintedDic_shifted[currentValue]=  PrintedDic[key]
+#         continue
+
+#     if inx == 0:
+#         currentValue=0
+#     else:
+#         currentValue=value_indexJobNameDicRev[inx-1]
+#     PrintedDic_shifted[currentValue]=  PrintedDic[key]
+  
+
+
+

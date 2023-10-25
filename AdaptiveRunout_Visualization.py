@@ -14,7 +14,7 @@ import os
 global PlotRead,PlotWrite,plot_Bar2show,Title_dictionary
 
 PlotRead = 1
-PlotWrite= 0
+PlotWrite= 1
 plot_Bar2show= [2,3,4,5,6,7,8]
     
 Title_dictionary = {
@@ -126,15 +126,18 @@ class DataVisualization:
         for barID in self.unique_bar_ids_write:
             if not(barID in plot_Bar2show):
                 continue
-            if PlotWrite:
-                average_values_barID_write[barID]= self.dataframes_write[barID].iloc[:, 7:].mean(axis=0)
-                average_barId_trace_write.append(go.Scatter(x=list(range(8, len(average_values_barID_write[barID]) + 8)), y=average_values_barID_write[barID], 
-                                           mode='lines', name='Write average bar '+str(barID), line=dict(color=color_list[barID], width=3)))
-            if PlotRead:
-                average_values_barID_read[barID]= self.dataframes_read[barID].iloc[:, 7:].mean(axis=0)
-                
-                average_barId_trace_read.append(go.Scatter(x=list(range(8, len(average_values_barID_read[barID]) + 8)), y=average_values_barID_read[barID], 
-                                           mode='lines', name='Read average bar '+str(barID), line=dict(color=color_list[barID], dash='dash', width=3)))
+            try:
+                if PlotWrite:
+                    average_values_barID_write[barID]= self.dataframes_write[barID].iloc[:, 7:].mean(axis=0)
+                    average_barId_trace_write.append(go.Scatter(x=list(range(8, len(average_values_barID_write[barID]) + 8)), y=average_values_barID_write[barID], 
+                                               mode='lines', name='Write average bar '+str(barID), line=dict(color=color_list[barID], width=3)))
+                if PlotRead:
+                    average_values_barID_read[barID]= self.dataframes_read[barID].iloc[:, 7:].mean(axis=0)
+                    
+                    average_barId_trace_read.append(go.Scatter(x=list(range(8, len(average_values_barID_read[barID]) + 8)), y=average_values_barID_read[barID], 
+                                              mode='lines', name='Read average bar '+str(barID), line=dict(color=color_list[barID], dash='dash', width=3)))
+            except:
+                continue
 
         
         # Add the average trace to the figure
@@ -194,9 +197,5 @@ if __name__ == "__main__":
     
  
     
-
-    
-    
-    
-    
-    
+#######################################################
+ 

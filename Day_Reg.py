@@ -1299,7 +1299,7 @@ class CalcC2C_AvrgOfAll(DispImagePlacment):
         #             n=n+1;
         
         
-        return WaveChangeList,indexJobNameDic,WaveJobPrintedDic,BlnketReplacmentDic;
+        return WaveChangeList,indexJobNameDic,indexJobNameDicRev,WaveJobPrintedDic,BlnketReplacmentDic;
     
     def CreateWaveBlanketRep_Dic(self,FilesInx, PrintedDic, ValidSortedJobListWithWave,indexJobNameDicRev):
         
@@ -1413,7 +1413,7 @@ class CalcC2C_AvrgOfAll(DispImagePlacment):
         return WaveChangeList,indexJobNameDic,WaveJobPrintedDic,BlnketReplacmentDic;
 
     
-    def CreateC2CchangeData(self,c2c,JobLengthWave):
+    def CreateC2CchangeData(self,c2c,JobLengthWave,indexJobNameDicRev):
         
         c2cChangeList=[];
         indexJobNameDic={}
@@ -1435,9 +1435,9 @@ class CalcC2C_AvrgOfAll(DispImagePlacment):
         
         for i,f in enumerate(ValidSortedJobListWithWave):
             try:
-            
-                c2cChangeList=c2cChangeList+list(c2c[f].dropna())
-                indexJobNameDic[len(c2cChangeList)-1]=[f,0]
+                 if f in indexJobNameDicRev.keys():
+                    c2cChangeList=c2cChangeList+list(c2c[f].dropna())
+                    indexJobNameDic[len(c2cChangeList)-1]=[f,0]
 
             except:
                       continue;
@@ -2032,10 +2032,12 @@ class PlotPlotly():
        # fig.add_trace(
        #  go.Scatter(y=list(ScaleChangeDFAverage.rolling(MoveAveWaveScale).mean()), line_color = '#9370DB',# MediumPurple
        #              name='Scale Average moving average = '+str(MoveAveWaveScale)))  
-       
-       fig.add_trace(
-        go.Scatter(y=list(savgol_filter((ScaleChangeDFAverage), MoveAveWaveScale, S_g_Degree) ), line_color = '#9370DB',# MediumPurple
-                    name='Scale savgol average = '+str(MoveAveWaveScale)))  
+       try:
+           fig.add_trace(
+            go.Scatter(y=list(savgol_filter((ScaleChangeDFAverage), MoveAveWaveScale, S_g_Degree) ), line_color = '#9370DB',# MediumPurple
+                        name='Scale savgol average = '+str(MoveAveWaveScale)))  
+       except:
+           1
        
        # fig.add_trace(
        #  go.Scatter(y=list(ScaleChangeDFRight[0]),
@@ -2476,12 +2478,12 @@ if WaveChangePlot:
 # # else:
 #     WaveChangeListFRONT,indexJobNameDicFRONT,WaveJobPrintedDicFRONT,BlnketReplacmentDic=CalcC2C_AvrgOfAll(pthF,folder,'Front',JobLength,PanelLengthInMM,'Left').CreateWaveChangeDataWithBlanketRep_v2(JobLengthWave, BlanketRepList);
 
-    WaveChangeListFRONT,indexJobNameDicFRONT,WaveJobPrintedDicFRONT,BlnketReplacmentDic=CalcC2C_AvrgOfAll(pthF,folder,'Front',JobLength,PanelLengthInMM,'Left').CreateWaveChangeDataWithBlanketRep_v3(JobLengthWave, BlanketRepList);
+    WaveChangeListFRONT,indexJobNameDicFRONT,indexJobNameDicRevFRONT,WaveJobPrintedDicFRONT,BlnketReplacmentDic=CalcC2C_AvrgOfAll(pthF,folder,'Front',JobLength,PanelLengthInMM,'Left').CreateWaveChangeDataWithBlanketRep_v3(JobLengthWave, BlanketRepList);
 
     WaveChangeDF_FRONT=pd.DataFrame(WaveChangeListFRONT)
     
     try:
-       WaveChangeListBACK,indexJobNameDicBACK,WaveJobPrintedDicBACK,BlnketReplacmentDic=CalcC2C_AvrgOfAll(pthF,folder,'Back',JobLength,PanelLengthInMM,'Left').CreateWaveChangeDataWithBlanketRep_v3(JobLengthWave,BlanketRepList);
+       WaveChangeListBACK,indexJobNameDicBACK,indexJobNameDicRevBACK,WaveJobPrintedDicBACK,BlnketReplacmentDic=CalcC2C_AvrgOfAll(pthF,folder,'Back',JobLength,PanelLengthInMM,'Left').CreateWaveChangeDataWithBlanketRep_v3(JobLengthWave,BlanketRepList);
        WaveChangeDF_BACK=pd.DataFrame(WaveChangeListBACK)
     
     except:
@@ -2489,11 +2491,11 @@ if WaveChangePlot:
 ######################C2C Prograss Over Time ######################
 
 if c2cChangePlot:
-    c2cChangeListFRONT,indexJobNameDicC2CFRONT=CalcC2C_AvrgOfAll(pthF,folder,'Front',JobLength,PanelLengthInMM,'Left').CreateC2CchangeData(DataPivotFront, JobLengthWave);
+    c2cChangeListFRONT,indexJobNameDicC2CFRONT=CalcC2C_AvrgOfAll(pthF,folder,'Front',JobLength,PanelLengthInMM,'Left').CreateC2CchangeData(DataPivotFront, JobLengthWave,indexJobNameDicRevFRONT);
     c2cChangeDF_FRONT=pd.DataFrame(c2cChangeListFRONT)
     
     try:
-        c2cChangeListBACK,indexJobNameDicC2CBACK=CalcC2C_AvrgOfAll(pthF,folder,'Back',JobLength,PanelLengthInMM,'Left').CreateC2CchangeData(DataPivotBack, JobLengthWave);
+        c2cChangeListBACK,indexJobNameDicC2CBACK=CalcC2C_AvrgOfAll(pthF,folder,'Back',JobLength,PanelLengthInMM,'Left').CreateC2CchangeData(DataPivotBack, JobLengthWave,indexJobNameDicRevBACK);
         c2cChangeDF_BACK=pd.DataFrame(c2cChangeListBACK)
         
     except:
@@ -2774,147 +2776,3 @@ print(endFigure - startFigure)
 
 # 
 ##### TILL HERE!!!!
-
-
-# WaveChangeList=[];
-# indexJobNameDic={}
-# indexJobNameDicRev={}
-
-# # DataAllMeanColorSET1Left,DataAllMeanColorSET2Left,DataAllMeanColorSET3Left,colorDic = self.CalcMeanByColorForAllJobs('Registration_Left.csv')
-# # DataAllMeanColorSET1Right,DataAllMeanColorSET2Right,DataAllMeanColorSET3Right,colorDic = self.CalcMeanByColorForAllJobs('Registration_Right.csv')
-
-
-
-
-# MeregedDataAllMeanColorLeft= CalcC2C_AvrgOfAll(pthF,folder,'Front',JobLength,PanelLengthInMM,'Left').LoadMeanColorPos_PickSide('Left');
-# MeregedDataAllMeanColorRight= CalcC2C_AvrgOfAll(pthF,folder,'Front',JobLength,PanelLengthInMM,'Left').LoadMeanColorPos_PickSide('Right');
-
-
-# colorDic={}
-
-# for i in MeregedDataAllMeanColorLeft.index:
-#    colorDic[i]= MeregedDataAllMeanColorLeft['Ink\Sets'][i]
-   
-# if not LoadTarget:
-
-#     DataAllMeanColorSET1Left=MeregedDataAllMeanColorLeft[['Ink\Sets','Set #1 X']].rename(index=colorDic)
-#     DataAllMeanColorSET2Left=MeregedDataAllMeanColorLeft[['Ink\Sets','Set #2 X']].rename(index=colorDic)
-#     DataAllMeanColorSET3Left=MeregedDataAllMeanColorLeft[['Ink\Sets','Set #3 X']].rename(index=colorDic)
-
-
-#     DataAllMeanColorSET1Right=MeregedDataAllMeanColorRight[['Ink\Sets','Set #1 X']].rename(index=colorDic)
-#     DataAllMeanColorSET2Right=MeregedDataAllMeanColorRight[['Ink\Sets','Set #2 X']].rename(index=colorDic)
-#     DataAllMeanColorSET3Right=MeregedDataAllMeanColorRight[['Ink\Sets','Set #3 X']].rename(index=colorDic)
-
-# # MeregedDataAllMeanColor= self.LoadMeanColorPos();
-
-
-
-# ValidSortedJobListWithWave=[]
-
-# for f in CalcC2C_AvrgOfAll(pthF,folder,'Front',JobLength,PanelLengthInMM,'Left').fldrs:
-#     vlid,lngth=CalcC2C_AvrgOfAll(pthF,folder,'Front',JobLength,PanelLengthInMM,'Left').CheckIfFileValid_forWave(f,JobLengthWave)
-#     if vlid or ('WaveCalibration' in f):
-#             ValidSortedJobListWithWave.append(f)
-            
-# ValidSortedJobListWithWave= list(CalcC2C_AvrgOfAll(pthF,folder,'Front',JobLength,PanelLengthInMM,'Left').SortJobsByTime(ValidSortedJobListWithWave + BlanketRepList).values())
-    
-# WaveFilesInx=CalcC2C_AvrgOfAll(pthF,folder,'Front',JobLength,PanelLengthInMM,'Left').find_indexes_with_substring(ValidSortedJobListWithWave, 'WaveCalibration')
-# BlanketRepInx=CalcC2C_AvrgOfAll(pthF,folder,'Front',JobLength,PanelLengthInMM,'Left').find_indexes_with_substring(ValidSortedJobListWithWave, 'BlanketReplacment')
-
-# WaveJobPrintedDic={}
-# BlnketReplacmentDic={}
-
-
-# k=0
-# kb=0
-# inxForW=0
-# indexJobNameDicRev={}
-# for i,f in enumerate(ValidSortedJobListWithWave):
-#     try:
-        
-#         if LoadTarget:
-#             MeregedDataAllMeanColor=CalcC2C_AvrgOfAll(pthF,folder,'Front',JobLength,PanelLengthInMM,'Left').Target_calc(f);
-#             DataAllMeanColorSET1Left=MeregedDataAllMeanColor[['Ink\Sets','Set #1 X']].rename(index=colorDic)
-#             DataAllMeanColorSET2Left=MeregedDataAllMeanColor[['Ink\Sets','Set #2 X']].rename(index=colorDic)
-#             DataAllMeanColorSET3Left=MeregedDataAllMeanColor[['Ink\Sets','Set #3 X']].rename(index=colorDic)
-    
-    
-#             DataAllMeanColorSET1Right=MeregedDataAllMeanColor[['Ink\Sets','Set #1 X']].rename(index=colorDic)
-#             DataAllMeanColorSET2Right=MeregedDataAllMeanColor[['Ink\Sets','Set #2 X']].rename(index=colorDic)
-#             DataAllMeanColorSET3Right=MeregedDataAllMeanColor[['Ink\Sets','Set #3 X']].rename(index=colorDic)
-            
- 
-#         C2Creg,indexNumberFailed = CalcC2C_AvrgOfAll(pthF,folder,'Front',JobLength,PanelLengthInMM,'Left').CalcC2CSingleSideColorPair(CalcC2C_AvrgOfAll(pthF,folder,'Front',JobLength,PanelLengthInMM,'Left').CheckForAI('Left',f),CalcC2C_AvrgOfAll(pthF,folder,'Front',JobLength,PanelLengthInMM,'Left').CheckForAI('Right',f),f,DataAllMeanColorSET1Left,DataAllMeanColorSET2Left,DataAllMeanColorSET3Left,DataAllMeanColorSET1Right,DataAllMeanColorSET2Right,DataAllMeanColorSET3Right)
-#         WaveChangeList=WaveChangeList+C2Creg
-#         indexJobNameDic[len(WaveChangeList)-1]=[f,lngth]
-#         indexJobNameDicRev[f]=len(WaveChangeList)-1
-        
-#         # k,WaveJobPrintedDic= self.CreatWaveBlankwtDic(k,i,WaveFilesInx,WaveJobPrintedDic,indexJobNameDic,ValidSortedJobListWithWave)
- 
-   
-#     except:
-#             continue;
-    
-# WaveJobPrintedDic={}
-# BlnketReplacmentDic={}   
-
-# WaveJobPrintedDic= CalcC2C_AvrgOfAll(pthF,folder,'Front',JobLength,PanelLengthInMM,'Left').CreateWaveBlanketRep_Dic(WaveFilesInx, WaveJobPrintedDic, ValidSortedJobListWithWave,indexJobNameDicRev)
-
-# BlnketReplacmentDic= CalcC2C_AvrgOfAll(pthF,folder,'Front',JobLength,PanelLengthInMM,'Left').CreateWaveBlanketRep_Dic(BlanketRepInx, BlnketReplacmentDic, ValidSortedJobListWithWave,indexJobNameDicRev)
-
-
-
-
-
-
-
-
-# ###########################
-# FilesInx=WaveFilesInx
-# PrintedDic=WaveJobPrintedDic
-# ValidSortedJobListWithWave=ValidSortedJobListWithWave
-# indexJobNameDicRev=indexJobNameDicRev
-
-# a=list(indexJobNameDicRev.keys())
-
-# offset=0
-# n=1;
-
-# for inx in FilesInx:
-#     n=1;
-#     offset=0
-#     try:
-#         while 1:
-#             if  ValidSortedJobListWithWave[inx+n] in indexJobNameDicRev.keys():
-#                 if  indexJobNameDicRev[ValidSortedJobListWithWave[inx+n]]+offset in PrintedDic.keys():
-#                     offset=offset+1
-#                     continue;
-#                 PrintedDic[indexJobNameDicRev[ValidSortedJobListWithWave[inx+n]]+offset]=[ValidSortedJobListWithWave[inx],inx]
-#                 break;
-#             else:
-#                 n=n+1;
-                
-        
-#     except:
-#         continue
-
-# value_indexJobNameDicRev = list(indexJobNameDicRev.values())
-# PrintedDic_shifted={}
-# for key in PrintedDic.keys():
-#     try:
-#         inx = value_indexJobNameDicRev.index(key)
-#     except:
-#         currentValue=currentValue+1    
-#         PrintedDic_shifted[currentValue]=  PrintedDic[key]
-#         continue
-
-#     if inx == 0:
-#         currentValue=0
-#     else:
-#         currentValue=value_indexJobNameDicRev[inx-1]
-#     PrintedDic_shifted[currentValue]=  PrintedDic[key]
-  
-
-
-

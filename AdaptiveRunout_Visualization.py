@@ -93,7 +93,7 @@ class DataVisualization:
             values = row[7:].values
             
             # Create a trace for the current row
-            trace = go.Scatter(x=list(range(8, len(values) + 8)), y=values, mode='lines', 
+            trace = go.Scatter(x=list(range(len(values))), y=values, mode='lines', 
                                name=f"{read_write} - {date_time} (Bar {bar_id})", line=dict(color=colorListCode[color]), hovertemplate=f"%{{y}}<br>Name:{read_write} - {date_time} (Bar {bar_id})", hoverinfo='none')
             
             # Add the trace to the figure
@@ -103,15 +103,15 @@ class DataVisualization:
         average_values_read = self.filtered_data_read.iloc[:, 7:].mean(axis=0)
         average_values_write = self.filtered_data_write.iloc[:, 7:].mean(axis=0)
 
-        average_trace_all = go.Scatter(x=list(range(8, len(average_values_all) + 8)), y=average_values_all, 
+        average_trace_all = go.Scatter(x=list(range(len(average_values_all))), y=average_values_all, 
                                    mode='lines', name='Average all', line=dict(color='red', width=4))
         if  PlotRead:
-            average_trace_read = go.Scatter(x=list(range(8, len(average_values_read) + 8)), y=average_values_read, 
+            average_trace_read = go.Scatter(x=list(range(len(average_values_read))), y=average_values_read, 
                                    mode='lines', name='Average read', line=dict(color='green', width=4))
             fig.add_trace(average_trace_read)
             
         if PlotWrite:
-            average_trace_write = go.Scatter(x=list(range(8, len(average_values_write) + 8)), y=average_values_write, 
+            average_trace_write = go.Scatter(x=list(range(len(average_values_write))), y=average_values_write, 
                                    mode='lines', name='Average write', line=dict(color='purple', width=4))
             fig.add_trace(average_trace_write)
 
@@ -129,12 +129,12 @@ class DataVisualization:
             try:
                 if PlotWrite:
                     average_values_barID_write[barID]= self.dataframes_write[barID].iloc[:, 7:].mean(axis=0)
-                    average_barId_trace_write.append(go.Scatter(x=list(range(8, len(average_values_barID_write[barID]) + 8)), y=average_values_barID_write[barID], 
+                    average_barId_trace_write.append(go.Scatter(x=list(range(len(average_values_barID_write[barID]))), y=average_values_barID_write[barID], 
                                                mode='lines', name='Write average bar '+str(barID), line=dict(color=color_list[barID], width=3)))
                 if PlotRead:
                     average_values_barID_read[barID]= self.dataframes_read[barID].iloc[:, 7:].mean(axis=0)
                     
-                    average_barId_trace_read.append(go.Scatter(x=list(range(8, len(average_values_barID_read[barID]) + 8)), y=average_values_barID_read[barID], 
+                    average_barId_trace_read.append(go.Scatter(x=list(range(len(average_values_barID_read[barID]))), y=average_values_barID_read[barID], 
                                               mode='lines', name='Read average bar '+str(barID), line=dict(color=color_list[barID], dash='dash', width=3)))
             except:
                 continue

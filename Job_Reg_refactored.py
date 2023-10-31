@@ -235,13 +235,22 @@ class CalcC2C():
         indexfirstSetDistance = next((i for i, row in enumerate(AnalyzerVersion['Parameter']) if row == 'Registration Y Distance Between Patterns In MM'), -1)
 
         GlobalScale =  float(AnalyzerVersion['Value'][indexGlobalScale]) # Drop3 simplex = 0.9976, Duplex = 0.9984 ,,,, Drop5 Simplex = 0.9953, Duplex = 0.9945 
-        DistBetweenSets =  int(AnalyzerVersion['Value'][indexDistBetweenSets]); 
-        # if firstSetDistance:
-        #     firstSetDistance_val = firstSetDistance
-        # else:
-        #     firstSetDistance_val=float(AnalyzerVersion['Value'][indexfirstSetDistance])*10000; 
         
-        firstSetDistance_val=float(AnalyzerVersion['Value'][indexfirstSetDistance])*10000; 
+        if indexDistBetweenSets == -1:
+            indexfirstSetDistance = next((i for i, row in enumerate(AnalyzerVersion['Parameter']) if row == 'Left Set#0'), -1)
+            indexDistBetweenSets = next((i for i, row in enumerate(AnalyzerVersion['Parameter']) if row == 'Left Set#1'), -1)
+
+            firstSetDistance_val=float(AnalyzerVersion['Value'][indexfirstSetDistance])*1000; 
+
+            DistBetweenSets =abs(  float(AnalyzerVersion['Value'][indexDistBetweenSets])-float(AnalyzerVersion['Value'][indexfirstSetDistance]))*1000 ; 
+        else:
+               DistBetweenSets =  int(AnalyzerVersion['Value'][indexDistBetweenSets]); 
+               # if firstSetDistance:
+               #     firstSetDistance_val = firstSetDistance
+               # else:
+               #     firstSetDistance_val=float(AnalyzerVersion['Value'][indexfirstSetDistance])*10000; 
+               
+               firstSetDistance_val=firstSetDistance /GlobalScale; 
 
    
         return GlobalScale,DistBetweenSets,firstSetDistance_val,geometry
@@ -275,8 +284,7 @@ class CalcC2C():
          
          GlobalScale,DistBetweenSets,firstSetDistance_val,geometry = self.extract_TargetParameters(geometry)
          
-         if firstSetDistance:
-             firstSetDistance_val = firstSetDistance /GlobalScale
+
 
          print('firstSetDistance_val '+str(firstSetDistance_val))
          print('firstSetDistance '+str(firstSetDistance))
@@ -427,8 +435,7 @@ class CalcC2C():
         
         GlobalScale,DistBetweenSets,firstSetDistance_val,geometry = self.extract_TargetParameters(geometry)
 
-        if firstSetDistance:
-            firstSetDistance_val = firstSetDistance /GlobalScale
+
             
         
         print('firstSetDistance_val '+str(firstSetDistance_val))

@@ -26,6 +26,8 @@ from plotly.subplots import make_subplots
 import re
 from scipy.signal import savgol_filter
 import pickle
+import seaborn as sns
+import matplotlib.colors as mcolors
 
 
 # import plotly.io as pio
@@ -34,9 +36,14 @@ import pickle
 
 # %matplotlib
 ############################################################################
-global ColorDic,pixSize,MaxWaveWindow,sideDic,CircleArea,DistBtwCrcle
+global ColorDic,pixSize,MaxWaveWindow,sideDic,CircleArea,DistBtwCrcle,UseTarget,DistanceBetweenColumns
+
+SatndardDistanceBetweenColumns= 404.9626381019503;
+LargeDistanceBetweenColumns= 1431.057469809592;
+UseTarget =1 # False- uses the average distance between circles in pixels, True- uses DistBtwCrcle*AQMscale = (18 x 0.9832)
 
 DistBtwCrcle=18
+ScaleY=0.9965001812608202
 AQMscale=0.9832
 CircleArea=15
 MaxWaveWindow=11
@@ -47,7 +54,18 @@ sideDic={0:'Left Side',1:'Middle',2:'Right Side'}
 
 ColorDicNum={'Magenta':0,'Yellow':1,'Blue':2,'Orange':3,'Cyan':4,'Green':5,'Black':6}
 
+
+DistanceBetweenColumns={i:SatndardDistanceBetweenColumns*1 for i in range(2,17)}
+DistanceBetweenColumns[0]=0
+
+DistanceBetweenColumns[1]=LargeDistanceBetweenColumns*1
+DistanceBetweenColumns[17]=LargeDistanceBetweenColumns*1
+
+
 ############################################################################
+
+
+
 def plot_histogram(arr, num_bins='auto'):
     flattened_arr = arr.flatten()
     plt.hist(flattened_arr, bins=num_bins)
@@ -103,7 +121,7 @@ class Circles():
     
         Roi={}
         
-        Roi['x']=[660,8130]
+        Roi['x']=[660,8380]
         Roi[0]=[700,1000]
         Roi[1]=[2200,2500]
         Roi[2]=[2750,3050]
@@ -123,6 +141,8 @@ class Circles():
         Roi[16]=[9900,10200]
         Roi[17]=[11450,11750]
         
+        StartRoiCoed={key:value[0]-Roi[0][0] for key,value in Roi.items() if key != 'x'}
+        
         ImRoi={}
 
 
@@ -133,7 +153,7 @@ class Circles():
         #    plt.figure(key)
         #    plt.imshow(value)    
    
-        return ImRoi
+        return ImRoi,StartRoiCoed
 
 
 
@@ -280,6 +300,12 @@ class Circles():
     def CreatColorList(self,Clr,current_line_sorted):
         y= [center[1] for center in current_line_sorted[Clr]]
         return y
+    
+    
+    def CreatColorList_x(self,Clr,current_line_sorted,StartRoiCoed_side):
+        x= [center[0]+StartRoiCoed_side for center in current_line_sorted[Clr]]
+        return x
+    
 
     def CreatDF_meanMinusY(self,ClrDF):
         DFdiffVSmean = pd.DataFrame()
@@ -342,13 +368,16 @@ class Circles():
            
        return ImgClr,gray,circle_image,edges,ClrDF_raw
  
-    def CalcorColorMat(self,ImRoi):
+    def CalcorColorMat(self,ImRoi,StartRoiCoed):
        
            
        ImgClr={}
        ClrDF_raw={}
+       ClrDF_rawXY={}
 
-       for i in range(3):
+       current_line_sortedDIC={}
+
+       for i in range(len(ImRoi.keys())):
            
            circle_centers,gray,circle_image,edges=self.find_circles(ImRoi[i],15);
 
@@ -366,16 +395,32 @@ class Circles():
 
            
            ClrDF=pd.DataFrame()
+           ClrDF_x=pd.DataFrame()
+
            tmp_df=pd.DataFrame()
+           tmp_df_xy=pd.DataFrame()
            for Key,Value in ColorDic.items():
                tmp_df = pd.DataFrame({Value: self.CreatColorList(Key,current_line_sorted)})
                ClrDF = pd.concat([ClrDF, tmp_df], axis=1)
+               ClrDF_x = pd.concat([ClrDF_x, tmp_df], axis=1)
+               tmp_df_x = pd.DataFrame({Value+'_x': self.CreatColorList_x(Key,current_line_sorted,StartRoiCoed[i])})
+               ClrDF_x = pd.concat([ClrDF_x, tmp_df_x], axis=1)
+
+               
+               
            
+            
+           current_line_sortedDIC[i] = current_line_sorted
            ClrDF_raw[i]=ClrDF
+           ClrDF_rawXY[i]=ClrDF_x
 
            
-       return gray,circle_image,edges,ClrDF_raw   
+       return gray,circle_image,edges,ClrDF_raw,ClrDF_rawXY,current_line_sortedDIC  
  
+    
+
+ 
+    
     def delete_indices_with_numpy(self,lst, indices):
         
         indices = np.sort(indices)[::-1]  # Sort indices in reverse order to avoid index shifting
@@ -417,31 +462,84 @@ class Circles():
 
         return C2Cmat
     
-    def calcDiffernceFromeTarget(self,ClrDF_rawSide,dymeanList,colorInUseName):
+    def calcDiffernceFromeTarget(self,ClrDF_rawSide,dymeanList,colorInUseName,strartPos):
         
         yTarget=[]
 
         ClrDF_fromTarget=pd.DataFrame()
         ClrDF_fromTargetS_goly=pd.DataFrame()
 
-        strartPos=ClrDF_rawSide['Magenta'][0]
+        if not strartPos:
+            strartPos=ClrDF_rawSide['Magenta'][0]
         # for col in ClrDF_rawSide.columns:
         #     dymean= np.mean(np.diff(ClrDF_rawSide[col])[:200])
         #     dymeanList.append(dymean)
+        
+        if  UseTarget:
+           dy= DistBtwCrcle*AQMscale
+        else:
+           dy= np.mean(np.array(dymeanList))
+
 
         yTargetDF=pd.DataFrame()
 
         for col in colorInUseName:
             # dymean= np.mean(np.diff(ClrDF_rawSide[col])[:200])
             # dymeanList.append(dymean)
-            yTarget = [i * np.mean(np.array(dymeanList)) + strartPos for i in range(len(ClrDF_rawSide[col]))]
+            yTarget = [i * dy + strartPos for i in range(len(ClrDF_rawSide[col]))]
             ClrDF_fromTarget[col]=(pd.Series(yTarget)- ClrDF_rawSide[col])
             ClrDF_fromTargetS_goly[col]=savgol_filter((pd.Series(yTarget)- ClrDF_rawSide[col]), MaxWaveWindow, S_g_Degree)
             yTargetDF=pd.concat((yTargetDF,pd.Series(yTarget).rename(col)),axis=1)
             yTarget=[]
 
-        return ClrDF_fromTarget,ClrDF_fromTargetS_goly,dymeanList,yTargetDF
+        return ClrDF_fromTarget,ClrDF_fromTargetS_goly,dymeanList,yTargetDF,strartPos
     
+    
+    def calcDiffernceFromeTargetXY(self,ClrDF_rawSide,dymeanList,colorInUseName,strartPos,strartPos_x,DistanceBetweenColumns_side):
+        
+        yTarget=[]
+
+        ClrDF_fromTarget=pd.DataFrame()
+        ClrDF_fromTargetS_goly=pd.DataFrame()
+
+        if not strartPos:
+            strartPos=ClrDF_rawSide['Magenta'][0]
+        # for col in ClrDF_rawSide.columns:
+        #     dymean= np.mean(np.diff(ClrDF_rawSide[col])[:200])
+        #     dymeanList.append(dymean)
+        
+        if not strartPos_x:
+            strartPos_x=ClrDF_rawSide['Magenta_x'][0]+DistBtwCrcle
+        
+        
+        strartPos_x = strartPos_x + DistanceBetweenColumns_side
+        
+        if  UseTarget:
+           dy= DistBtwCrcle*AQMscale
+        else:
+           dy= np.mean(np.array(dymeanList))
+
+
+        yTargetDF=pd.DataFrame()
+        xTargetDF = pd.DataFrame()
+
+        for j,col in enumerate(colorInUseName):
+            # dymean= np.mean(np.diff(ClrDF_rawSide[col])[:200])
+            # dymeanList.append(dymean)
+            yTarget = [i * dy + strartPos for i in range(len(ClrDF_rawSide[col]))]
+            xTarget = [strartPos_x for i in range(len(ClrDF_rawSide[col]))]
+            ClrDF_fromTarget[col]=(pd.Series(yTarget)- ClrDF_rawSide[col])
+            ClrDF_fromTargetS_goly[col]=savgol_filter((pd.Series(yTarget)- ClrDF_rawSide[col]), MaxWaveWindow, S_g_Degree)
+            yTargetDF=pd.concat((yTargetDF,pd.Series(yTarget).rename(col)),axis=1)
+            yTarget=[]
+            xTargetDF=pd.concat((xTargetDF,pd.Series(xTarget).rename(col+'_x')),axis=1)
+            xTarget=[]
+            if j < len(colorInUseName)-1:
+                # strartPos_x = DistBtwCrcle/AQMscale +strartPos_x
+                strartPos_x = DistBtwCrcle/ScaleY +strartPos_x
+        
+
+        return ClrDF_fromTarget,ClrDF_fromTargetS_goly,dymeanList,yTargetDF,strartPos,strartPos_x,xTargetDF
     def CalcDiffTarget(self,ClrDF,dymeanList):
         
             for col in ClrDF.columns:
@@ -1098,12 +1196,19 @@ colorInUseNum=[ColorDicNum[itm] for itm in colorInUseName]
 # plt.imshow(imInp_Orig)
 
 
-imInp_Orig = cv2.imread(Circles(r'D:\B8\new file\95-0-16\FullImage.bmp').pthF)
+imInp_Orig = cv2.imread(Circles(r'D:\B8\new file\95-0-18\FullImage.bmp').pthF)
 
 plt.figure()
 plt.imshow(imInp_Orig)
 
+# ImRoi= Circles(r'D:\B8\new file\95-0-16\FullImage.bmp').loadImage();
+
+
+
+
+
 fileNME='\\FullImage.bmp'
+ImRoi,StartRoiCoed= Circles(sInput+'\\'+pnl+fileNME).loadImage();
 
 
 C2Cmat_allPanels=pd.DataFrame()
@@ -1115,7 +1220,7 @@ Color_Black_Sgoly_allPanels={}
 
 ClrDF_fromTargetPnl={}
 
-for i in range(3):
+for i in range(len(ImRoi.keys())):
     Cyan_Black_Sgoly_allPanels[i]=pd.DataFrame();
     Green_Black_Sgoly_allPanels[i]=pd.DataFrame();
     ClrDF_fromTargetS_goly_allPanels[i]=pd.DataFrame();
@@ -1125,7 +1230,6 @@ for i in range(3):
 indexPanelNameDic={}
 
 
-ImRoi= Circles(sInput+'\\'+pnl+fileNME).loadImage();
 
 
 # ImRoi= Circles(sInput+'\\'+pnl+fileNME).loadImage();
@@ -1152,14 +1256,18 @@ Clr1='Cyan'
 #     for i in range(3):
 #       dymeanList=Circles(sInput+'\\'+Pnl+fileNME).CalcDiffTarget(ClrDF_raw[i],dymeanList)  
 
+plt.figure('ImRoi')
+plt.imshow(ImRoi)
+
 
 # for Pnl in sInputListL:
 
 for Pnl in sInputListSORTED:
 
-    ImRoi= Circles(sInput+'\\'+Pnl+fileNME).loadImage();
-    
-    gray,circle_image,edges,ClrDF_raw = Circles(sInput+'\\'+Pnl+fileNME).CalcorColorMat(ImRoi)
+    ImRoi,StartRoiCoed= Circles(sInput+'\\'+Pnl+fileNME).loadImage();
+    pth=r'D:\B8\new file\95-0-16\FullImage.bmp'
+    # pth=sInput+'\\'+Pnl+fileNME
+    gray,circle_image,edges,ClrDF_raw, ClrDF_rawXY,current_line_sortedDIC = Circles(pth).CalcorColorMat(ImRoi,StartRoiCoed)
     
     
     # C2CmatOP_side = Circles(sInput).calcC2C('Magenta', ClrDF_raw[0]);
@@ -1169,19 +1277,28 @@ for Pnl in sInputListSORTED:
     dymeanListdic={}
     x={}
     dymeanList=[]
-    for i in range(3):
-      dymeanList=Circles(sInput+'\\'+Pnl+fileNME).CalcDiffTarget(ClrDF_raw[i],dymeanList)  
+    for i in range(len(ImRoi.keys())):
+      dymeanList=Circles(pth).CalcDiffTarget(ClrDF_raw[i],dymeanList)  
     
     ClrDF_fromTargetSide={}
 
+    strartPos =0
+    strartPos_x =np.mean(ClrDF_rawXY[0]['Magenta_x'])
     
-    for i in range(3):
+    yTargetDF_all={}
+    xTargetDF_all={}
+    for i in range(len(ImRoi.keys())):
         
         # dymeanList=[]
     
         # dymeanList=Circles(sInput+'\\'+Pnl+fileNME).CalcDiffTarget(ClrDF_raw[i],dymeanList)
     
-        ClrDF_fromTarget[i],ClrDF_fromTargetS_goly[i],dymeanListdic[i],yTargetDF = Circles(sInput+'\\'+Pnl+fileNME).calcDiffernceFromeTarget(ClrDF_raw[i],dymeanList,colorInUseName);
+        # ClrDF_fromTarget[i],ClrDF_fromTargetS_goly[i],dymeanListdic[i],yTargetDF,strartPos = Circles(pth).calcDiffernceFromeTarget(ClrDF_raw[i],dymeanList,colorInUseName,strartPos);
+        
+        ClrDF_fromTarget[i],ClrDF_fromTargetS_goly[i],dymeanListdic[i],yTargetDF,strartPos,strartPos_x,xTargetDF = Circles(pth).calcDiffernceFromeTargetXY(ClrDF_rawXY[i],dymeanList,colorInUseName,strartPos,strartPos_x,DistanceBetweenColumns[i]);
+        xTargetDF_all[i]=xTargetDF
+        yTargetDF_all[i]=yTargetDF
+
         x[i]=np.mean(dymeanListdic[i])
         ClrDF_fromTargetS_goly_allPanels[i]=pd.concat([ClrDF_fromTargetS_goly_allPanels[i], ClrDF_fromTargetS_goly[i]])
         ClrDF_fromTarget_allPanels[i]=pd.concat([ClrDF_fromTarget_allPanels[i], ClrDF_fromTarget[i]])
@@ -1217,6 +1334,10 @@ for Pnl in sInputListSORTED:
     indexPanelNameDic[len(C2Cmat_allPanels.iloc[:, 0])-1] = Pnl
     
     print(Pnl)
+
+
+
+
     
    
 C2Cmat_allPanels= C2Cmat_allPanels.reset_index(drop=True)    
@@ -1423,7 +1544,6 @@ figCyanVsClr_multiPanel_colorFromTarget= PlotSingle_BasicVsTraget_multiPanel(db,
 
 
 #############################################################################################
-
 
 
 
@@ -1786,8 +1906,8 @@ FFT_TrgHz_Side= FFT_Plot(db,PlotTitle,fileName,439/((7549/12480)*0.504), PageSid
 # plt.imshow(dIm)
 
 
-# plt.figure('ImRoi2')
-# plt.imshow(ImRoi[i])
+plt.figure('ImRoi2')
+plt.imshow(ImRoi[i])
 
 # plt.figure('adjusted_image2')
 # plt.imshow(adjusted_image)
@@ -1796,6 +1916,52 @@ FFT_TrgHz_Side= FFT_Plot(db,PlotTitle,fileName,439/((7549/12480)*0.504), PageSid
 # plt.imshow(circle_image)
 
 ###########################################################
+ClrDF_rawSide=ClrDF_rawXY[4]
+DistanceBetweenColumns_side=DistanceBetweenColumns[4]
+# strartPos =0
+# strartPos_x =np.mean(ClrDF_rawXY[0]['Magenta_x'])
+
+yTarget=[]
+
+ClrDF_fromTarget=pd.DataFrame()
+ClrDF_fromTargetS_goly=pd.DataFrame()
+
+if not strartPos:
+    strartPos=ClrDF_rawSide['Magenta'][0]
+# for col in ClrDF_rawSide.columns:
+#     dymean= np.mean(np.diff(ClrDF_rawSide[col])[:200])
+#     dymeanList.append(dymean)
+
+if not strartPos_x:
+    strartPos_x=ClrDF_rawSide['Magenta_x'][0]+DistBtwCrcle
+
+
+strartPos_x = strartPos_x + DistanceBetweenColumns_side
+
+if  UseTarget:
+   dy= DistBtwCrcle*AQMscale
+else:
+   dy= np.mean(np.array(dymeanList))
+
+
+yTargetDF=pd.DataFrame()
+xTargetDF = pd.DataFrame()
+
+for j,col in enumerate(colorInUseName):
+    # dymean= np.mean(np.diff(ClrDF_rawSide[col])[:200])
+    # dymeanList.append(dymean)
+    yTarget = [i * dy + strartPos for i in range(len(ClrDF_rawSide[col]))]
+    xTarget = [strartPos_x for i in range(len(ClrDF_rawSide[col]))]
+    ClrDF_fromTarget[col]=(pd.Series(yTarget)- ClrDF_rawSide[col])
+    ClrDF_fromTargetS_goly[col]=savgol_filter((pd.Series(yTarget)- ClrDF_rawSide[col]), MaxWaveWindow, S_g_Degree)
+    yTargetDF=pd.concat((yTargetDF,pd.Series(yTarget).rename(col)),axis=1)
+    yTarget=[]
+    xTargetDF=pd.concat((xTargetDF,pd.Series(xTarget).rename(col+'_x')),axis=1)
+    xTarget=[]
+    if j < len(colorInUseName)-1:
+        strartPos_x = DistBtwCrcle/AQMscale +strartPos_x
+                # strartPos_x = DistBtwCrcle +strartPos_x
+        
 
 
     
@@ -1890,6 +2056,242 @@ FFT_TrgHz_Side= FFT_Plot(db,PlotTitle,fileName,439/((7549/12480)*0.504), PageSid
 # cv2.waitKey(0)
 
 #############################################################################################################
+
+
+dxList=[]
+for i in range(len(ClrDF_rawXY.keys())-1):
+    dx = abs(np.mean(ClrDF_rawXY[i]['Black_x'])-np.mean(ClrDF_rawXY[i+1]['Magenta_x']))
+    dxList.append(dx)
+
+
+
+
+colX= list(xTargetDF_all[0].columns)
+dxColor=[]
+# k=1
+for k in range(len(ClrDF_rawXY.keys())):
+    for i in range(len(colX)-1):
+        dx = abs(np.mean(ClrDF_rawXY[k][colX[i]])-np.mean(ClrDF_rawXY[k][colX[i+1]]))
+        dxColor.append(dx)
+
+
+plt.figure(1)
+plt.plot(dxColor)
+
+np.mean(dxColor)
+
+small=np.mean(dxList[1:16])
+large=np.mean([dxList[0],dxList[16]])
+
+
+        
+ClrDF_TargetXY={}
+
+for i in range(len(ClrDF_rawXY.keys())):
+    targetDF=pd.DataFrame()
+    for col in yTargetDF_all[i].columns:
+        targetDF=pd.concat((targetDF,yTargetDF_all[i][col].rename(col)),axis=1)
+        targetDF=pd.concat((targetDF,xTargetDF_all[i][col+'_x'].rename(col+'_x')),axis=1)
+    ClrDF_TargetXY[i]=targetDF
+
+DeltaTarget_result={}
+for i in range(len(ClrDF_TargetXY.keys())):
+    DeltaTarget_result[i]=  ClrDF_TargetXY[i]-  ClrDF_rawXY[i]
+
+col='Magenta'
+plt.figure('all collors x'+col)
+
+
+
+colX=col+'_x'
+
+TmagentaY=pd.DataFrame()
+TmagentaX=pd.DataFrame()
+
+DeltaTarget_resultMagentaY=pd.DataFrame()
+DeltaTarget_resultMagentaX=pd.DataFrame()
+
+for i in range(len(ClrDF_rawXY.keys())):
+    TmagentaY=pd.concat([TmagentaY,yTargetDF_all[i][col]],axis=1).rename(columns={col:col+str(i)})
+    TmagentaX=pd.concat([TmagentaX,xTargetDF_all[i][colX]],axis=1).rename(columns={colX:colX+str(i)})
+    DeltaTarget_resultMagentaX=pd.concat([DeltaTarget_resultMagentaX,(xTargetDF_all[i][colX]-ClrDF_rawXY[i][colX])],axis=1).rename(columns={colX:colX+str(i)})
+    DeltaTarget_resultMagentaY=pd.concat([DeltaTarget_resultMagentaY,(yTargetDF_all[i][col]-ClrDF_rawXY[i][col])],axis=1).rename(columns={col:col+str(i)})
+
+# plt.figure(col)
+    
+
+# Meshgrid 
+# x = np.array(xTargetDF_all[17].iloc[:200,:])
+# y = np.array(yTargetDF_all[17].iloc[:200,:])
+x = np.array(TmagentaX.iloc[:200,:])
+y = np.array(TmagentaY.iloc[:200,:])
+
+
+# X, Y = np.meshgrid(x, y)
+
+# Directional vectors 
+# u = np.array(DeltaTarget_result[17][list(xTargetDF_all[0].columns)].iloc[:200,:])
+# v = np.zeros((200, 18))
+u = np.array(DeltaTarget_resultMagentaX.iloc[:200,:])
+# u =np.zeros((200, 18))
+
+
+v = np.array(DeltaTarget_resultMagentaY.iloc[:200,:])
+# v = np.zeros((200, 18))
+
+# z = np.sqrt(np.square(u)+np.square(v))
+
+if col== 'Yellow':
+    col ='gold'
+
+# arrow_scale = 0.02  # Adjust the size of the dots
+# for i in range(len(x)):
+#     for j in range(len(y)):
+#         plt.plot(X[i, j] + arrow_scale * U[i, j], Y[i, j] + arrow_scale * V[i, j], 'o', color=col)
+
+# # Plotting Vector Field with QUIVER 
+plt.quiver(x, y, u, v, color=col, headaxislength=4, headlength=5, headwidth=3) 
+plt.title('Vector Field') 
+
+# Setting x, y boundary limits 
+# plt.xlim(-7, 7) 
+# plt.ylim(-7, 7) 
+
+# Show plot with grid 
+plt.grid() 
+plt.show() 
+
+
+
+
+plt.figure()
+plt.plot(DeltaTarget_result[0]['Magenta_x']-DeltaTarget_result[0]['Green_x'])
+
+
+
+##################################################################################
+
+
+plt.figure('all collors1')
+
+
+col='Magenta'
+colX=col+'_x'
+TmagentaY=pd.DataFrame()
+TmagentaX=pd.DataFrame()
+
+DeltaTarget_resultMagentaY=pd.DataFrame()
+DeltaTarget_resultMagentaX=pd.DataFrame()
+
+for i in range(len(ClrDF_rawXY.keys())):
+    TmagentaY=pd.concat([TmagentaY,yTargetDF_all[i][col]],axis=1).rename(columns={col:col+str(i)})
+    TmagentaX=pd.concat([TmagentaX,xTargetDF_all[i][colX]],axis=1).rename(columns={colX:colX+str(i)})
+    DeltaTarget_resultMagentaX=pd.concat([DeltaTarget_resultMagentaX,(xTargetDF_all[i][colX]-ClrDF_rawXY[i][colX])],axis=1).rename(columns={colX:colX+str(i)})
+    DeltaTarget_resultMagentaY=pd.concat([DeltaTarget_resultMagentaY,(yTargetDF_all[i][col]-ClrDF_rawXY[i][col])],axis=1).rename(columns={col:col+str(i)})
+
+plt.figure(col)
+    
+
+# Meshgrid 
+x = np.array(xTargetDF_all[0].iloc[:,:])
+y = np.array(yTargetDF_all[0].iloc[:,:])
+# x = np.array(TmagentaX.iloc[:200,:])
+# y = np.array(TmagentaY.iloc[:200,:])
+
+# X, Y = np.meshgrid(x, y)
+
+# Directional vectors 
+u = np.array(DeltaTarget_result[0][list(xTargetDF_all[0].columns)].iloc[:,:])
+v = np.array(DeltaTarget_result[0][list(yTargetDF_all[0].columns)].iloc[:,:])
+# u = np.array(DeltaTarget_resultMagentaX.iloc[:200,:])
+# v = np.array(DeltaTarget_resultMagentaY.iloc[:200,:])
+
+if col== 'Yellow':
+    col ='gold'
+
+# arrow_scale = 0.02  # Adjust the size of the dots
+# for i in range(len(x)):
+#     for j in range(len(y)):
+#         plt.plot(X[i, j] + arrow_scale * U[i, j], Y[i, j] + arrow_scale * V[i, j], 'o', color=col)
+
+# # Plotting Vector Field with QUIVER 
+# plt.quiver(x, y, u, v, color=col, headaxislength=4, headlength=5, headwidth=3) 
+# plt.title('Vector Field') 
+# Depict illustration 
+# plt.figure(figsize=(10, 10)) 
+plt.streamplot(x,y,u,v, density=1.4, linewidth=None, color='#A23BEC') 
+# plt.plot(-1,0,'-or') 
+# plt.plot(1,0,'-og') 
+plt.title('Electromagnetic Field')
+# Setting x, y boundary limits 
+# plt.xlim(-7, 7) 
+# plt.ylim(-7, 7) 
+
+# Show plot with grid 
+plt.grid() 
+plt.show() 
+
+
+
+# imInp_Orig = cv2.imread(r'D:\B8\new file\95-0-18\FullImage.bmp')
+# plt.Figure()
+# plt.imshow(imInp_Orig)
+########################################################################
+
+ZallCols={}
+
+colList=list(yTargetDF_all[0].columns)
+
+for col in list(yTargetDF_all[0].columns):
+
+    colX=col+'_x'
+    
+    TmagentaY=pd.DataFrame()
+    TmagentaX=pd.DataFrame()
+    
+    DeltaTarget_resultMagentaY=pd.DataFrame()
+    DeltaTarget_resultMagentaX=pd.DataFrame()
+    
+    for i in range(len(ClrDF_rawXY.keys())):
+        TmagentaY=pd.concat([TmagentaY,yTargetDF_all[i][col]],axis=1).rename(columns={col:col+str(i)})
+        TmagentaX=pd.concat([TmagentaX,xTargetDF_all[i][colX]],axis=1).rename(columns={colX:colX+str(i)})
+        DeltaTarget_resultMagentaX=pd.concat([DeltaTarget_resultMagentaX,(xTargetDF_all[i][colX]-ClrDF_rawXY[i][colX])],axis=1).rename(columns={colX:colX+str(i)})
+        DeltaTarget_resultMagentaY=pd.concat([DeltaTarget_resultMagentaY,(yTargetDF_all[i][col]-ClrDF_rawXY[i][col])],axis=1).rename(columns={col:col+str(i)})
+
+    u = np.array(DeltaTarget_resultMagentaX.iloc[:200,:])
+    # u =np.zeros((200, 18))
+
+
+    v = np.array(DeltaTarget_resultMagentaY.iloc[:200,:])
+    # v = np.zeros((200, 18))
+
+    ZallCols[col] = np.sqrt(np.square(u)+np.square(v))
+    
+    
+arr=  np.zeros((200, 18))
+
+for i in range(18):
+    for j in range(200):
+        tmp= [ZallCols[col][j,i] for col in colList]
+        arr[j,i]= np.max(tmp)-np.min(tmp)
+
+
+
+
+plt.figure('sns')
+
+colors = sns.color_palette("YlOrRd", as_cmap=True)
+
+sns.heatmap(arr*pixSize, annot=False, cmap=colors, fmt='.2f')
+
+# Set labels for the axes
+plt.xlabel('X Axis')
+plt.ylabel('Y Axis')
+
+# Show the heatmap
+plt.show()
+
+
 
 
 

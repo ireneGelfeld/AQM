@@ -50,7 +50,7 @@ JobLength = 0;
 colorID_aqm={'Cyan':1,'Magenta':2,'Yellow':3,'Black':4,'Orange':5,'Blue':6,'Green':7}       
 
 #### Plots
-I2Splot=0 # Plot I2S 
+I2Splot=1 # Plot I2S 
 C2Cplot=1 # Plot C2C
 ScalePlot=0 # Plot Scale
 WaveChangePlot=1 # Plot Wave Change

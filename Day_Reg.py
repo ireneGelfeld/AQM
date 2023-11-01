@@ -52,7 +52,7 @@ colorID_aqm={'Cyan':1,'Magenta':2,'Yellow':3,'Black':4,'Orange':5,'Blue':6,'Gree
 #### Plots
 I2Splot=1 # Plot I2S 
 C2Cplot=1 # Plot C2C
-ScalePlot=0 # Plot Scale
+ScalePlot=1 # Plot Scale
 WaveChangePlot=1 # Plot Wave Change
 c2cChangePlot = 1 # Plot c2c Change MUST be align with Plot Wave Change
 scaleChangePlot = 1 # Plot scale Change MUST be align with Plot Wave Change

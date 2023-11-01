@@ -60,8 +60,8 @@ Plot_RegForAllColors_Right = 1;
 Plot_Scale= 1;
 Plot_MinMaxScale= 1;
 Plot_MinMaxSETS= 1;
-
-
+PlotAllSetsInOneView_Left=1
+PlotAllSetsInOneView_Right=1
 BaseDefult= 40103.853777615
 
 ######################################################################
@@ -716,6 +716,55 @@ def findMinMaxDiv(Vector):
     filtered_data1 = [x for x in MaxDivNotNaN if  x >= percentile_1 and x <= percentile_99]
     
     return  max(filtered_data1)-min(filtered_data1),max(filtered_data1),min(filtered_data1)        
+
+
+def PlotSingle(db,PlotTitle,fileName,  SetNumber ,fig):
+    
+   if not fig:
+       fig = go.Figure()
+   
+
+   dashSolidDot={1:'solid',2:'dash',3:'dot'}
+   for index, row in db.iterrows():  
+               
+       if index=='Yellow':
+           lineColor='gold';
+       else:
+           lineColor=index;
+           
+       
+       fig.add_trace(go.Scatter(y=list(row), line=dict(color=lineColor, dash=dashSolidDot[SetNumber]),name=index+' set ' +str(SetNumber)))
+       
+   
+   titleColor = 'black'
+  
+   
+   fig.update_layout(title={
+        'text': PlotTitle,
+        'font': {'color': titleColor}
+    })
+     #fig_back.update_layout(title='ImagePlacement_Left-Back')
+  
+     
+   fig.update_layout(
+         hoverlabel=dict(
+             namelength=-1
+         )
+     )
+     
+     # datetime object containing current date and time
+    
+   if fileName:
+       plot(fig,auto_play=True,filename=fileName)  
+    # plot(fig)  
+
+    #plot(fig_back,filename="AQM-Back.html")  
+       fig.show()
+     
+   return fig   
+
+
+
 ####################################################################################################
 
 
@@ -1894,5 +1943,108 @@ if Plot_MinMaxSETS:
     except:
         1;
 
+######################################################
 
+if PlotAllSetsInOneView_Left:
+    db1=St1dataAllColorsFrontLeft
+    db2=St2dataAllColorsFrontLeft
+    db3=St3dataAllColorsFrontLeft
+    
+    
+    PlotTitle=f+' FRONT-LEFT'
+    fileName=0
+    SetNumber=1
+    
+    FigAllsetsInView=PlotSingle(db1,PlotTitle,fileName,  SetNumber ,0)
+
+    PlotTitle=f+' FRONT-LEFT'
+    fileName=0
+    SetNumber=2
+
+    FigAllsetsInView=PlotSingle(db2,PlotTitle,fileName,  SetNumber ,FigAllsetsInView)
+
+    PlotTitle=f+' FRONT-LEFT'
+    fileName=PlotTitle+'.html'
+    SetNumber=3
+
+    FigAllsetsInView=PlotSingle(db3,PlotTitle,fileName,  SetNumber ,FigAllsetsInView)
+    
+    try:
+        db1=St1dataAllColorsBackLeft
+        db2=St2dataAllColorsBackLeft
+        db3=St3dataAllColorsBackLeft
+        
+        
+        PlotTitle=f+' BACK-LEFT'
+        fileName=0
+        SetNumber=1
+        
+        FigAllsetsInViewBack=PlotSingle(db1,PlotTitle,fileName,  SetNumber ,0)
+
+        PlotTitle=f+' BACK-LEFT'
+        fileName=0
+        SetNumber=2
+
+        FigAllsetsInViewBack=PlotSingle(db2,PlotTitle,fileName,  SetNumber ,FigAllsetsInViewBack)
+
+        PlotTitle=f+' BACK-LEFT'
+        fileName=PlotTitle+'.html'
+        SetNumber=3
+
+        FigAllsetsInViewBack=PlotSingle(db3,PlotTitle,fileName,  SetNumber ,FigAllsetsInViewBack) 
+    except:
+        1
+        
+        
+
+
+if PlotAllSetsInOneView_Right:
+    db1=St1dataAllColorsFrontRight
+    db2=St2dataAllColorsFrontRight
+    db3=St3dataAllColorsFrontRight
+    
+    
+    PlotTitle=f+' FRONT-RIGHT'
+    fileName=0
+    SetNumber=1
+    
+    FigAllsetsInViewRight=PlotSingle(db1,PlotTitle,fileName,  SetNumber ,0)
+
+    PlotTitle=f+' FRONT-RIGHT'
+    fileName=0
+    SetNumber=2
+
+    FigAllsetsInViewRight=PlotSingle(db2,PlotTitle,fileName,  SetNumber ,FigAllsetsInViewRight)
+
+    PlotTitle=f+' FRONT-RIGHT'
+    fileName=PlotTitle+'.html'
+    SetNumber=3
+
+    FigAllsetsInViewRight=PlotSingle(db3,PlotTitle,fileName,  SetNumber ,FigAllsetsInViewRight)
+    
+    try:
+        db1=St1dataAllColorsBackRight
+        db2=St2dataAllColorsBackRight
+        db3=St3dataAllColorsBackRight
+        
+        
+        PlotTitle=f+' BACK-RIGHT'
+        fileName=0
+        SetNumber=1
+        
+        FigAllsetsInViewBackRight=PlotSingle(db1,PlotTitle,fileName,  SetNumber ,0)
+
+        PlotTitle=f+' BACK-RIGHT'
+        fileName=0
+        SetNumber=2
+
+        FigAllsetsInViewBackRight=PlotSingle(db2,PlotTitle,fileName,  SetNumber ,FigAllsetsInViewBackRight)
+
+        PlotTitle=f+' BACK-RIGHT'
+        fileName=PlotTitle+'.html'
+        SetNumber=3
+
+        FigAllsetsInViewBackRight=PlotSingle(db3,PlotTitle,fileName,  SetNumber ,FigAllsetsInViewBackRight) 
+    except:
+          1  
 

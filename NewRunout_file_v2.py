@@ -1196,10 +1196,10 @@ colorInUseNum=[ColorDicNum[itm] for itm in colorInUseName]
 # plt.imshow(imInp_Orig)
 
 
-imInp_Orig = cv2.imread(Circles(r'D:\B8\new file\95-0-18\FullImage.bmp').pthF)
+# imInp_Orig = cv2.imread(Circles(r'D:\B8\new file\95-0-18\FullImage.bmp').pthF)
 
-plt.figure()
-plt.imshow(imInp_Orig)
+# plt.figure()
+# plt.imshow(imInp_Orig)
 
 # ImRoi= Circles(r'D:\B8\new file\95-0-16\FullImage.bmp').loadImage();
 
@@ -1208,7 +1208,7 @@ plt.imshow(imInp_Orig)
 
 
 fileNME='\\FullImage.bmp'
-ImRoi,StartRoiCoed= Circles(sInput+'\\'+pnl+fileNME).loadImage();
+# ImRoi,StartRoiCoed= Circles(sInput+'\\'+pnl+fileNME).loadImage();
 
 
 C2Cmat_allPanels=pd.DataFrame()
@@ -1256,17 +1256,19 @@ Clr1='Cyan'
 #     for i in range(3):
 #       dymeanList=Circles(sInput+'\\'+Pnl+fileNME).CalcDiffTarget(ClrDF_raw[i],dymeanList)  
 
-plt.figure('ImRoi')
-plt.imshow(ImRoi)
+# plt.figure('ImRoi')
+# plt.imshow(ImRoi)
 
 
 # for Pnl in sInputListL:
 
 for Pnl in sInputListSORTED:
 
-    ImRoi,StartRoiCoed= Circles(sInput+'\\'+Pnl+fileNME).loadImage();
-    pth=r'D:\B8\new file\95-0-16\FullImage.bmp'
+    # ImRoi,StartRoiCoed= Circles(sInput+'\\'+Pnl+fileNME).loadImage();
+    pth=r'D:\B8\new file\95-0-18\FullImage.bmp'
     # pth=sInput+'\\'+Pnl+fileNME
+    ImRoi,StartRoiCoed= Circles(pth).loadImage();
+
     gray,circle_image,edges,ClrDF_raw, ClrDF_rawXY,current_line_sortedDIC = Circles(pth).CalcorColorMat(ImRoi,StartRoiCoed)
     
     
@@ -1916,51 +1918,7 @@ plt.imshow(ImRoi[i])
 # plt.imshow(circle_image)
 
 ###########################################################
-ClrDF_rawSide=ClrDF_rawXY[4]
-DistanceBetweenColumns_side=DistanceBetweenColumns[4]
-# strartPos =0
-# strartPos_x =np.mean(ClrDF_rawXY[0]['Magenta_x'])
 
-yTarget=[]
-
-ClrDF_fromTarget=pd.DataFrame()
-ClrDF_fromTargetS_goly=pd.DataFrame()
-
-if not strartPos:
-    strartPos=ClrDF_rawSide['Magenta'][0]
-# for col in ClrDF_rawSide.columns:
-#     dymean= np.mean(np.diff(ClrDF_rawSide[col])[:200])
-#     dymeanList.append(dymean)
-
-if not strartPos_x:
-    strartPos_x=ClrDF_rawSide['Magenta_x'][0]+DistBtwCrcle
-
-
-strartPos_x = strartPos_x + DistanceBetweenColumns_side
-
-if  UseTarget:
-   dy= DistBtwCrcle*AQMscale
-else:
-   dy= np.mean(np.array(dymeanList))
-
-
-yTargetDF=pd.DataFrame()
-xTargetDF = pd.DataFrame()
-
-for j,col in enumerate(colorInUseName):
-    # dymean= np.mean(np.diff(ClrDF_rawSide[col])[:200])
-    # dymeanList.append(dymean)
-    yTarget = [i * dy + strartPos for i in range(len(ClrDF_rawSide[col]))]
-    xTarget = [strartPos_x for i in range(len(ClrDF_rawSide[col]))]
-    ClrDF_fromTarget[col]=(pd.Series(yTarget)- ClrDF_rawSide[col])
-    ClrDF_fromTargetS_goly[col]=savgol_filter((pd.Series(yTarget)- ClrDF_rawSide[col]), MaxWaveWindow, S_g_Degree)
-    yTargetDF=pd.concat((yTargetDF,pd.Series(yTarget).rename(col)),axis=1)
-    yTarget=[]
-    xTargetDF=pd.concat((xTargetDF,pd.Series(xTarget).rename(col+'_x')),axis=1)
-    xTarget=[]
-    if j < len(colorInUseName)-1:
-        strartPos_x = DistBtwCrcle/AQMscale +strartPos_x
-                # strartPos_x = DistBtwCrcle +strartPos_x
         
 
 
@@ -2098,24 +2056,46 @@ DeltaTarget_result={}
 for i in range(len(ClrDF_TargetXY.keys())):
     DeltaTarget_result[i]=  ClrDF_TargetXY[i]-  ClrDF_rawXY[i]
 
+
+
+
+TmagentaYDic={}
+TmagentaXDic={}
+
+DeltaTarget_resultMagentaYDic={}
+DeltaTarget_resultMagentaXDic={}
+
+
+for color in colorInUseName:
+    colorX=color+'_x'
+
+    for i in range(len(ClrDF_rawXY.keys())):
+        TmagentaY=pd.concat([TmagentaY,yTargetDF_all[i][color]],axis=1).rename(columns={color:color+str(i)})
+        TmagentaX=pd.concat([TmagentaX,xTargetDF_all[i][colorX]],axis=1).rename(columns={colorX:colorX+str(i)})
+        DeltaTarget_resultMagentaX=pd.concat([DeltaTarget_resultMagentaX,(xTargetDF_all[i][colorX]-ClrDF_rawXY[i][colorX])],axis=1).rename(columns={colorX:colorX+str(i)})
+        DeltaTarget_resultMagentaY=pd.concat([DeltaTarget_resultMagentaY,(yTargetDF_all[i][color]-ClrDF_rawXY[i][color])],axis=1).rename(columns={color:color+str(i)})
+    
+
+    TmagentaYDic[color]=TmagentaY
+    TmagentaXDic[color]=TmagentaX
+
+    DeltaTarget_resultMagentaYDic[color]=DeltaTarget_resultMagentaY
+    DeltaTarget_resultMagentaXDic[color]=DeltaTarget_resultMagentaX
+    
+    TmagentaY=pd.DataFrame()
+    TmagentaX=pd.DataFrame()
+
+    DeltaTarget_resultMagentaY=pd.DataFrame()
+    DeltaTarget_resultMagentaX=pd.DataFrame()
+    
+
 col='Magenta'
-plt.figure('all collors x'+col)
+plt.figure('all collors '+col)
 
 
 
 colX=col+'_x'
 
-TmagentaY=pd.DataFrame()
-TmagentaX=pd.DataFrame()
-
-DeltaTarget_resultMagentaY=pd.DataFrame()
-DeltaTarget_resultMagentaX=pd.DataFrame()
-
-for i in range(len(ClrDF_rawXY.keys())):
-    TmagentaY=pd.concat([TmagentaY,yTargetDF_all[i][col]],axis=1).rename(columns={col:col+str(i)})
-    TmagentaX=pd.concat([TmagentaX,xTargetDF_all[i][colX]],axis=1).rename(columns={colX:colX+str(i)})
-    DeltaTarget_resultMagentaX=pd.concat([DeltaTarget_resultMagentaX,(xTargetDF_all[i][colX]-ClrDF_rawXY[i][colX])],axis=1).rename(columns={colX:colX+str(i)})
-    DeltaTarget_resultMagentaY=pd.concat([DeltaTarget_resultMagentaY,(yTargetDF_all[i][col]-ClrDF_rawXY[i][col])],axis=1).rename(columns={col:col+str(i)})
 
 # plt.figure(col)
     
@@ -2123,8 +2103,8 @@ for i in range(len(ClrDF_rawXY.keys())):
 # Meshgrid 
 # x = np.array(xTargetDF_all[17].iloc[:200,:])
 # y = np.array(yTargetDF_all[17].iloc[:200,:])
-x = np.array(TmagentaX.iloc[:200,:])
-y = np.array(TmagentaY.iloc[:200,:])
+x = np.array(TmagentaXDic[col].iloc[:200,:])
+y = np.array(TmagentaYDic[col].iloc[:200,:])
 
 
 # X, Y = np.meshgrid(x, y)
@@ -2132,12 +2112,12 @@ y = np.array(TmagentaY.iloc[:200,:])
 # Directional vectors 
 # u = np.array(DeltaTarget_result[17][list(xTargetDF_all[0].columns)].iloc[:200,:])
 # v = np.zeros((200, 18))
-u = np.array(DeltaTarget_resultMagentaX.iloc[:200,:])
+u = np.array(DeltaTarget_resultMagentaXDic[col].iloc[:200,:])
 # u =np.zeros((200, 18))
 
 
-v = np.array(DeltaTarget_resultMagentaY.iloc[:200,:])
-# v = np.zeros((200, 18))
+# v = np.array(DeltaTarget_resultMagentaYDic[col].iloc[:200,:])
+v = np.zeros((200, 18))
 
 # z = np.sqrt(np.square(u)+np.square(v))
 
@@ -2193,18 +2173,25 @@ plt.figure(col)
     
 
 # Meshgrid 
-x = np.array(xTargetDF_all[0].iloc[:,:])
-y = np.array(yTargetDF_all[0].iloc[:,:])
-# x = np.array(TmagentaX.iloc[:200,:])
-# y = np.array(TmagentaY.iloc[:200,:])
+# x = np.array(xTargetDF_all[0].iloc[:,:])
+# y = np.array(yTargetDF_all[0].iloc[:,:])
+x = np.array(TmagentaX.iloc[:200,:])
+y = np.array(TmagentaY.iloc[:200,:])
 
 # X, Y = np.meshgrid(x, y)
 
 # Directional vectors 
-u = np.array(DeltaTarget_result[0][list(xTargetDF_all[0].columns)].iloc[:,:])
-v = np.array(DeltaTarget_result[0][list(yTargetDF_all[0].columns)].iloc[:,:])
+# u = np.array(DeltaTarget_result[0][list(xTargetDF_all[0].columns)].iloc[:,:])
+# v = np.array(DeltaTarget_result[0][list(yTargetDF_all[0].columns)].iloc[:,:])
 # u = np.array(DeltaTarget_resultMagentaX.iloc[:200,:])
-# v = np.array(DeltaTarget_resultMagentaY.iloc[:200,:])
+u =np.zeros((200, 18))
+
+
+
+
+v = np.array(DeltaTarget_resultMagentaY.iloc[:200,:])
+# v = np.zeros((200, 18))
+
 
 if col== 'Yellow':
     col ='gold'
@@ -2219,10 +2206,9 @@ if col== 'Yellow':
 # plt.title('Vector Field') 
 # Depict illustration 
 # plt.figure(figsize=(10, 10)) 
-plt.streamplot(x,y,u,v, density=1.4, linewidth=None, color='#A23BEC') 
-# plt.plot(-1,0,'-or') 
-# plt.plot(1,0,'-og') 
-plt.title('Electromagnetic Field')
+plt.quiver(x, y, u, v, color=col, headaxislength=4, headlength=5, headwidth=3) 
+plt.title('Vector Field') 
+
 # Setting x, y boundary limits 
 # plt.xlim(-7, 7) 
 # plt.ylim(-7, 7) 
@@ -2278,18 +2264,18 @@ for i in range(18):
 
 
 
-plt.figure('sns')
+# plt.figure('sns')
 
-colors = sns.color_palette("YlOrRd", as_cmap=True)
+# colors = sns.color_palette("YlOrRd", as_cmap=True)
 
-sns.heatmap(arr*pixSize, annot=False, cmap=colors, fmt='.2f')
+# sns.heatmap(arr*pixSize, annot=False, cmap=colors, fmt='.2f')
 
-# Set labels for the axes
-plt.xlabel('X Axis')
-plt.ylabel('Y Axis')
+# # Set labels for the axes
+# plt.xlabel('X Axis')
+# plt.ylabel('Y Axis')
 
-# Show the heatmap
-plt.show()
+# # Show the heatmap
+# plt.show()
 
 
 

@@ -1019,11 +1019,11 @@ Lname=CalcC2C(pthF+'/'+f,side,'',JobLength,LoadTarget).fname.split('.');
 LLname=Lname[0].split('_');
 pthComp=CalcC2C(pthF+'/'+f,side,'',JobLength,LoadTarget).pthF.replace(CalcC2C(pthF+'/'+f,side,'',JobLength,LoadTarget).pthF.split('/')[len(CalcC2C(pthF+'/'+f,side,'',JobLength,LoadTarget).pthF.split('/'))-1],"")[:-1]
    
-MeregedDataAllMeanColorRight = pd.read_csv(pthComp +'/'+'MeregedDataAllMeanColor_'+CalcC2C(pthF+'/'+f,side,'',JobLength,LoadTarget).side+'_Right.csv')    
-MeregedDataAllMeanColorLeft = pd.read_csv(pthComp +'/'+'MeregedDataAllMeanColor_'+CalcC2C(pthF+'/'+f,side,'',JobLength,LoadTarget).side+'_Left.csv')    
+# MeregedDataAllMeanColorRight = pd.read_csv(pthComp +'/'+'MeregedDataAllMeanColor_'+CalcC2C(pthF+'/'+f,side,'',JobLength,LoadTarget).side+'_Right.csv')    
+# MeregedDataAllMeanColorLeft = pd.read_csv(pthComp +'/'+'MeregedDataAllMeanColor_'+CalcC2C(pthF+'/'+f,side,'',JobLength,LoadTarget).side+'_Left.csv')    
 
-MeregedDataAllMeanColor = (MeregedDataAllMeanColorRight[['Set #1 X', 'Set #2 X', 'Set #3 X']]+MeregedDataAllMeanColorLeft[['Set #1 X', 'Set #2 X', 'Set #3 X']])/2
-MeregedDataAllMeanColor.insert(0, 'Ink\\Sets', list(MeregedDataAllMeanColorRight['Ink\\Sets']))           
+# MeregedDataAllMeanColor = (MeregedDataAllMeanColorRight[['Set #1 X', 'Set #2 X', 'Set #3 X']]+MeregedDataAllMeanColorLeft[['Set #1 X', 'Set #2 X', 'Set #3 X']])/2
+# MeregedDataAllMeanColor.insert(0, 'Ink\\Sets', list(MeregedDataAllMeanColorRight['Ink\\Sets']))           
 ############################## calc SCALE
 if Plot_Scale:
     side='Front';

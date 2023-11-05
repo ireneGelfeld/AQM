@@ -13,8 +13,8 @@ Created on Wed Jun 16 16:30:46 2021
 ##############################################################################
 global thresholdCorr,NumOfConsElements;
 
-thresholdCorr = 30
-NumOfConsElements=4
+thresholdCorr = 30 # In [um]- The threshold between Consecutive corrections
+NumOfConsElements=4 # Number of consecutive corrections with a difference above thresholdCorr
 
 
 

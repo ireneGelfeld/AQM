@@ -213,7 +213,7 @@ class CorrectionAndDiversion():
         
         df = pd.DataFrame(self.diverdingJobs).T
         
-        df.to_csv('DivergingJobs.csv')
+        df.to_csv('DivergingJobs_'+self.side+'.csv')
         
         return df
                 
@@ -243,7 +243,6 @@ side =  'Front'
   
     
 correctionAndDiversionFRONT  = CorrectionAndDiversion(pthF,fldrs,side)
-
     
 correctionAndDiversionFRONT.ReadImagePlacmentAndCorrectionData()
    
@@ -252,9 +251,18 @@ correctionAndDiversionFRONT.CalcDivergincePerColor()
 dfFront=     correctionAndDiversionFRONT.saveDivergingJobs()
     
     
-    
+try:
 
-correctionDic=correctionAndDiversionFRONT.correctionDic
+     side =  'Back'   
+     correctionAndDiversionBACK  = CorrectionAndDiversion(pthF,fldrs,side)
+         
+     correctionAndDiversionBACK .ReadImagePlacmentAndCorrectionData()
+        
+     correctionAndDiversionBACK .CalcDivergincePerColor()
+    
+     dfBACK=     correctionAndDiversionBACK.saveDivergingJobs()
+except:
+     1
 
 
 ######################

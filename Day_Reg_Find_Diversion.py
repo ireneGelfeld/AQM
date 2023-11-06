@@ -11,10 +11,17 @@ Created on Wed Jun 16 16:30:46 2021
 # pio.renderers
 # pio.renderers.default='browser'
 ##############################################################################
-global thresholdCorr,NumOfConsElements;
+global thresholdCorr,NumOfConsElements,PanelLengthInMM,AscalationErrorScale,AscalationErrorSP;
 
-thresholdCorr = 30 # In [um]- The threshold between Consecutive corrections
-NumOfConsElements=4 # Number of consecutive corrections with a difference above thresholdCorr
+thresholdCorr = 30 # In [um]- Absolute correction Start Page
+
+thresholdCorrScale = 30 # In [um]- Absolute correction Sacle
+
+AscalationErrorScale = 1.5 # In Ratio- Scale
+AscalationErrorSP =1.2 #In Ratio - Start Page
+
+NumOfConsElements=2 # Number of consecutive corrections with a difference above thresholdCorr
+PanelLengthInMM = 650*1000;#SubStrate Length
 
 
 
@@ -134,6 +141,9 @@ class CorrectionAndDiversion():
         self.pthF = pthF;
         self.fldrs = fldrs;
         self.side = side;
+        self.diverdingJobs={};
+        self.correctionDic={};
+        self.diverdingJobsSCALE={};
    
         
 
@@ -154,7 +164,7 @@ class CorrectionAndDiversion():
     def ReadImagePlacmentAndCorrectionData(self):
         
         
-        self.correctionDic={}
+        
         fcorr='PanelCorrection.csv'
 
         for f in self.fldrs:
@@ -174,11 +184,14 @@ class CorrectionAndDiversion():
             except:
                 1
       
-            
+   
+    def are_all_lists_empty_in_dict(self,dictionary):
+        return all(not sublist for sublist in dictionary.values())
+
     
     def CalcDivergincePerColor(self):
         
-        self.diverdingJobs={}
+        
         for key,value in self.correctionDic.items():
             colorList= value['Color'].unique();
             divertingcolors={}
@@ -204,18 +217,115 @@ class CorrectionAndDiversion():
                     CorrValue[index]=df['C2C_X Correction'][index]
                     
                 divertingcolors[color]=divergins
+            if not self.are_all_lists_empty_in_dict(divertingcolors):
                 
-            self.diverdingJobs[key]=divertingcolors
+                self.diverdingJobs[key]=divertingcolors
             
+    def CalcDivergincePerColorPnl(self):
+ 
+        for key,value in self.correctionDic.items():
+            colorList= value['Color'].unique();
+            divertingcolors={}
+            for color in colorList:
+                df=value[value['Color']==color].reset_index(drop=True)
+                pnelList= df['Panel'].unique()
+
+                for pnl in pnelList:
+                    dfPnl= df[df['Panel']== pnl].reset_index(drop=True)
+                    CorrValue={}
+                    CorrValue[0]=dfPnl['C2C_X Correction'][0]
+                    divergins=[]
+                  
+                    # if key == 'QCS Continuous_Printing_Archive 30-10-2023 21-40-54.zip':
+                    #     print(key+' '+' panel='+str(pnl)+' color='+color)
+                    for index in dfPnl.index[1:]:
+                        
+                       
+                        if index-1 in CorrValue.keys():
+     
+                                if  (dfPnl['C2C_X Correction'][index] >= 0) == (CorrValue[index-1] >= 0):
+                                    if abs(dfPnl['C2C_X Correction'][index])>thresholdCorr and abs(CorrValue[index-1])>thresholdCorr:
+                                        if abs(dfPnl['C2C_X Correction'][index]) > abs( CorrValue[index-1])*AscalationErrorSP:
+
+                                        # if (abs(dfPnl['C2C_X Correction'][index]) -abs( CorrValue[index-1]))> thresholdCorr:
+                                            if len(CorrValue.keys())<NumOfConsElements:
+                                                CorrValue[index]=dfPnl['C2C_X Correction'][index]
+                                                continue;
+                           
+                                    
+                        if   len(CorrValue.keys())>NumOfConsElements-1:
+                            divergins.append([pnl]+list(CorrValue.values()))
+                        CorrValue={}
+                        CorrValue[index]=dfPnl['C2C_X Correction'][index]
+             
+                    
+                divertingcolors[color]=divergins
+            if not self.are_all_lists_empty_in_dict(divertingcolors):
+                
+                self.diverdingJobs[key]=divertingcolors
+                
+    def CalcDivergincePerColorPnlSCALE(self):
+        
+        for key,value in self.correctionDic.items():
+            colorList= value['Color'].unique();
+            divertingcolors={}
+            for color in colorList:
+                df=value[value['Color']==color].reset_index(drop=True)
+                pnelList= df['Panel'].unique()
+
+                for pnl in pnelList:
+                    dfPnl= df[df['Panel']== pnl].reset_index(drop=True)
+                    CorrValue={}
+                    CorrValue[0]=(dfPnl['Scaling Correction'][0]-1)*PanelLengthInMM
+                    
+                    divergins=[]
+                  
+                    # if key == 'QCS Continuous_Printing_Archive 30-10-2023 21-40-54.zip':
+                    #     print(key+' '+' panel='+str(pnl)+' color='+color)
+                    for index in dfPnl.index[1:]:
+                        
+                       
+                        if index-1 in CorrValue.keys():
+                                if  ((dfPnl['Scaling Correction'][index]-1)*PanelLengthInMM >= 0) == (CorrValue[index-1] >= 0):
+                                    if abs((dfPnl['Scaling Correction'][index]-1)*PanelLengthInMM)>thresholdCorrScale and abs( CorrValue[index-1])>thresholdCorrScale:
+
+                                        # if (abs((dfPnl['Scaling Correction'][index]-1)*PanelLengthInMM) -abs( CorrValue[index-1]))> thresholdCorrScale:
+                                        if abs((dfPnl['Scaling Correction'][index]-1)*PanelLengthInMM) > abs( CorrValue[index-1])*AscalationErrorScale:
+
+                                            if len(CorrValue.keys())<NumOfConsElements:
+                                                CorrValue[index]=(dfPnl['Scaling Correction'][index]-1)*PanelLengthInMM
+                                                continue;
+                           
+                                    
+                        if   len(CorrValue.keys())>NumOfConsElements-1:
+                            divergins.append([pnl]+list(CorrValue.values()))
+                        CorrValue={}
+                        CorrValue[index]=(dfPnl['Scaling Correction'][index]-1)*PanelLengthInMM
+             
+                    
+                divertingcolors[color]=divergins
+            if not self.are_all_lists_empty_in_dict(divertingcolors):
+                
+                self.diverdingJobsSCALE[key]=divertingcolors
+        
+        
+               
     def saveDivergingJobs(self):
         
         os.chdir(self.pthF)
         
+        fldNme=self.pthF.split('/')
+        
         df = pd.DataFrame(self.diverdingJobs).T
         
-        df.to_csv('DivergingJobs_'+self.side+'.csv')
+        dfSCALE = pd.DataFrame(self.diverdingJobsSCALE).T
+
         
-        return df
+        df.to_csv('DivergingJobs_'+fldNme[len(fldNme)-2]+'_' +self.side+'.csv')
+        dfSCALE.to_csv('DivergingJobsSCALE_'+fldNme[len(fldNme)-2]+'_' +self.side+'.csv')
+
+        
+        return df,dfSCALE
                 
 
 #################################################
@@ -246,9 +356,10 @@ correctionAndDiversionFRONT  = CorrectionAndDiversion(pthF,fldrs,side)
     
 correctionAndDiversionFRONT.ReadImagePlacmentAndCorrectionData()
    
-correctionAndDiversionFRONT.CalcDivergincePerColor()
+correctionAndDiversionFRONT.CalcDivergincePerColorPnl()
+correctionAndDiversionFRONT.CalcDivergincePerColorPnlSCALE()
 
-dfFront=     correctionAndDiversionFRONT.saveDivergingJobs()
+dfFront,dfSCALEFront=     correctionAndDiversionFRONT.saveDivergingJobs()
     
     
 try:
@@ -258,9 +369,11 @@ try:
          
      correctionAndDiversionBACK .ReadImagePlacmentAndCorrectionData()
         
-     correctionAndDiversionBACK .CalcDivergincePerColor()
+     correctionAndDiversionBACK .CalcDivergincePerColorPnl()
+     correctionAndDiversionBACK .CalcDivergincePerColorPnlSCALE()
+
     
-     dfBACK=     correctionAndDiversionBACK.saveDivergingJobs()
+     dfBack,dfSCALEBack=     correctionAndDiversionBACK.saveDivergingJobs()
 except:
      1
 
@@ -270,6 +383,101 @@ except:
 
 
 
+# diverdingJobsFront= correctionAndDiversionFRONT.diverdingJobs
 
 
+# # ##########################
+# correctionAndDiversionFRONT.diverdingJobs={}
+# keys= list(correctionAndDiversionFRONT.correctionDic.keys())
+# values= list(correctionAndDiversionFRONT.correctionDic.values())
 
+# key=keys[11]
+# value=values[11]
+# color=colorList[6]
+# for key,value in correctionAndDiversionFRONT.correctionDic.items():
+#     colorList= value['Color'].unique();
+#     divertingcolors={}
+#     for color in colorList:
+#         df=value[value['Color']==color].reset_index(drop=True)
+#         pnelList= df['Panel'].unique()
+
+#         for pnl in pnelList:
+#             dfPnl= df[df['Panel']== pnl].reset_index(drop=True)
+#             CorrValue={}
+#             CorrValue[0]=dfPnl['C2C_X Correction'][0]
+#             divergins=[]
+          
+#             # if key == 'QCS Continuous_Printing_Archive 30-10-2023 21-40-54.zip':
+#             #     print(key+' '+' panel='+str(pnl)+' color='+color)
+#             for index in dfPnl.index[1:]:
+                
+               
+#                 if index-1 in CorrValue.keys():
+ 
+#                         if  (dfPnl['C2C_X Correction'][index] >= 0) == (CorrValue[index-1] >= 0):
+#                             if abs(dfPnl['C2C_X Correction'][index])>thresholdCorr and abs(CorrValue[index-1])>thresholdCorr:
+#                                 if abs(dfPnl['C2C_X Correction'][index]) > abs( CorrValue[index-1])*AscalationErrorSP:
+
+#                                 # if (abs(dfPnl['C2C_X Correction'][index]) -abs( CorrValue[index-1]))> thresholdCorr:
+#                                     if len(CorrValue.keys())<NumOfConsElements:
+#                                         CorrValue[index]=dfPnl['C2C_X Correction'][index]
+#                                         continue;
+                   
+                            
+#                 if   len(CorrValue.keys())>NumOfConsElements-1:
+#                     divergins.append([pnl]+list(CorrValue.values()))
+#                 CorrValue={}
+#                 CorrValue[index]=dfPnl['C2C_X Correction'][index]
+     
+            
+#         divertingcolors[color]=divergins
+#     if not correctionAndDiversionFRONT.are_all_lists_empty_in_dict(divertingcolors):
+        
+#         correctionAndDiversionFRONT.diverdingJobs[key]=divertingcolors
+        
+        
+# #############################################################################       
+# correctionAndDiversionFRONT.diverdingJobs={}
+# keys= list(correctionAndDiversionFRONT.correctionDic.keys())
+# values= list(correctionAndDiversionFRONT.correctionDic.values())
+
+# key=keys[0]
+# value=values[0]
+# color=colorList[0]
+# for key,value in correctionAndDiversionFRONT.correctionDic.items():
+#     colorList= value['Color'].unique();
+#     divertingcolors={}
+#     for color in colorList:
+#         df=value[value['Color']==color].reset_index(drop=True)
+#         pnelList= df['Panel'].unique()
+
+#         for pnl in pnelList:
+#             dfPnl= df[df['Panel']== pnl].reset_index(drop=True)
+#             CorrValue={}
+#             CorrValue[0]=(dfPnl['Scaling Correction'][0]-1)*PanelLengthInMM
+            
+#             divergins=[]
+          
+#             # if key == 'QCS Continuous_Printing_Archive 30-10-2023 21-40-54.zip':
+#             #     print(key+' '+' panel='+str(pnl)+' color='+color)
+#             for index in dfPnl.index[1:]:
+                
+               
+#                 if index-1 in CorrValue.keys():
+#                     if  ((dfPnl['Scaling Correction'][index]-1)*PanelLengthInMM >= 0) == (CorrValue[index-1] >= 0):
+#                         if (abs((dfPnl['Scaling Correction'][index]-1)*PanelLengthInMM) -abs( CorrValue[index-1]))> thresholdCorr:
+#                             if len(CorrValue.keys())<NumOfConsElements:
+#                                 CorrValue[index]=(dfPnl['Scaling Correction'][index]-1)*PanelLengthInMM
+#                                 continue;
+                   
+                            
+#                 if   len(CorrValue.keys())>NumOfConsElements-1:
+#                     divergins.append([pnl]+list(CorrValue.values()))
+#                 CorrValue={}
+#                 CorrValue[index]=(dfPnl['Scaling Correction'][index]-1)*PanelLengthInMM
+     
+            
+#         divertingcolors[color]=divergins
+#     if not correctionAndDiversionFRONT.are_all_lists_empty_in_dict(divertingcolors):
+        
+#         correctionAndDiversionFRONT.diverdingJobs[key]=divertingcolors

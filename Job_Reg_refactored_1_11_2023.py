@@ -801,6 +801,11 @@ def PlotSingleMarks(xdb,db,PlotTitle,fileName,  lineColor,panelNumber,ScalOrSP ,
      )
      
      # datetime object containing current date and time
+   
+    
+   for x in xdb:
+       fig.add_vline(x=x, line_width=0.5, line_dash="dash", line_color="red")
+
     
    if fileName:
        plot(fig,auto_play=True,filename=fileName)  

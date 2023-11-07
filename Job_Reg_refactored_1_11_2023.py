@@ -58,7 +58,7 @@ StatisticsCalcStartPage = 100;
 
 ColorToShow=['Yellow','Black'] # full color list ['Cyan','Magenta','Yellow','Black','Orange','Blue','Green']
 
-panelToShow= [1,8,11] #full panel list ['Cyan','Magenta','Yellow','Black','Orange','Blue','Green']
+panelToShow= [1,8,11] #full panel list [1,2,3,4,5,6,7,8,9,10,11]
 
 ######## Plot Selection
 

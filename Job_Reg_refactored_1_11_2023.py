@@ -10,8 +10,10 @@ Created on Sun Apr 24 12:35:16 2022
 #get_ipython().magic('reset -sf')
 
 #######################PARAMS#########################################
-global LoadTarget,GlobalScale,DistBetweenSets,JobLength,PanelNumber,DataPracent_toConcider,BaseDefultתgeometry,geometry
+global LoadTarget,GlobalScale,DistBetweenSets,JobLength,PanelNumber,DataPracent_toConcider,BaseDefultתgeometry,geometry,ColorToShow,panelToShow,PanelLengthInMM ;
 
+
+PanelLengthInMM = 650;
 
 #For 252
 MarkSetVersion=252
@@ -47,9 +49,16 @@ DataPracent_toConcider= 94 #in % --> for example => 90 % --> cuts Off 5 %  from 
 DataPracent_toConcider= 95 #in % --> for example => 90 % --> cuts Off 5 %  from top and 5 % from bottomm
 #DistBetweenSets =  126357  #102693 Duplex Drop3 = 125864,   Duplex-Drop5 126357
 #Simplex Drop3 = 125965,  Simplex Drop5 = 126256 
-LoadTarget = 1 ; #True from targets in the AQM or False - from the tabel 
+LoadTarget = 0 ; #True from targets in the AQM or False - from the tabel 
 
 StatisticsCalcStartPage = 100;
+
+
+##Corrections Graph
+
+ColorToShow=['Yellow','Black'] # full color list ['Cyan','Magenta','Yellow','Black','Orange','Blue','Green']
+
+panelToShow= [1,8,11] #full panel list ['Cyan','Magenta','Yellow','Black','Orange','Blue','Green']
 
 ######## Plot Selection
 
@@ -285,12 +294,12 @@ class CalcC2C():
          GlobalScale,DistBetweenSets,firstSetDistance_val,geometry = self.extract_TargetParameters(geometry)
          
 
-
-         print('firstSetDistance_val '+str(firstSetDistance_val))
-         print('firstSetDistance '+str(firstSetDistance))
-
-         print('GlobalScale '+str(GlobalScale))
-         print('DistBetweenSets '+str(DistBetweenSets))
+         if LoadTarget:
+             print('firstSetDistance_val '+str(firstSetDistance_val))
+             print('firstSetDistance '+str(firstSetDistance))
+    
+             print('GlobalScale '+str(GlobalScale))
+             print('DistBetweenSets '+str(DistBetweenSets))
 
 
          valueSet1= firstSetDistance_val;
@@ -437,12 +446,12 @@ class CalcC2C():
 
 
             
-        
-        print('firstSetDistance_val '+str(firstSetDistance_val))
-        print('firstSetDistance '+str(firstSetDistance))
-
-        print('GlobalScale '+str(GlobalScale))
-        print('DistBetweenSets '+str(DistBetweenSets))
+        if LoadTarget:
+            print('firstSetDistance_val '+str(firstSetDistance_val))
+            print('firstSetDistance '+str(firstSetDistance))
+    
+            print('GlobalScale '+str(GlobalScale))
+            print('DistBetweenSets '+str(DistBetweenSets))
         
         
         valueSet1= firstSetDistance_val;
@@ -763,8 +772,49 @@ def PlotSingle(db,PlotTitle,fileName,  SetNumber ,fig):
      
    return fig   
 
+def PlotSingleMarks(xdb,db,PlotTitle,fileName,  lineColor,panelNumber,ScalOrSP ,fig):
+    
+   if not fig:
+       fig = go.Figure()
+   
+
+   
+   dashSolidDot={'Scale':'solid','SP':'dash'}
+
+   fig.add_trace(go.Scatter(x=xdb,y=list(db),mode='lines+markers', line=dict(color=lineColor, dash=dashSolidDot[ScalOrSP]),name=ScalOrSP+' correction panel ='+str(panelNumber)+' '+lineColor))
+       
+   
+   titleColor = 'black'
+  
+   
+   fig.update_layout(title={
+        'text': PlotTitle,
+        'font': {'color': titleColor}
+    })
+     #fig_back.update_layout(title='ImagePlacement_Left-Back')
+  
+     
+   fig.update_layout(
+         hoverlabel=dict(
+             namelength=-1
+         )
+     )
+     
+     # datetime object containing current date and time
+    
+   if fileName:
+       plot(fig,auto_play=True,filename=fileName)  
+    # plot(fig)  
+
+    #plot(fig_back,filename="AQM-Back.html")  
+       fig.show()
+     
+   return fig   
 
 
+
+    
+    
 ####################################################################################################
 
 
@@ -1030,7 +1080,6 @@ if Plot_Scale:
     fname = CalcC2C(pthF+'/'+f,side,'',JobLength,LoadTarget).CheckForAI('Left')
 
     # fname='Registration_Left.csv'
-    PanelLengthInMM = 650;
     # St1dataAllColorsFrontLeft,St2dataAllColorsFrontLeft,St3dataAllColorsFrontLeft,indexNumberFailed=CalcC2C(pthF+'/',side,fname,JobLength).CalcC2CSingleSidePerSet()
     
     St1dataAllColorsFrontFullLeft,St2dataAllColorsFrontFullLeft,St3dataAllColorsFrontFullLeft,RefSETlocLeft,ScaleFRONTLeft,ScaleLeftFRONTMaxMin,colorDicLeft=CalcC2C(pthF+'/'+f,side,fname,JobLength,LoadTarget).DataForCalcSCALE(PanelLengthInMM)
@@ -1278,7 +1327,7 @@ if Plot_Image_Placment:
         now = datetime.now()
         # dd/mm/YY H:M:S
         dt_string = now.strftime("%d_%m_%Y_%H_%M_%S")
-        plot(fig,filename=f+" AQM_"+ dt_string +".html") 
+        plot(fig,filename=f+" AQM_"+ '_Image_Placment' +".html") 
         fig.show() 
         
         
@@ -1323,7 +1372,7 @@ if Plot_RegForAllColors_Left:
     
     
     
-    
+    clrPnlnumFRONT_dic={}
     for i in range(len(dbtmpSentCrrFRONT['X Correction Moving Avarage'])):
      
             ymin=np.min(list(db1.loc[inx[0]]))
@@ -1344,6 +1393,8 @@ if Plot_RegForAllColors_Left:
                 except:
                     continue;
                     
+                if len(clrPnlnumFRONT_dic.keys())<len(inx):
+                    clrPnlnumFRONT_dic[clr]= clrPnlnumFRONT  
                     
                 fig.add_trace(go.Scatter(x=[dbtmpSentCrrFRONT['Flat Id'][i]-ImagePlacement_ppFRONT['Flat Id'][0]], y=[ymin],
                             #opacity=0.5,
@@ -1356,7 +1407,7 @@ if Plot_RegForAllColors_Left:
                 ymin=ymin-50;
             
             
-            
+
             fig.add_vline(x=dbtmpSentCrrFRONT['Flat Id'][i]-ImagePlacement_ppFRONT['Flat Id'][0], line_width=0.5, line_dash="dash", line_color="red")
        
     
@@ -1381,7 +1432,7 @@ if Plot_RegForAllColors_Left:
     now = datetime.now()
     # # dd/mm/YY H:M:S
     dt_string = now.strftime("%d_%m_%Y_%H_%M_%S")
-    plot(fig,filename=f+" FRONT-LEFT_C2C"+ dt_string +".html")  
+    plot(fig,filename=f+" FRONT-LEFT_C2C_allSets" +".html")  
     fig.show() 
     
     #plot(fig_back,filename="AQM-Back.html")  
@@ -1434,7 +1485,7 @@ if Plot_RegForAllColors_Right:
     now = datetime.now()
     # # dd/mm/YY H:M:S
     dt_string = now.strftime("%d_%m_%Y_%H_%M_%S")
-    plot(fig,filename=f+" FRONT-RIGHT_C2C"+ dt_string +".html")  
+    plot(fig,filename=f+" FRONT-RIGHT_C2C_allSets"+".html")  
     fig.show() 
 
 
@@ -1468,7 +1519,9 @@ if Plot_RegForAllColors_Right:
                         name=i+' set2'), row=2, col=1)
             fig.add_trace(go.Scatter(y=list(db3.loc[i]),line_color=i,
                         name=i+' set3'), row=3, col=1)    
-            
+        
+        clrPnlnumBACK_dic={}
+        
         for i in range(len(dbtmpSentCrrBACK['X Correction Moving Avarage'])):
            
                 ymin=np.min(list(db1.loc[inx[0]]))
@@ -1488,7 +1541,9 @@ if Plot_RegForAllColors_Right:
                             pctext=pctext+'<br>'+'p'+c+'='+"{:.2f}".format(clrPnlnumBACK[c][i]);
                     except:
                        continue;     
-                        
+                     
+                    if len(clrPnlnumBACK_dic.keys())<len(inx):
+                        clrPnlnumBACK_dic[clr]= clrPnlnumBACK 
                     fig.add_trace(go.Scatter(x=[dbtmpSentCrrBACK['Flat Id'][i]-ImagePlacement_ppBACK['Flat Id'][0]], y=[ymin],
                                 marker=dict(color=clr, size=6),
                                 mode="markers",
@@ -1499,7 +1554,7 @@ if Plot_RegForAllColors_Right:
 
                     ymin=ymin-50;   
                              
-        
+
                 fig.add_vline(x=dbtmpSentCrrBACK['Flat Id'][i]-ImagePlacement_ppBACK['Flat Id'][0], line_width=0.5, line_dash="dash", line_color="red")
     
         
@@ -1519,7 +1574,7 @@ if Plot_RegForAllColors_Right:
         now = datetime.now()
         # # dd/mm/YY H:M:S
         dt_string = now.strftime("%d_%m_%Y_%H_%M_%S")
-        plot(fig,filename=f+" BACK-LEFT_C2C"+ dt_string +".html")  
+        plot(fig,filename=f+" BACK-LEFT_C2C_allSets"+".html")  
         fig.show() 
     
         #plot(fig_back,filename="AQM-Back.html")  
@@ -1570,7 +1625,7 @@ if Plot_RegForAllColors_Right:
         now = datetime.now()
         # # dd/mm/YY H:M:S
         dt_string = now.strftime("%d_%m_%Y_%H_%M_%S")
-        plot(fig,filename=f+" BACK-RIGHT_C2C"+ dt_string +".html")  
+        plot(fig,filename=f+" BACK-RIGHT_C2C_allSets" +".html")  
         fig.show() 
       
     except:
@@ -1601,27 +1656,31 @@ if Plot_Scale:
                     name=i+' Left'),row=1, col=1)
         fig.add_trace(go.Scatter(y=list(db2.loc[i]),line_color=i,
                     name=i+' Right'), row=2, col=1)
-    
+   
+    clrPnlnumFRONTscale_dic={}
+    correctionLoFront=[]
     for i in range(len(dbtmpSentCrrFRONT['X Correction Moving Avarage'])):
         try:
             ymin=np.min(list(db1.loc[inx[0]]))
             for clr in inx:
-                clrFRONT=PanelCorrectionFRONT[(PanelCorrectionFRONT['Color']) == clr].reset_index(drop=True)
+                clrFRONTscale=PanelCorrectionFRONT[(PanelCorrectionFRONT['Color']) == clr].reset_index(drop=True)
             
-                clrPnlnumFRONT=pd.DataFrame();
+                clrPnlnumFRONTscale=pd.DataFrame();
                 tmpdb=pd.DataFrame();
                 for j in range(1,12):
-                   tmpdb=clrFRONT[clrFRONT['Panel']==j].reset_index(drop=True);
-                   clrPnlnumFRONT=pd.concat((clrPnlnumFRONT, tmpdb['Scaling Correction'].rename(str(j))), axis=1)
+                   tmpdb=clrFRONTscale[clrFRONTscale['Panel']==j].reset_index(drop=True);
+                   clrPnlnumFRONTscale=pd.concat((clrPnlnumFRONTscale, tmpdb['Scaling Correction'].rename(str(j))), axis=1)
                 
-                cc=list(clrPnlnumFRONT.columns);
+                cc=list(clrPnlnumFRONTscale.columns);
                 try:
-                    pctext=clr+':'+'<br>'+'p'+cc[0]+'='+"{:.1f}".format((clrPnlnumFRONT[cc[0]][i]-1)*PanelLengthInMM*1000);
+                    pctext=clr+':'+'<br>'+'p'+cc[0]+'='+"{:.1f}".format((clrPnlnumFRONTscale[cc[0]][i]-1)*PanelLengthInMM*1000);
                     for c in cc[1:]:
-                        pctext=pctext+'<br>'+'p'+c+'='+"{:.1f}".format((clrPnlnumFRONT[c][i]-1)*PanelLengthInMM*1000);
+                        pctext=pctext+'<br>'+'p'+c+'='+"{:.1f}".format((clrPnlnumFRONTscale[c][i]-1)*PanelLengthInMM*1000);
                 except:
                     continue;
                     
+                if len(clrPnlnumFRONTscale_dic.keys())<len(inx):
+                    clrPnlnumFRONTscale_dic[clr]= clrPnlnumFRONTscale 
                     
                 fig.add_trace(go.Scatter(x=[dbtmpSentCrrFRONT['Flat Id'][i]-ImagePlacement_ppFRONT['Flat Id'][0]], y=[ymin],
                             #opacity=0.5,
@@ -1634,10 +1693,11 @@ if Plot_Scale:
 
                 ymin=ymin-50;
             
-            
+
             
         except:
             continue;
+        correctionLoFront.append(dbtmpSentCrrFRONT['Flat Id'][i]-ImagePlacement_ppFRONT['Flat Id'][0])    
         fig.add_vline(x=dbtmpSentCrrFRONT['Flat Id'][i]-ImagePlacement_ppFRONT['Flat Id'][0], line_width=0.5, line_dash="dash", line_color="red")
     
     fig.update_layout(title=f+' FRONT-SCALE')
@@ -1655,7 +1715,7 @@ if Plot_Scale:
     now = datetime.now()
     # # dd/mm/YY H:M:S
     dt_string = now.strftime("%d_%m_%Y_%H_%M_%S")
-    plot(fig,filename=f+" FRONT-SCALE"+ dt_string +".html")  
+    plot(fig,filename=f+" FRONT-SCALE_allSets" +".html")  
     fig.show() 
     
     
@@ -1683,27 +1743,32 @@ if Plot_Scale:
                             name=i+' Left'),row=1, col=1)
                 fig01.add_trace(go.Scatter(y=list(db2.loc[i]),line_color=i,
                             name=i+' Right'), row=2, col=1)
+           
+            clrPnlnumBACKscale_dic={}
+            correctionLocBack=[]
             for i in range(len(dbtmpSentCrrBACK['X Correction Moving Avarage'])):
                 try:
                     ymin=np.min(list(db1.loc[inx[0]]))
                     for clr in inx:
-                        clrBACK=PanelCorrectionBACK[(PanelCorrectionBACK['Color']) == clr].reset_index(drop=True)
+                        clrBACKscale=PanelCorrectionBACK[(PanelCorrectionBACK['Color']) == clr].reset_index(drop=True)
                     
-                        clrPnlnumBACK=pd.DataFrame();
+                        clrPnlnumBACKscale=pd.DataFrame();
                         tmpdb=pd.DataFrame();
                         for j in range(1,12):
-                           tmpdb=clrBACK[clrBACK['Panel']==j].reset_index(drop=True);
-                           clrPnlnumBACK=pd.concat((clrPnlnumBACK, tmpdb['Scaling Correction'].rename(str(j))), axis=1)
+                           tmpdb=clrBACKscale[clrBACKscale['Panel']==j].reset_index(drop=True);
+                           clrPnlnumBACKscale=pd.concat((clrPnlnumBACKscale, tmpdb['Scaling Correction'].rename(str(j))), axis=1)
                         
-                        cc=list(clrPnlnumBACK.columns);
+                        cc=list(clrPnlnumBACKscale.columns);
                         try:
-                            pctext=clr+':'+'<br>'+'p'+cc[0]+'='+"{:.1f}".format((clrPnlnumBACK[cc[0]][i]-1)*PanelLengthInMM*1000);
+                            pctext=clr+':'+'<br>'+'p'+cc[0]+'='+"{:.1f}".format((clrPnlnumBACKscale[cc[0]][i]-1)*PanelLengthInMM*1000);
                             for c in cc[1:]:
-                                pctext=pctext+'<br>'+'p'+c+'='+"{:.1f}".format((clrPnlnumBACK[c][i]-1)*PanelLengthInMM*1000);
+                                pctext=pctext+'<br>'+'p'+c+'='+"{:.1f}".format((clrPnlnumBACKscale[c][i]-1)*PanelLengthInMM*1000);
                         except:
                             continue;
                             
-                            
+                        if len(clrPnlnumBACKscale_dic.keys())<len(inx):
+                            clrPnlnumBACKscale_dic[clr]= clrPnlnumBACKscale  
+    
                         fig01.add_trace(go.Scatter(x=[dbtmpSentCrrBACK['Flat Id'][i]-ImagePlacement_ppBACK['Flat Id'][0]], y=[ymin],
                                     marker=dict(color=clr, size=6),
                                     mode="markers",
@@ -1714,11 +1779,10 @@ if Plot_Scale:
 
                         ymin=ymin-50;   
                         
-    
                 except:
                     continue;
-            
-                fig01.add_vline(x=PanelCorrectionBACK['Flat Id'][i]-ImagePlacement_ppBACK['Flat Id'][0], line_width=0.5, line_dash="dash", line_color="red")
+                correctionLocBack.append(dbtmpSentCrrBACK['Flat Id'][i]-ImagePlacement_ppBACK['Flat Id'][0])   
+                fig01.add_vline(x=dbtmpSentCrrBACK['Flat Id'][i]-ImagePlacement_ppBACK['Flat Id'][0], line_width=0.5, line_dash="dash", line_color="red")
     
             fig01.update_layout(title=f+' BACK-SCALE')
             fig01.update_layout(xaxis_showticklabels=True, xaxis2_showticklabels=True)
@@ -1735,7 +1799,7 @@ if Plot_Scale:
             now = datetime.now()
             # # dd/mm/YY H:M:S
             dt_string = now.strftime("%d_%m_%Y_%H_%M_%S")
-            plot(fig01,filename=f+" BACK-SCALE"+ dt_string +".html")  
+            plot(fig01,filename=f+" BACK-SCALE_allSets" +".html")  
             fig01.show() 
     except:
         1
@@ -1963,11 +2027,28 @@ if PlotAllSetsInOneView_Left:
 
     FigAllsetsInView=PlotSingle(db2,PlotTitle,fileName,  SetNumber ,FigAllsetsInView)
 
+    for clr in ColorToShow:
+        for pnl in panelToShow:
+            xdb= correctionLoFront
+            db= (clrPnlnumFRONTscale_dic[clr][str(pnl)]-1)*PanelLengthInMM*1000
+            fileName=0
+            if clr == 'Yellow':
+               lineColor='Gold'
+            else:
+                lineColor=clr
+            panelNumber=pnl
+            ScalOrSP='Scale'
+            FigAllsetsInView=PlotSingleMarks(xdb,db,PlotTitle,fileName,  lineColor,panelNumber,ScalOrSP ,FigAllsetsInView)
+        
+
+
     PlotTitle=f+' FRONT-LEFT'
     fileName=PlotTitle+'.html'
     SetNumber=3
 
     FigAllsetsInView=PlotSingle(db3,PlotTitle,fileName,  SetNumber ,FigAllsetsInView)
+    
+
     
     try:
         db1=St1dataAllColorsBackLeft
@@ -1986,6 +2067,19 @@ if PlotAllSetsInOneView_Left:
         SetNumber=2
 
         FigAllsetsInViewBack=PlotSingle(db2,PlotTitle,fileName,  SetNumber ,FigAllsetsInViewBack)
+        
+        for clr in ColorToShow:
+            for pnl in panelToShow:
+                xdb= correctionLocBack
+                db=(clrPnlnumBACKscale_dic[clr][str(pnl)]-1)*PanelLengthInMM*1000
+                fileName=0
+                if clr == 'Yellow':
+                   lineColor='Gold'
+                else:
+                    lineColor=clr
+                panelNumber=pnl
+                ScalOrSP='Scale'
+                FigAllsetsInViewBack=PlotSingleMarks(xdb,db,PlotTitle,fileName,  lineColor,panelNumber,ScalOrSP ,FigAllsetsInViewBack)
 
         PlotTitle=f+' BACK-LEFT'
         fileName=PlotTitle+'.html'
@@ -2015,6 +2109,20 @@ if PlotAllSetsInOneView_Right:
     SetNumber=2
 
     FigAllsetsInViewRight=PlotSingle(db2,PlotTitle,fileName,  SetNumber ,FigAllsetsInViewRight)
+    
+    for clr in ColorToShow:
+        for pnl in panelToShow:
+            xdb= correctionLoFront
+            db= clrPnlnumFRONT_dic[clr][str(pnl)]
+            fileName=0
+            if clr == 'Yellow':
+               lineColor='Gold'
+            else:
+                lineColor=clr
+            panelNumber=pnl
+            ScalOrSP='SP'
+            FigAllsetsInViewRight=PlotSingleMarks(xdb,db,PlotTitle,fileName,  lineColor,panelNumber,ScalOrSP ,FigAllsetsInViewRight)
+        
 
     PlotTitle=f+' FRONT-RIGHT'
     fileName=PlotTitle+'.html'
@@ -2039,6 +2147,19 @@ if PlotAllSetsInOneView_Right:
         SetNumber=2
 
         FigAllsetsInViewBackRight=PlotSingle(db2,PlotTitle,fileName,  SetNumber ,FigAllsetsInViewBackRight)
+        
+        for clr in ColorToShow:
+            for pnl in panelToShow:
+                xdb= correctionLocBack
+                db= clrPnlnumBACK_dic[clr][str(pnl)]
+                fileName=0
+                if clr == 'Yellow':
+                   lineColor='Gold'
+                else:
+                    lineColor=clr
+                panelNumber=pnl
+                ScalOrSP='SP'
+                FigAllsetsInViewBackRight=PlotSingleMarks(xdb,db,PlotTitle,fileName,  lineColor,panelNumber,ScalOrSP ,FigAllsetsInViewBackRight)
 
         PlotTitle=f+' BACK-RIGHT'
         fileName=PlotTitle+'.html'

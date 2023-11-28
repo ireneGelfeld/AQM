@@ -49,16 +49,16 @@ DataPracent_toConcider= 94 #in % --> for example => 90 % --> cuts Off 5 %  from 
 DataPracent_toConcider= 95 #in % --> for example => 90 % --> cuts Off 5 %  from top and 5 % from bottomm
 #DistBetweenSets =  126357  #102693 Duplex Drop3 = 125864,   Duplex-Drop5 126357
 #Simplex Drop3 = 125965,  Simplex Drop5 = 126256 
-LoadTarget = 0 ; #True from targets in the AQM or False - from the tabel 
+LoadTarget = 1 ; #True from targets in the AQM or False - from the tabel 
 
 StatisticsCalcStartPage = 100;
 
 
 ##Corrections Graph
 
-ColorToShow=['Yellow','Black'] # full color list ['Cyan','Magenta','Yellow','Black','Orange','Blue','Green']
+ColorToShow=['Cyan','Magenta','Yellow','Black','Orange','Blue','Green'] # full color list ['Cyan','Magenta','Yellow','Black','Orange','Blue','Green']
 
-panelToShow= [1,8,11] #full panel list [1,2,3,4,5,6,7,8,9,10,11]
+panelToShow= [1,11] #full panel list [1,2,3,4,5,6,7,8,9,10,11]
 
 ######## Plot Selection
 
@@ -733,7 +733,7 @@ def PlotSingle(db,PlotTitle,fileName,  SetNumber ,fig):
        fig = go.Figure()
    
 
-   dashSolidDot={1:'solid',2:'dash',3:'dot'}
+   dashSolidDot={1:'solid',2:'solid',3:'solid'}
    for index, row in db.iterrows():  
                
        if index=='Yellow':
@@ -779,7 +779,7 @@ def PlotSingleMarks(xdb,db,PlotTitle,fileName,  lineColor,panelNumber,ScalOrSP ,
    
 
    
-   dashSolidDot={'Scale':'solid','SP':'dash'}
+   dashSolidDot={'Scale':'solid','SP':'solid'}
 
    fig.add_trace(go.Scatter(x=xdb,y=list(db),mode='lines+markers', line=dict(color=lineColor, dash=dashSolidDot[ScalOrSP]),name=ScalOrSP+' correction panel ='+str(panelNumber)+' '+lineColor))
        
@@ -2118,7 +2118,7 @@ if PlotAllSetsInOneView_Right:
     for clr in ColorToShow:
         for pnl in panelToShow:
             xdb= correctionLoFront
-            db= clrPnlnumFRONT_dic[clr][str(pnl)]
+            db= clrPnlnumFRONT_dic[clr][str(pnl)]-clrPnlnumFRONT_dic['Cyan'][str(pnl)]
             fileName=0
             if clr == 'Yellow':
                lineColor='Gold'

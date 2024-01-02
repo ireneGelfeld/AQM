@@ -19,6 +19,7 @@ ColorForDisplay = 'Cyan'
 StartCycle4Avr = 2; # Start averaging for all plots defult = 2
 Cycle2Display = 2
 
+
 #########################################################################################################
 #########################################################################################################
 import os
@@ -67,7 +68,8 @@ class PreapareData():
         folder= list(set(folderZip + folderSub))
         folderWaveCalibration=[]
         for f in folder:
-            if 'WaveCalibration' in f:
+            # if 'WaveCalibration' in f:
+            if 'Wave' in f:
                 folderWaveCalibration.append(f);     
         return folderWaveCalibration;
     

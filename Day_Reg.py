@@ -18,7 +18,7 @@ JobLengthWave=50;
 MoveAveWave=20;
 S_g_Degree=1;
 
-MoveAveWaveScale=200;
+MoveAveWaveScale=20;
 #For 252
 MarkSetVersion=252
 
@@ -1060,11 +1060,11 @@ class CalcC2C_AvrgOfAll(DispImagePlacment):
 
         for f in JobNmeSORTED:
             vlid,lngth=self.CheckIfFileValid_forWave(f,JobLengthWave)
-            if vlid or ('WaveCalibration' in f):
+            if vlid or ('Wave' in f):
                     ValidSortedJobListWithWave.append(f)
                     
                     
-        WaveFilesInx=self.find_indexes_with_substring(ValidSortedJobListWithWave, 'WaveCalibration')
+        WaveFilesInx=self.find_indexes_with_substring(ValidSortedJobListWithWave, 'Wave')
         WaveJobPrintedDic={}
 
 
@@ -1136,12 +1136,12 @@ class CalcC2C_AvrgOfAll(DispImagePlacment):
 
         for f in self.fldrs:
             vlid,lngth=self.CheckIfFileValid_forWave(f,JobLengthWave)
-            if vlid or ('WaveCalibration' in f):
+            if vlid or ('Wave' in f):
                     ValidSortedJobListWithWave.append(f)
                     
         ValidSortedJobListWithWave= list(self.SortJobsByTime(ValidSortedJobListWithWave + BlanketRepList).values())
             
-        WaveFilesInx=self.find_indexes_with_substring(ValidSortedJobListWithWave, 'WaveCalibration')
+        WaveFilesInx=self.find_indexes_with_substring(ValidSortedJobListWithWave, 'Wave')
         BlanketRepInx=self.find_indexes_with_substring(ValidSortedJobListWithWave, 'BlanketReplacment')
 
         WaveJobPrintedDic={}
@@ -1235,12 +1235,12 @@ class CalcC2C_AvrgOfAll(DispImagePlacment):
 
         for f in self.fldrs:
             vlid,lngth=self.CheckIfFileValid_forWave(f,JobLengthWave)
-            if vlid or ('WaveCalibration' in f):
+            if vlid or ('Wave' in f):
                     ValidSortedJobListWithWave.append(f)
                     
         ValidSortedJobListWithWave= list(self.SortJobsByTime(ValidSortedJobListWithWave + BlanketRepList).values())
             
-        WaveFilesInx=self.find_indexes_with_substring(ValidSortedJobListWithWave, 'WaveCalibration')
+        WaveFilesInx=self.find_indexes_with_substring(ValidSortedJobListWithWave, 'Wave')
         BlanketRepInx=self.find_indexes_with_substring(ValidSortedJobListWithWave, 'BlanketReplacment')
 
         WaveJobPrintedDic={}
@@ -1382,7 +1382,7 @@ class CalcC2C_AvrgOfAll(DispImagePlacment):
         for i,f in enumerate(JobSortedWblnkRep):
             if not 'BlanketReplacment' in f:        
                 vlid,lngth=self.CheckIfFileValid_forWave(f,JobLengthWave)
-                if 'WaveCalibration' in f:
+                if 'Wave' in f:
                     WaveJobPrintedDic[jLngthW]=[f,i]
                     jLngthW=jLngthW+1
                 else:

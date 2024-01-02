@@ -56,7 +56,7 @@ class PreapareData():
         folderZip=self.UnzipFilesAndSaveToFolderList();
         folderWaveCalibration=[]
         for f in folderZip:
-            if 'WaveCalibration' in f:
+            if 'Wave' in f:
                 if not '\\' in f:
                     folderWaveCalibration.append(f);     
         return folderWaveCalibration;
@@ -86,7 +86,7 @@ class PreapareDataOLD():
         folder= list(set(folderZip + folderSub))
         folderWaveCalibration=[]
         for f in folder:
-            if 'WaveCalibration' in f:
+            if 'Wave' in f:
                 folderWaveCalibration.append(f);     
         return folderWaveCalibration;
 

@@ -28,6 +28,7 @@ from scipy.signal import savgol_filter
 import pickle
 import seaborn as sns
 import matplotlib.colors as mcolors
+from PIL import Image
 
 
 # import plotly.io as pio
@@ -36,7 +37,7 @@ import matplotlib.colors as mcolors
 
 # %matplotlib
 ############################################################################
-global ColorDic,pixSize,MaxWaveWindow,sideDic,CircleArea,DistBtwCrcle,UseTarget,DistanceBetweenColumns
+global ColorDic,pixSize,MaxWaveWindow,sideDic,CircleArea,DistBtwCrcle,UseTarget,DistanceBetweenColumns,NumOfSec,CircleLvl
 
 SatndardDistanceBetweenColumns= 404.9626381019503;
 LargeDistanceBetweenColumns= 1431.057469809592;
@@ -61,7 +62,17 @@ DistanceBetweenColumns[0]=0
 DistanceBetweenColumns[1]=LargeDistanceBetweenColumns*1
 DistanceBetweenColumns[17]=LargeDistanceBetweenColumns*1
 
+# DistanceBetweenColumns={i:SatndardDistanceBetweenColumns*1 for i in range(1,16)}
+# DistanceBetweenColumns[0]=0
 
+# DistanceBetweenColumns[1]=LargeDistanceBetweenColumns*1
+# DistanceBetweenColumns[17]=LargeDistanceBetweenColumns*1
+
+
+NumOfSec=18
+CircleLvl=70
+
+x_Cut_coord=[550,8220]
 ############################################################################
 
 
@@ -115,13 +126,63 @@ class Circles():
         
         return ImRoi
     
+    def loadImage_SmallSubstrate(self):
+    
+        imInp_Orig = cv2.imread(self.pthF)
+    
+        Roi={}
+        
+        if len(x_Cut_coord):
+           Roi['x'] =  x_Cut_coord;
+        else:
+           Roi['x']=[660,8380]
+        
+        
+        Roi[0]=[2200,2500]
+        Roi[1]=[2750,3050]
+        Roi[2]=[3250,3550]
+        Roi[3]=[3750,4050]
+        Roi[4]=[4300,4600]
+        Roi[5]=[4800,5100]
+        Roi[6]=[5300,5600]
+        Roi[7]=[5800,6100]
+        Roi[8]=[6300,6600]
+        Roi[9]=[6850,7150]
+        Roi[10]=[7350,7650]
+        Roi[11]=[7850,8150]
+        Roi[12]=[8400,8700]
+        Roi[13]=[8900,9200]
+        Roi[14]=[9400,9700]
+        Roi[15]=[9900,10200]
+        
+        StartRoiCoed={key:value[0]-Roi[0][0] for key,value in Roi.items() if key != 'x'}
+        
+        ImRoi={}
+
+
+        for i in range(NumOfSec):
+           ImRoi[i]=imInp_Orig[Roi['x'][0]:Roi['x'][1],Roi[i][0]:Roi[i][1],:]
+           
+        # for key,value in ImRoi.items():
+        #    plt.figure(key)
+        #    plt.imshow(value)    
+   
+        return ImRoi,StartRoiCoed
+
+
+
+
+    
     def loadImage(self):
     
         imInp_Orig = cv2.imread(self.pthF)
     
         Roi={}
         
-        Roi['x']=[660,8380]
+        if len(x_Cut_coord):
+           Roi['x'] =  x_Cut_coord;
+        else:
+           Roi['x']=[660,8380]
         Roi[0]=[700,1000]
         Roi[1]=[2200,2500]
         Roi[2]=[2750,3050]
@@ -146,7 +207,7 @@ class Circles():
         ImRoi={}
 
 
-        for i in range(18):
+        for i in range(NumOfSec):
            ImRoi[i]=imInp_Orig[Roi['x'][0]:Roi['x'][1],Roi[i][0]:Roi[i][1],:]
            
         # for key,value in ImRoi.items():
@@ -154,12 +215,6 @@ class Circles():
         #    plt.imshow(value)    
    
         return ImRoi,StartRoiCoed
-
-
-
-
-    
-    
     
     def find_circles(self,image,AreaTH):
         
@@ -203,11 +258,93 @@ class Circles():
                 # Append the center coordinates to the array
                 circle_centers.append((center_x, center_y))
                 # Draw a circle at the center of the contour
-                cv2.circle(circle_image, (center_xINT, center_yINT), 5, (50, 50, 50), -1)
+                cv2.circle(circle_image, (center_xINT, center_yINT), 5, (CircleLvl, CircleLvl, CircleLvl), -1)
                 
                 
         return circle_centers,gray,circle_image,edges
     
+    
+    def CreateCicles(self,center_x,center_y,gray):
+        
+        circle_image = np.ones_like(gray)*220
+
+        
+        for cx,cy in zip(center_x.columns,center_y.columns):
+            for i in range(len(center_x[cx])):
+                center_xINT = int(center_x[cx][i])
+                center_yINT = int(center_y[cy][i])
+                cv2.circle(circle_image, (center_xINT, center_yINT), 5, (CircleLvl, CircleLvl, CircleLvl), -1)
+        
+        return circle_image
+
+        
+    def SortCircle_Coord_y(self,circle_centers):
+        
+        circles_sorted2 = sorted(circle_centers, key=lambda x: x[1])
+
+        x_values = [center[0] for center in circles_sorted2]
+
+        y_values = [center[1] for center in circles_sorted2]
+
+
+        # plt.figure()
+        # # plt.plot(y_values,'-x')
+        # plt.plot(np.diff(y_values),'-x')
+
+        current_line={}
+        indeces_y=np.argwhere(abs(np.diff(y_values))>(DistBtwCrcle/2))
+        ii=0
+        for indx in indeces_y:
+            if ii==0:
+                for k in range(indx[0]+1):
+                    current_line[k]=[(x_values[k],y_values[k])]
+                    ii=indx[0]+1
+                    continue;
+            for j in range(ii,indx[0]+1):
+                gotValue=False
+
+                for k in current_line.keys():
+                    if  abs(current_line[k][len( current_line[k])-1][0]- x_values[j])<(DistBtwCrcle/5):
+                        current_line[k].append((x_values[j],y_values[j]))
+                        gotValue=True
+                        break;
+                if not gotValue:
+                        current_line[len(current_line)]=[(x_values[j],y_values[j])]
+            ii=indx[0]+1
+
+
+        for j in range(ii,len(y_values)):
+            gotValue=False
+
+            for k in current_line.keys():
+                if  abs(current_line[k][len( current_line[k])-1][0]- x_values[j])<(DistBtwCrcle/5):
+                    current_line[k].append((x_values[j],y_values[j]))
+                    gotValue=True
+                    break;
+            if not gotValue:
+                    current_line[len(current_line)]=[(x_values[j],y_values[j])]
+                     
+
+
+
+        current_line_sorted={}
+        avregeLoc={}
+
+        for key in current_line.keys():
+            x_values = [center[0] for center in current_line[key]]
+            avregeLoc[np.mean(x_values)]=key
+
+        sorted_avregeLoc = sorted(list(avregeLoc.keys()))
+        sorted_Index=[avregeLoc[itm] for itm in sorted_avregeLoc]
+
+        for i,k in enumerate(sorted_Index):
+            current_line_sorted[i]=current_line[k]
+            
+        return current_line_sorted
+
+        
+        
+
     def SortCircle_Coord(self,circle_centers):
         
         
@@ -245,6 +382,138 @@ class Circles():
             current_line_sorted[k]=l_sorted
             
         return current_line_sorted
+    
+#### 
+    def AddMissingCircles_withPolyFIT(self,current_line_sorted):   
+        cntMissingCircles={}
+        
+        
+        
+        yFirst=[]
+        yLast=[]
+        
+        
+        for k in current_line_sorted.keys():   
+            y = [center[1] for center in current_line_sorted[k]] 
+            yFirst.append(y[0])
+            yLast.append(y[len(y)-1])
+        
+        yF= np.min(yFirst )
+        yL=np.max(yLast)
+        
+        for k in current_line_sorted.keys():    
+            
+            if len(current_line_sorted[k])>439:
+                continue;
+            
+            y = [center[1] for center in current_line_sorted[k]]
+            
+            dymean=np.mean(np.diff(y))
+            
+            if dymean > DistBtwCrcle*1.02:
+                dymean = DistBtwCrcle*AQMscale
+            
+            dymax=max(np.diff(y))
+            cntMissingCircles[k]=0;
+            
+           
+            while abs(dymax)> abs(dymean*1.3):
+                x = [center[0] for center in current_line_sorted[k]]
+                degree = 4
+        
+                coefficients = np.polyfit(y, x, degree)
+        
+                # Create a polynomial function using the coefficients
+                poly_function = np.poly1d(coefficients)
+        
+                # Generate x values for the fitted curve
+                y_fit = np.linspace(yF, yL,439)
+        
+                # Calculate corresponding y values based on the fitted polynomial
+                x_fit = poly_function(y_fit)
+                
+                if abs(dymax)> abs(dymean*1.3):
+                    maxIn= np.argmax(np.diff(y))
+                    closest_index = min(range(len(y_fit)), key=lambda i: abs(y_fit[i] - (y[maxIn]+dymean)))
+        
+                    current_line_sorted[k].insert(maxIn+1, (x_fit[closest_index],y[maxIn]+dymean))
+                y = [center[1] for center in current_line_sorted[k]]
+                dymean=np.mean(np.diff(y))
+                
+                if dymean > DistBtwCrcle*1.02:
+                    dymean = DistBtwCrcle*AQMscale
+                    
+                dymax=max(np.diff(y))
+                cntMissingCircles[k]=cntMissingCircles[k]+1
+                
+                # print('abs('+str(dymax)+')> abs('+str(dymean*1.1)+')')
+                
+                
+ 
+        
+        
+        
+        for k in current_line_sorted.keys(): 
+            
+            if len(current_line_sorted[k])>439:
+                continue;
+            y = [center[1] for center in current_line_sorted[k]]
+            x = [center[0] for center in current_line_sorted[k]]
+            
+            
+            degree = 4
+        
+            coefficients = np.polyfit(y, x, degree)
+        
+            # Create a polynomial function using the coefficients
+            poly_function = np.poly1d(coefficients)
+        
+            # Generate x values for the fitted curve
+            y_fit = np.linspace(yF, yL,439)
+        
+            # Calculate corresponding y values based on the fitted polynomial
+            x_fit = poly_function(y_fit)
+            
+        
+             
+            while len(y) != 439:
+        
+                dyF=int(abs(y[0]-yF)/(dymean-5))
+                if dyF>0:
+                    closest_index = min(range(len(y_fit)), key=lambda i: abs(y_fit[i] - (current_line_sorted[k][0][1]-dymean)))
+                    current_line_sorted[k].insert(0, (x_fit[closest_index],current_line_sorted[k][0][1]-dymean ))
+                    cntMissingCircles[k]=cntMissingCircles[k]+1
+                else:
+                    # if abs(y[len(y)-1]- np.mean(yLast))>10:
+                    closest_index = min(range(len(y_fit)), key=lambda i: abs(y_fit[i] - (y[len(y)-1] + dymean)))
+            
+                    current_line_sorted[k].append((x_fit[closest_index],y[len(y)-1] + dymean))
+                    cntMissingCircles[k]=cntMissingCircles[k]+1
+                y = [center[1] for center in current_line_sorted[k]]
+                x = [center[0] for center in current_line_sorted[k]] 
+                degree = 4
+        
+                coefficients = np.polyfit(y, x, degree)
+        
+                # Create a polynomial function using the coefficients
+                poly_function = np.poly1d(coefficients)
+        
+                # Generate x values for the fitted curve
+                y_fit = np.linspace(yF, yL,439)
+        
+                # Calculate corresponding y values based on the fitted polynomial
+                x_fit = poly_function(y_fit)
+                
+                
+        return current_line_sorted,cntMissingCircles
+
+    
+    
+    
+    
+    
+    
+ ###   
     
     def AddMissingCircles(self,current_line_sorted):
         
@@ -367,38 +636,205 @@ class Circles():
            ImgClr[i]=CoupleClr
            
        return ImgClr,gray,circle_image,edges,ClrDF_raw
+   
+    def identify_dominant_color(self,image_array):
+        
+        from PIL import Image
+
+        image = Image.fromarray(image_array)
+
+        # Convert the image to RGB mode (if it's not already in RGB)
+        img = image.convert('RGB')
+
+        # Get the image pixels
+        pixels = list(img.getdata())
+
+        # Calculate the average color
+        average_color = (
+           sum(pixel[0] for pixel in pixels) // len(pixels),
+           sum(pixel[1] for pixel in pixels) // len(pixels),
+           sum(pixel[2] for pixel in pixels) // len(pixels)
+        )
+
+        return average_color
+
+
+    def findColorsInDIC(self,centerByColor,colorCode,itm,threshold):
+        
+        
+  
+        
+        keys= np.array(list(centerByColor.keys()))
+        if len(keys)<10:
+            centerByColor[colorCode]=[itm]
+            return centerByColor
+        
+        colorCode_array = np.array(colorCode)
+        
+        result_array = keys - colorCode_array
+       
+        
+        result_array[abs(result_array) < threshold] = 0
+        
+        distances = np.linalg.norm(result_array, axis=1)
+
+        closest_index = np.argmin(distances)
+        
+        if distances[closest_index]<5:
+            centerByColor[list(centerByColor.keys())[closest_index]].append(itm)
+     
+        else:
+            centerByColor[colorCode]=[itm]
+            
+        return centerByColor
+    
+    def defineCOLOR(self,ImRoi,circle_centers):
+        colorList= []
+ 
+        scoreList={} 
+        for   threshold in [10,15,20,25,30]: 
+            centerByColor={}
+
+            for itm in circle_centers:
+                
+                x=[int(itm[0])-2,int(itm[0])+2]
+                y=[int(itm[1])-2,int(itm[1])+2]
+                
+                # plt.figure()
+                # plt.imshow(circle)
+                
+                circle= ImRoi[y[0]:y[1],x[0]:x[1],:]
+                
+                colorCode=self.identify_dominant_color(circle)
+                
+                centerByColor=self.findColorsInDIC(centerByColor,colorCode,itm,threshold)
+                
+            centerByColorLenght={key:len(centerByColor[key])/395 for key in centerByColor if len(centerByColor[key])>100}
+            
+            score=0
+            for value in centerByColorLenght.values():
+                
+                if int(value)>1:
+                    
+                    score=score+0
+                else: 
+                    score=score+int(value)
+            scoreList[score]=threshold
+            if score == 7:
+                break;
+            
+        
+        if score != 7:
+            for itm in circle_centers:
+                
+                x=[int(itm[0])-2,int(itm[0])+2]
+                y=[int(itm[1])-2,int(itm[1])+2]
+                
+                # plt.figure()
+                # plt.imshow(circle)
+                
+                circle= ImRoi[y[0]:y[1],x[0]:x[1],:]
+                
+                colorCode=self.identify_dominant_color(circle)
+                
+                centerByColor=self.findColorsInDIC(centerByColor,colorCode,itm,scoreList[max(list(scoreList.keys()))])
+        
+        
+        
+        toDel=[]
+        for key in centerByColor.keys():
+            if len(centerByColor[key])<100:
+                toDel.append(key)
+
+        for key in toDel:
+            del centerByColor[key]
+        
+        current_line_sorted={}
+        avregeLoc={}
+        
+        for key in centerByColor.keys():
+            x_values = [center[0] for center in centerByColor[key]]
+            avregeLoc[np.mean(x_values)]=key
+
+        sorted_avregeLoc = sorted(list(avregeLoc.keys()))
+        
+
+        
+        
+        
+        for key in centerByColor.keys():
+            
+            x_values = [center[0] for center in centerByColor[key]]
+
+            y_values = [center[1] for center in centerByColor[key]]
+            
+            enumerated_list = list(enumerate(y_values))
+
+            sorted_list = sorted(enumerated_list, key=lambda x: x[1])
+
+            sorted_indices, sorted_values = zip(*sorted_list)
+            l=[]
+            
+            for i in sorted_indices:
+                l.append((x_values[i],y_values[i]))
+             
+            current_line_sorted[sorted_avregeLoc.index(np.mean(x_values))]=l
+            
+        
+        
+        return   current_line_sorted
  
     def CalcorColorMat(self,ImRoi,StartRoiCoed):
        
            
-       ImgClr={}
        ClrDF_raw={}
        ClrDF_rawXY={}
 
        current_line_sortedDIC={}
-
+       
+       
+       circle_image_all={}
+       gray_all={}
+       
        for i in range(len(ImRoi.keys())):
            
-           circle_centers,gray,circle_image,edges=self.find_circles(ImRoi[i],15);
-
+           circle_centers,gray,circle_image,edges=self.find_circles(ImRoi[i],CircleArea);
+           
+           
+           circle_image_all[i]=circle_image
+           
+           gray_all[i]=gray
            
            current_line_sorted=self.SortCircle_Coord(circle_centers);
            
+           if len(current_line_sorted.keys()) < 7:
+               current_line_sorted=self.SortCircle_Coord_y(circle_centers)
+
+           if len(current_line_sorted.keys()) < 7:    
+               current_line_sorted=self.defineCOLOR(ImRoi[i],circle_centers)
+           
            if len(current_line_sorted.keys()) > 7:
-               del current_line_sorted[7]
+                keysOverLimit=[key for key in  current_line_sorted.keys() if key>6]
+                for key in keysOverLimit:
+                    del current_line_sorted[key]           
+           # current_line_sorted,cntMissingCircles=self.AddMissingCircles(current_line_sorted);
            
-           current_line_sorted,cntMissingCircles=self.AddMissingCircles(current_line_sorted);
+           current_line_sorted,cntMissingCircles=self.AddMissingCircles_withPolyFIT(current_line_sorted);
+
            
-           current_line_sorted = self.filterCircles(current_line_sorted)
            
-           current_line_sorted,cntMissingCircles=self.AddMissingCircles(current_line_sorted);
+           current_line_sorted = self.filterCircles_WithPol(current_line_sorted)
+           
+           current_line_sorted,cntMissingCircles=self.AddMissingCircles_withPolyFIT(current_line_sorted);
+
+           
+           # current_line_sorted,cntMissingCircles=self.AddMissingCircles(current_line_sorted);
 
            
            ClrDF=pd.DataFrame()
            ClrDF_x=pd.DataFrame()
 
            tmp_df=pd.DataFrame()
-           tmp_df_xy=pd.DataFrame()
            for Key,Value in ColorDic.items():
                tmp_df = pd.DataFrame({Value: self.CreatColorList(Key,current_line_sorted)})
                ClrDF = pd.concat([ClrDF, tmp_df], axis=1)
@@ -415,7 +851,7 @@ class Circles():
            ClrDF_rawXY[i]=ClrDF_x
 
            
-       return gray,circle_image,edges,ClrDF_raw,ClrDF_rawXY,current_line_sortedDIC  
+       return gray_all,circle_image_all,edges,ClrDF_raw,ClrDF_rawXY,current_line_sortedDIC,StartRoiCoed
  
     
 
@@ -443,7 +879,45 @@ class Circles():
             
             
 
+    def filterCircles_WithPol(self,current_line_sorted):
         
+        yFirst=[]
+        yLast=[]
+        for k in current_line_sorted.keys():   
+            y = [center[1] for center in current_line_sorted[k]] 
+            yFirst.append(y[0])
+            yLast.append(y[len(y)-1])
+
+        yF= np.min(yFirst )
+        yL=np.max(yLast)
+                
+        for k in  current_line_sorted.keys():
+            y_values = [center[1] for center in current_line_sorted[k]]
+
+            dymean= np.mean(np.diff(np.array(y_values)))
+            indices = np.argwhere(abs(np.diff(np.array(y_values)))<(dymean/2))
+            current_line_sorted[k] = self.delete_indices_with_numpy(current_line_sorted[k],indices)
+            
+            y_values = [center[1] for center in current_line_sorted[k]]
+            x_values = [center[0] for center in current_line_sorted[k]]
+            
+            degree = 4
+
+            coefficients = np.polyfit(y_values, x_values, degree)
+
+            # Create a polynomial function using the coefficients
+            poly_function = np.poly1d(coefficients)
+
+            # Generate x values for the fitted curve
+            y_fit = np.linspace(yF, yL,len(y_values))
+
+            # Calculate corresponding y values based on the fitted polynomial
+            x_fit = poly_function(y_fit)
+            
+            
+            indeces_x=np.argwhere(abs(x_fit-x_values)>(DistBtwCrcle/2))
+            current_line_sorted[k] = self.delete_indices_with_numpy(current_line_sorted[k],indeces_x)
+        return current_line_sorted
         
     def calcC2C(self,refClr,ClrDF_rawSide):
         
@@ -764,10 +1238,9 @@ def PlotSingle_Wstarvitsky_allInOneGraph(x,dbwAll,PlotTitle,fileName,colorInUseN
     
    fig = go.Figure()
    
-   dashSolidDot={0:'solid',1:'dash',2:'dot'}
    
 
-   for i in range(3):
+   for i in range(len(dbwAll)):
        db=dbwAll[i]
        
        for c in colorInUseName:  
@@ -778,10 +1251,10 @@ def PlotSingle_Wstarvitsky_allInOneGraph(x,dbwAll,PlotTitle,fileName,colorInUseN
                lineColor='gold';
            
            fig.add_trace(go.Scatter(x=x,y=list(db[c]),mode='lines',
-                                    line=dict(color=lineColor, dash=dashSolidDot[i]),name=c+' ' +sideDic[i]))
+                                    line=dict(color=lineColor),name=c+' section ' +str(i)))
            fig.data[len(fig.data)-1].visible = 'legendonly';
            fig.add_trace(go.Scatter(x=x,y=savgol_filter(db[c], MaxWaveWindow, S_g_Degree), 
-                                    line=dict(color=lineColor, dash=dashSolidDot[i]) ,name='S.Goly ' + c+' ' +sideDic[i]))
+                                    line=dict(color=lineColor) ,name='S.Goly ' + c+' section ' +str(i)))
 
        
    
@@ -855,21 +1328,20 @@ def PlotSingle_Basic(x,db,PlotTitle,fileName):
    return fig   
 
 
-def PlotSingle_BasicVsTraget_multiPanel(db,PlotTitle,fileName,indexPanelNameDic,ymax):
+def PlotSingle_BasicVsTraget_multiPanel(db,PlotTitle,fileName,indexPanelNameDic,ymax,sectionNumber):
     
    fig = go.Figure()
    
-   dashSolidDot={0:'solid',1:'dash',2:'dot'}
-   PageSide={0:'Left',1:'Middle',2:'Right'}
+
    
-   for i in range(3):
+   for i in sectionNumber:
        for c in db[i].columns:  
            lineColor = c
                 
            if lineColor=='Yellow':
                 lineColor='gold';
                 
-           fig.add_trace(go.Scatter(y=list(db[i][c]*pixSize),line=dict(color=lineColor, dash=dashSolidDot[i]) , name=c+' '+PageSide[i]))
+           fig.add_trace(go.Scatter(y=list(db[i][c]*pixSize),line=dict(color=lineColor) , name=c+' section '+str(i)))
        
    
     
@@ -941,15 +1413,15 @@ def PlotSingle_Basic_multiPanel(db,PlotTitle,fileName,indexPanelNameDic,ymax):
      
    return fig   
 
-def PlotSingle_DiffFromRefclr_multiPanel(db,PlotTitle,fileName,indexPanelNameDic,ymax):
+def PlotSingle_DiffFromRefclr_multiPanel(db,PlotTitle,fileName,indexPanelNameDic,ymax,sectionNumber):
     
    fig = go.Figure()
    
-   dashSolidDot={0:'solid',1:'dash',2:'dot'}
-   PageSide={0:'Left',1:'Middle',2:'Right'}
+   # dashSolidDot={0:'solid',1:'dash',2:'dot'}
+   # PageSide={0:'Left',1:'Middle',2:'Right'}
   
     
-   for i in range(3):
+   for i in sectionNumber:
         for c in db[i].columns:  
            
             lineColor=c.split('-')[1]
@@ -957,8 +1429,9 @@ def PlotSingle_DiffFromRefclr_multiPanel(db,PlotTitle,fileName,indexPanelNameDic
             if lineColor=='Yellow':
                 lineColor='gold';
                 
-            fig.add_trace(go.Scatter(y=list(db[i][c]*pixSize), line=dict(color=lineColor, dash=dashSolidDot[i])  ,name=c+' '+PageSide[i]))
-           
+                # fig.add_trace(go.Scatter(y=list(db[i][c]*pixSize), line=dict(color=lineColor, dash=dashSolidDot[i])  ,name=c+' '+PageSide[i]))
+            fig.add_trace(go.Scatter(y=list(db[i][c]*pixSize), line=dict(color=lineColor)  ,name=c+' section '+str(i)))
+
    
     
    fig= Plot_Panel_number(fig,ymax,indexPanelNameDic)
@@ -1129,19 +1602,18 @@ def CalcCumError(clrFomTarget,LngthLimit):
     return  x, cumSmPnl
 
 
-def Color_To_Black_4allPanel(ClrDF_fromTargetS_goly,Color_Black_Sgoly_allPanels,RefCl,colorInUseName):
+def Color_To_Black_4allPanel(ClrDF_fromTargetS_goly,RefCl,colorInUseName,SecNum):
     
     Color_Black_Sgoly={};
 
-    for i in range(3):
+    for i in range(SecNum):
         Color_Black_Sgoly[i]=pd.DataFrame()
         for col in colorInUseName:
             if RefCl == col:
                 continue;
             Color_Black_Sgoly[i] = pd.concat([Color_Black_Sgoly[i], (ClrDF_fromTargetS_goly[i][RefCl]-ClrDF_fromTargetS_goly[i][col]).rename(RefCl+'-'+col)], axis=1)
-        Color_Black_Sgoly_allPanels[i]=pd.concat([Color_Black_Sgoly_allPanels[i], Color_Black_Sgoly[i]])
 
-    return Color_Black_Sgoly_allPanels
+    return Color_Black_Sgoly
 
 
 
@@ -1175,10 +1647,10 @@ for ll in  sorted_indices_list:
 Pnl = sInputListSORTED[0]
 
 
-colorInUseName=['Magenta','Yellow','Blue','Orange','Cyan','Green','Black']
+# colorInUseName=['Magenta','Yellow','Blue','Orange','Cyan','Green','Black']
 
-
-# colorInUseName=['Magenta','Yellow','Cyan','Black']
+# 
+colorInUseName=['Magenta','Yellow','Cyan','Black']
 colorInUseNum=[ColorDicNum[itm] for itm in colorInUseName]
 
 # sInputListL=[sInputList[0]]
@@ -1210,22 +1682,23 @@ colorInUseNum=[ColorDicNum[itm] for itm in colorInUseName]
 fileNME='\\FullImage.bmp'
 # ImRoi,StartRoiCoed= Circles(sInput+'\\'+pnl+fileNME).loadImage();
 
-
+ClrDF_fromTargetPnl={}
 C2Cmat_allPanels=pd.DataFrame()
-Cyan_Black_Sgoly_allPanels={};
-Green_Black_Sgoly_allPanels={};
 ClrDF_fromTargetS_goly_allPanels={}
 ClrDF_fromTarget_allPanels={}
 Color_Black_Sgoly_allPanels={}
+Green_Black_Sgoly_allPanels={};
 
-ClrDF_fromTargetPnl={}
+ClrDF_fromTargetS_goly_allPanels_continues={}
+ClrDF_fromTarget_allPanels_continues={}
+Color_Black_Sgoly_allPanels_continues={}
+Green_Black_Sgoly_allPanels_continues={};
 
-for i in range(len(ImRoi.keys())):
-    Cyan_Black_Sgoly_allPanels[i]=pd.DataFrame();
-    Green_Black_Sgoly_allPanels[i]=pd.DataFrame();
-    ClrDF_fromTargetS_goly_allPanels[i]=pd.DataFrame();
-    ClrDF_fromTarget_allPanels[i]=pd.DataFrame();
-    Color_Black_Sgoly_allPanels[i]=pd.DataFrame();
+for i in range(NumOfSec):
+    ClrDF_fromTargetS_goly_allPanels_continues[i]=pd.DataFrame();
+    ClrDF_fromTarget_allPanels_continues[i]=pd.DataFrame();
+    Color_Black_Sgoly_allPanels_continues[i]=pd.DataFrame();
+    Green_Black_Sgoly_allPanels_continues[i]=pd.DataFrame();
 
 indexPanelNameDic={}
 
@@ -1261,17 +1734,33 @@ Clr1='Cyan'
 
 
 # for Pnl in sInputListL:
+ClrDF_rawXY_allPanels={}
+yTargetDF_allpanel={}
+xTargetDF_allpanel={}
+calcTarget = True
 
+circle_image_pnl={}
+gray_pnl={}
+Target_image_pnl={}
 for Pnl in sInputListSORTED:
+    pth=sInput+'\\'+Pnl+fileNME
+    if NumOfSec == 18:
+        ImRoi,StartRoiCoed= Circles(pth).loadImage();
+    else:
+        ImRoi,StartRoiCoed= Circles(pth).loadImage_SmallSubstrate();
 
-    # ImRoi,StartRoiCoed= Circles(sInput+'\\'+Pnl+fileNME).loadImage();
-    pth=r'D:\B8\new file\95-0-18\FullImage.bmp'
-    # pth=sInput+'\\'+Pnl+fileNME
-    ImRoi,StartRoiCoed= Circles(pth).loadImage();
+    # pth=r'D:\B8\new file\95-0-18\FullImage.bmp'
+    
+    # ImRoi,StartRoiCoed= Circles(pth).loadImage();
 
-    gray,circle_image,edges,ClrDF_raw, ClrDF_rawXY,current_line_sortedDIC = Circles(pth).CalcorColorMat(ImRoi,StartRoiCoed)
+    gray_all,circle_image_all,edges,ClrDF_raw, ClrDF_rawXY,current_line_sortedDIC,StartRoiCoed = Circles(pth).CalcorColorMat(ImRoi,StartRoiCoed)
+    
+    circle_image_pnl[Pnl]=circle_image_all
+    gray_pnl[Pnl]=gray_all
     
     
+    
+    ClrDF_rawXY_allPanels[Pnl]=ClrDF_rawXY
     # C2CmatOP_side = Circles(sInput).calcC2C('Magenta', ClrDF_raw[0]);
     
     ClrDF_fromTargetS_goly={}
@@ -1286,9 +1775,10 @@ for Pnl in sInputListSORTED:
 
     strartPos =0
     strartPos_x =np.mean(ClrDF_rawXY[0]['Magenta_x'])
-    
     yTargetDF_all={}
     xTargetDF_all={}
+    Target_image_pnl={}
+
     for i in range(len(ImRoi.keys())):
         
         # dymeanList=[]
@@ -1302,33 +1792,39 @@ for Pnl in sInputListSORTED:
         yTargetDF_all[i]=yTargetDF
 
         x[i]=np.mean(dymeanListdic[i])
-        ClrDF_fromTargetS_goly_allPanels[i]=pd.concat([ClrDF_fromTargetS_goly_allPanels[i], ClrDF_fromTargetS_goly[i]])
-        ClrDF_fromTarget_allPanels[i]=pd.concat([ClrDF_fromTarget_allPanels[i], ClrDF_fromTarget[i]])
-        ClrDF_fromTargetSide[i]=ClrDF_fromTarget[i]
-    C2Cmat=pd.DataFrame()
+    ClrDF_fromTargetS_goly_allPanels[Pnl]=ClrDF_fromTargetS_goly
+    ClrDF_fromTarget_allPanels[Pnl]=ClrDF_fromTarget
     ClrDF_fromTargetPnl[Pnl]=ClrDF_fromTargetSide
-    for i in range(3):
-        C2Cmat[sideDic[i]] = Circles(sInput+'\\'+Pnl+fileNME).calcC2C('Magenta', ClrDF_fromTargetS_goly[i]);
+    yTargetDF_allpanel[Pnl]=yTargetDF_all
+    xTargetDF_allpanel[Pnl]=xTargetDF_all
+    
+    
+    
+    C2Cmat=pd.DataFrame()
+    for i in range(len(ImRoi.keys())):
+        C2Cmat[i] = Circles(sInput+'\\'+Pnl+fileNME).calcC2C('Magenta', ClrDF_fromTargetS_goly_allPanels[Pnl][i]);
         
     C2Cmat_allPanels= pd.concat([C2Cmat_allPanels, C2Cmat])  
     
-    RefC01='Blue'
-    Cyan_Black_Sgoly_allPanels=Color_To_Black_4allPanel(ClrDF_fromTargetS_goly,Cyan_Black_Sgoly_allPanels,RefC01,colorInUseName)
-    # Cyan_Black_Sgoly={};
-    # RefCl='Cyan'
-    # for i in range(3):
-    #     Cyan_Black_Sgoly[i]=pd.DataFrame()
-    #     for col in ClrDF_fromTargetS_goly[i].columns:
-    #         if RefCl == col:
-    #             continue;
-    #         Cyan_Black_Sgoly[i] = pd.concat([Cyan_Black_Sgoly[i], (ClrDF_fromTargetS_goly[i][RefCl]-ClrDF_fromTargetS_goly[i][col]).rename(RefCl+'-'+col)], axis=1)
-    #     Cyan_Black_Sgoly_allPanels[i]=pd.concat([Cyan_Black_Sgoly_allPanels[i], Cyan_Black_Sgoly[i]])
+    RefC01='Cyan'
+    Color_Black_Sgoly_allPanels[Pnl]=Color_To_Black_4allPanel(ClrDF_fromTargetS_goly,RefC01,colorInUseName,len(ImRoi.keys()))
+    # # Cyan_Black_Sgoly={};
+    # # RefCl='Cyan'
+    # # for i in range(3):
+    # #     Cyan_Black_Sgoly[i]=pd.DataFrame()
+    # #     for col in ClrDF_fromTargetS_goly[i].columns:
+    # #         if RefCl == col:
+    # #             continue;
+    # #         Cyan_Black_Sgoly[i] = pd.concat([Cyan_Black_Sgoly[i], (ClrDF_fromTargetS_goly[i][RefCl]-ClrDF_fromTargetS_goly[i][col]).rename(RefCl+'-'+col)], axis=1)
+    # #     Cyan_Black_Sgoly_allPanels[i]=pd.concat([Cyan_Black_Sgoly_allPanels[i], Cyan_Black_Sgoly[i]])
     
-    
-    # RefCl='Magenta'
-    RefCl11='Magenta'
+    RefC02='Magenta'
+    Green_Black_Sgoly_allPanels[Pnl]=Color_To_Black_4allPanel(ClrDF_fromTargetS_goly,RefC02,colorInUseName,len(ImRoi.keys()))
 
-    Color_Black_Sgoly_allPanels=Color_To_Black_4allPanel(ClrDF_fromTargetS_goly,Color_Black_Sgoly_allPanels,RefCl11,colorInUseName)
+    # # RefCl='Magenta'
+    # RefCl11='Magenta'
+
+    # Color_Black_Sgoly_allPanels=Color_To_Black_4allPanel(ClrDF_fromTargetS_goly,Color_Black_Sgoly_allPanels,RefCl11,colorInUseName,len(ImRoi.keys()))
    
     
     
@@ -1344,32 +1840,161 @@ for Pnl in sInputListSORTED:
    
 C2Cmat_allPanels= C2Cmat_allPanels.reset_index(drop=True)    
 
+for i in range(len(ImRoi.keys())):
+    for pnl in ClrDF_fromTargetS_goly_allPanels.keys():
+        ClrDF_fromTargetS_goly_allPanels_continues[i]=pd.concat([ClrDF_fromTargetS_goly_allPanels_continues[i],ClrDF_fromTargetS_goly_allPanels[pnl][i]]).reset_index(drop=True) 
+        ClrDF_fromTarget_allPanels_continues[i]=pd.concat([ClrDF_fromTarget_allPanels_continues[i],ClrDF_fromTarget_allPanels[pnl][i]]).reset_index(drop=True) 
+        Color_Black_Sgoly_allPanels_continues[i]=pd.concat([Color_Black_Sgoly_allPanels_continues[i],Color_Black_Sgoly_allPanels[pnl][i]]).reset_index(drop=True) 
+        Green_Black_Sgoly_allPanels_continues[i]=pd.concat([Green_Black_Sgoly_allPanels_continues[i],Green_Black_Sgoly_allPanels[pnl][i]]).reset_index(drop=True) 
 
-for i in range(3):
-    Color_Black_Sgoly_allPanels[i]=Color_Black_Sgoly_allPanels[i].reset_index(drop=True)
-    Cyan_Black_Sgoly_allPanels[i]=Cyan_Black_Sgoly_allPanels[i].reset_index(drop=True) 
-    ClrDF_fromTargetS_goly_allPanels[i]=ClrDF_fromTargetS_goly_allPanels[i].reset_index(drop=True) 
+        # Color_Black_Sgoly_allPanels[i]=Color_Black_Sgoly_allPanels[i].reset_index(drop=True)
+        # Cyan_Black_Sgoly_allPanels[i]=Cyan_Black_Sgoly_allPanels[i].reset_index(drop=True) 
+        # ClrDF_fromTargetS_goly_allPanels[i]=ClrDF_fromTargetS_goly_allPanels[i].reset_index(drop=True) 
+#### Create Images
+targetImage_Pnl={}
+ClrDF_rawXY_image_Pnl={}
+colorList_y=[col for col in ClrDF_rawXY[0].columns if not('_x' in col)]
+colorList_x=[col for col in ClrDF_rawXY[0].columns if ('_x' in col)]
 
-# path_FnameClrDF=r'E:\B2_17082023\PCCimage\Production[250][17-08-2023 11-34-07]\ClrDF_fromTargetPnl.pkl'
-# with open(path_FnameClrDF, 'wb') as f:
-#     pickle.dump(ClrDF_fromTargetPnl, f)
+for Pnl in  sInputListSORTED:
+    
+    targetImage_all={}
+    ClrDF_rawXY_all={}
+    for i in range(len(yTargetDF_allpanel[Pnl])):
+        
+        targetImage_all[i]=Circles(pth).CreateCicles(xTargetDF_allpanel[Pnl][i]-StartRoiCoed[i],yTargetDF_allpanel[Pnl][i],gray_pnl[Pnl][i])
+        ClrDF_rawXY_all[i]=Circles(pth).CreateCicles(ClrDF_rawXY_allPanels[Pnl][i][colorList_x]-StartRoiCoed[i],ClrDF_rawXY_allPanels[Pnl][i][colorList_y],gray_pnl[Pnl][i])
+
+        
+    targetImage_Pnl[Pnl]=targetImage_all
+    ClrDF_rawXY_image_Pnl[Pnl]=ClrDF_rawXY_all
+    print('image-'+Pnl)
+
+plt.figure(0)
+plt.imshow( ClrDF_rawXY_image_Pnl[Pnl][sc])
 
 
-path_ClrDF_fromTarget_allPanels=sInput+'\ClrDF_fromTarget_allPanels.pkl'
-path_indexPanelNameDic=sInput+'\indexPanelNameDic.pkl'
-with open(path_ClrDF_fromTarget_allPanels, 'wb') as f:
+plt.figure(1)
+plt.imshow( gray_pnl[Pnl][sc])
+
+
+# plt.figure(2)
+# plt.imshow( targetImage_Pnl[Pnl][0]-ClrDF_rawXY_image_Pnl[Pnl][0])
+
+
+# plt.figure(3)
+# plt.imshow( ClrDF_rawXY_image_Pnl[Pnl][0]-circle_image_pnl[Pnl][0])
+
+
+Pnl='87-0-17'
+sc=12
+
+adjusted_image = np.where(gray_pnl[Pnl][sc] > 220, 220, np.where(gray_pnl[Pnl][sc] < 50, 70, gray_pnl[Pnl][sc]))
+
+dIm=(circle_image_pnl[Pnl][sc].astype(np.int32)-adjusted_image.astype(np.int32))
+
+dIm2=(ClrDF_rawXY_image_Pnl[Pnl][sc].astype(np.int32)-adjusted_image.astype(np.int32))
+
+dIm3=(targetImage_Pnl[Pnl][sc].astype(np.int32)-adjusted_image.astype(np.int32))
+
+dIm4=(targetImage_Pnl[Pnl][sc].astype(np.int32)-ClrDF_rawXY_image_Pnl[Pnl][sc].astype(np.int32))
+
+
+dIm[dIm<0]=0
+dIm2[dIm2<0]=0
+dIm3[dIm3<0]=0
+dIm4[dIm4<0]=0
+
+# #### Check the Circles
+
+# # dIm= adjusted_image-circle_image
+
+# plt.figure(0)
+# plt.plot(ClrDF_fromTarget_allPanels[Pnl][6]['Yellow'])
+
+# plt.figure(0)
+# plt.plot(np.diff(ClrDF_rawXY_allPanels[Pnl][sc]['Magenta']))
+# ## maxdImInt=np.max(dImInt)
+# ## mindImInt=np.min(dImInt)
+
+# ## nominaldImInt=(dImInt-mindImInt)/(maxdImInt-mindImInt)*255
+
+
+
+plt.figure(10)
+plt.imshow(gray_pnl[Pnl][sc] )
+
+plt.figure(101)
+plt.imshow(ClrDF_rawXY_allPanels[Pnl][sc] )
+
+plt.figure(1)
+plt.imshow(dIm)
+
+plt.figure(11)
+plt.imshow(dIm2)
+
+plt.figure(111)
+plt.imshow(dIm3)
+
+plt.figure(110)
+plt.imshow(dIm4)
+
+# plt.figure(2)
+# plt.imshow(adjusted_image)
+
+plt.figure(31)
+plt.imshow(targetImage_Pnl[Pnl][sc])
+
+plt.figure(3)
+plt.imshow(ClrDF_rawXY_image_Pnl[Pnl][sc])
+
+
+
+path_FnameClrDF=sInput+'\ClrDF_fromTarget_allPanels.pkl'
+with open(path_FnameClrDF, 'wb') as f:
     pickle.dump(ClrDF_fromTarget_allPanels, f)
-
-with open(path_indexPanelNameDic, 'wb') as f:
-    pickle.dump(indexPanelNameDic, f)
-
-path_ClrDF_fromTargetS_goly=sInput+'\ClrDF_fromTargetS_goly_allPanels.pkl'
-with open(path_ClrDF_fromTargetS_goly, 'wb') as f:
+    
+    
+path_FnameClrDF=sInput+'\ClrDF_rawXY_allPanels.pkl'
+with open(path_FnameClrDF, 'wb') as f:
+    pickle.dump(ClrDF_rawXY_allPanels, f)
+    
+path_FnameClrDF=sInput+'\ClrDF_fromTargetS_goly_allPanels.pkl'
+with open(path_FnameClrDF, 'wb') as f:
     pickle.dump(ClrDF_fromTargetS_goly_allPanels, f)
 
+path_FnameClrDF=sInput+'\\targetImage_Pnl.pkl'
+with open(path_FnameClrDF, 'wb') as f:
+    pickle.dump(targetImage_Pnl, f)
+    
+path_FnameClrDF=sInput+'\\ClrDF_rawXY_image_Pnl.pkl'
+with open(path_FnameClrDF, 'wb') as f:
+    pickle.dump(ClrDF_rawXY_image_Pnl, f)
+
+path_FnameClrDF=sInput+'\\gray_pnl.pkl'
+with open(path_FnameClrDF, 'wb') as f:
+    pickle.dump(gray_pnl, f)
+# path_ClrDF_fromTarget_allPanels=sInput+'\ClrDF_fromTarget_allPanels.pkl'
+# path_indexPanelNameDic=sInput+'\indexPanelNameDic.pkl'
+# with open(path_ClrDF_fromTarget_allPanels, 'wb') as f:
+#     pickle.dump(ClrDF_fromTarget_allPanels, f)
+
+# with open(path_indexPanelNameDic, 'wb') as f:
+#     pickle.dump(indexPanelNameDic, f)
+
+# path_ClrDF_fromTargetS_goly=sInput+'\ClrDF_fromTargetS_goly_allPanels.pkl'
+# with open(path_ClrDF_fromTargetS_goly, 'wb') as f:
+#     pickle.dump(ClrDF_fromTargetS_goly_allPanels, f)
 
 
-Side2Side=ClrDF_fromTargetS_goly_allPanels[0]-ClrDF_fromTargetS_goly_allPanels[2]
+imInp_Orig = cv2.imread(r'E:\s8\for irene\12-0-11\FullImage.bmp')
+
+
+plt.figure(00)
+plt.imshow(imInp_Orig)
+
+
+Side2Side=ClrDF_fromTargetS_goly_allPanels_continues[0]-ClrDF_fromTargetS_goly_allPanels_continues[len(ClrDF_fromTargetS_goly_allPanels_continues)-1]
 
 # file_path = r'D:\BTDencoder\B2\04092026_poxy\ClrDF_fromTargetS_goly_allPanels.pkl'
 
@@ -1503,44 +2128,44 @@ figC2C_multiPanel= PlotSingle_Basic_multiPanel(db,PlotTitle,fileName,indexPanelN
 ##########################################################################################
 ##########################################################################################
 ##########################################################################################
-db= Cyan_Black_Sgoly_allPanels;
+db= Color_Black_Sgoly_allPanels_continues;
 # RefCl='Cyan'
 RefCl=RefC01
 
 PlotTitle='2 color diff - '+RefCl +' Vs color'
 
 fileName=PlotTitle+'.html'
-figCyanVsClr_multiPanel_OP= PlotSingle_DiffFromRefclr_multiPanel(db,PlotTitle,fileName,indexPanelNameDic,100)
+figCyanVsClr_multiPanel_OP= PlotSingle_DiffFromRefclr_multiPanel(db,PlotTitle,fileName,indexPanelNameDic,100,[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15])
 
 ##########################################################################################
-db= Color_Black_Sgoly_allPanels;
+db= Green_Black_Sgoly_allPanels_continues;
 
 # RefCl='Magenta'
-RefCl=RefCl11
+RefCl=RefC02
 
 
 PlotTitle='2 color diff -'+RefCl +' Vs color'
 
 fileName=PlotTitle+'.html'
-figCyanVsClr_multiPanel_OP= PlotSingle_DiffFromRefclr_multiPanel(db,PlotTitle,fileName,indexPanelNameDic,100)
+figCyanVsClr_multiPanel_OP= PlotSingle_DiffFromRefclr_multiPanel(db,PlotTitle,fileName,indexPanelNameDic,100,[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15])
 
 ##########################################################################################
 ##########################################################################################
 ##########################################################################################
-db= ClrDF_fromTargetS_goly_allPanels;
+db= ClrDF_fromTargetS_goly_allPanels_continues;
 PlotTitle='Single color from Target'
 
 fileName=PlotTitle+'.html'
-figCyanVsClr_multiPanel_colorFromTarget= PlotSingle_BasicVsTraget_multiPanel(db,PlotTitle,fileName,indexPanelNameDic,100)
+figCyanVsClr_multiPanel_colorFromTarget= PlotSingle_BasicVsTraget_multiPanel(db,PlotTitle,fileName,indexPanelNameDic,100,[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15])
 
 #############################################################################################
 ##########################################################################################
 
-db= ClrDF_fromTarget_allPanels;
+db= ClrDF_fromTarget_allPanels_continues;
 PlotTitle='Single color from Target-NO FILTER'
 
 fileName=PlotTitle+'.html'
-figCyanVsClr_multiPanel_colorFromTarget= PlotSingle_BasicVsTraget_multiPanel(db,PlotTitle,fileName,indexPanelNameDic,100)
+figCyanVsClr_multiPanel_colorFromTarget= PlotSingle_BasicVsTraget_multiPanel(db,PlotTitle,fileName,indexPanelNameDic,100,[13,14,15])
 
 
 
@@ -1630,21 +2255,7 @@ figCyanVsClr_multiPanel_colorFromTarget= PlotSingle_BasicVsTraget_multiPanel(db,
 
 
 
-# adjusted_image = np.where(gray > 220, 220, np.where(gray < 50, 50, gray))
 
-# dIm=circle_image-adjusted_image
-
-
-# plt.figure(1)
-# plt.imshow(dIm)
-
-
-
-# plt.figure(2)
-# plt.imshow(adjusted_image)
-
-# plt.figure(3)
-# plt.imshow(circle_image)
 
 
 # plt.figure(4)
@@ -1874,7 +2485,7 @@ figCyanVsClr_multiPanel_colorFromTarget= PlotSingle_BasicVsTraget_multiPanel(db,
 
 RefCl='Targe'
 
-db= ClrDF_fromTarget_allPanels[0]*pixSize;
+db= ClrDF_fromTarget_allPanels_continues[0]*pixSize;
 PageSide='left-Side'
 PlotTitle='FFT '+RefCl
 fileName=PageSide+' '+RefCl+'FFT.html'
@@ -1883,7 +2494,7 @@ FFT_TrgtM_Side= FFT_Plot(db,PlotTitle,fileName,1/((18*84.666*1e-6*0.9832)), Page
 
 RefCl='Targe- Hz'
 
-db= ClrDF_fromTarget_allPanels[0]*pixSize;
+db= ClrDF_fromTarget_allPanels_continues[0]*pixSize;
 PageSide='left-Side'
 PlotTitle='FFT '+RefCl
 fileName=PageSide+' '+RefCl+'FFT.html'
@@ -2014,33 +2625,40 @@ plt.imshow(ImRoi[i])
 # cv2.waitKey(0)
 
 #############################################################################################################
-
-
-dxList=[]
-for i in range(len(ClrDF_rawXY.keys())-1):
-    dx = abs(np.mean(ClrDF_rawXY[i]['Black_x'])-np.mean(ClrDF_rawXY[i+1]['Magenta_x']))
-    dxList.append(dx)
-
-
-
-
-colX= list(xTargetDF_all[0].columns)
-dxColor=[]
-# k=1
-for k in range(len(ClrDF_rawXY.keys())):
-    for i in range(len(colX)-1):
-        dx = abs(np.mean(ClrDF_rawXY[k][colX[i]])-np.mean(ClrDF_rawXY[k][colX[i+1]]))
-        dxColor.append(dx)
-
-
+z=ClrDF_rawXY[15]-ClrDF_rawXY_allPanels['12-0-20'][15]
+Pnl='12-0-20'
 plt.figure(1)
-plt.plot(dxColor)
+dxListPnl=np.zeros(15)
+for Pnl in ClrDF_rawXY_allPanels.keys():
+    ClrDF_rawXY=ClrDF_rawXY_allPanels[Pnl]
+    dxList=[]
+    for i in range(len(ClrDF_rawXY.keys())-1):
+        dx = abs(np.mean(ClrDF_rawXY[i]['Black_x'])-np.mean(ClrDF_rawXY[i+1]['Magenta_x']))
+        dxList.append(dx)
+    
+    dxListPnl=dxListPnl+np.array(dxList)
+    
+    
+    colX= list(xTargetDF_all[0].columns)
+    dxColor=[]
+    # k=1
+    for k in range(len(ClrDF_rawXY.keys())):
+        for i in range(len(colX)-1):
+            dx = abs(np.mean(ClrDF_rawXY[k][colX[i]])-np.mean(ClrDF_rawXY[k][colX[i+1]]))
+            dxColor.append(dx)
+    
+    
+    plt.plot(dxColor)
 
 np.mean(dxColor)
 
-small=np.mean(dxList[1:16])
-large=np.mean([dxList[0],dxList[16]])
+# dxListPnl=dxListPnl/150
 
+small=np.mean(dxList[1:NumOfSec-2])
+large=np.mean([dxList[0],dxList[NumOfSec-2]])
+
+# small=np.mean(dxList)
+# large= small
 
         
 ClrDF_TargetXY={}
@@ -2058,6 +2676,11 @@ for i in range(len(ClrDF_TargetXY.keys())):
 
 
 
+TmagentaY=pd.DataFrame()
+TmagentaX=pd.DataFrame()
+
+DeltaTarget_resultMagentaY=pd.DataFrame()
+DeltaTarget_resultMagentaX=pd.DataFrame()
 
 TmagentaYDic={}
 TmagentaXDic={}
@@ -2089,7 +2712,7 @@ for color in colorInUseName:
     DeltaTarget_resultMagentaX=pd.DataFrame()
     
 
-col='Magenta'
+col='Black'
 plt.figure('all collors '+col)
 
 
@@ -2103,21 +2726,23 @@ colX=col+'_x'
 # Meshgrid 
 # x = np.array(xTargetDF_all[17].iloc[:200,:])
 # y = np.array(yTargetDF_all[17].iloc[:200,:])
-x = np.array(TmagentaXDic[col].iloc[:200,:])
-y = np.array(TmagentaYDic[col].iloc[:200,:])
+# x = np.array(TmagentaXDic[col].iloc[:200,:])
+# y = np.array(TmagentaYDic[col].iloc[:200,:])
 
+x = np.array(TmagentaXDic[col].iloc[:,:])
+y = np.array(TmagentaYDic[col].iloc[:,:])
 
 # X, Y = np.meshgrid(x, y)
 
 # Directional vectors 
 # u = np.array(DeltaTarget_result[17][list(xTargetDF_all[0].columns)].iloc[:200,:])
 # v = np.zeros((200, 18))
-u = np.array(DeltaTarget_resultMagentaXDic[col].iloc[:200,:])
+u = np.array(DeltaTarget_resultMagentaXDic[col].iloc[:,:])
 # u =np.zeros((200, 18))
 
 
 # v = np.array(DeltaTarget_resultMagentaYDic[col].iloc[:200,:])
-v = np.zeros((200, 18))
+v = np.zeros((439, NumOfSec))
 
 # z = np.sqrt(np.square(u)+np.square(v))
 
@@ -2155,7 +2780,7 @@ plt.plot(DeltaTarget_result[0]['Magenta_x']-DeltaTarget_result[0]['Green_x'])
 plt.figure('all collors1')
 
 
-col='Magenta'
+col='Black'
 colX=col+'_x'
 TmagentaY=pd.DataFrame()
 TmagentaX=pd.DataFrame()
@@ -2175,21 +2800,26 @@ plt.figure(col)
 # Meshgrid 
 # x = np.array(xTargetDF_all[0].iloc[:,:])
 # y = np.array(yTargetDF_all[0].iloc[:,:])
-x = np.array(TmagentaX.iloc[:200,:])
-y = np.array(TmagentaY.iloc[:200,:])
-
+# x = np.array(TmagentaX.iloc[:200,:])
+# y = np.array(TmagentaY.iloc[:200,:])
+x = np.array(TmagentaX.iloc[:,:])
+y = np.array(TmagentaY.iloc[:,:])
 # X, Y = np.meshgrid(x, y)
 
 # Directional vectors 
 # u = np.array(DeltaTarget_result[0][list(xTargetDF_all[0].columns)].iloc[:,:])
 # v = np.array(DeltaTarget_result[0][list(yTargetDF_all[0].columns)].iloc[:,:])
 # u = np.array(DeltaTarget_resultMagentaX.iloc[:200,:])
-u =np.zeros((200, 18))
+# u =np.zeros((200, 18))
+# u =np.zeros((200, NumOfSec))
+u =np.zeros((439, NumOfSec))
 
 
 
 
-v = np.array(DeltaTarget_resultMagentaY.iloc[:200,:])
+# v = np.array(DeltaTarget_resultMagentaY.iloc[:200,:])
+v = np.array(DeltaTarget_resultMagentaY.iloc[:,:])
+
 # v = np.zeros((200, 18))
 
 
@@ -2254,9 +2884,9 @@ for col in list(yTargetDF_all[0].columns):
     ZallCols[col] = np.sqrt(np.square(u)+np.square(v))
     
     
-arr=  np.zeros((200, 18))
+arr=  np.zeros((200, NumOfSec))
 
-for i in range(18):
+for i in range(NumOfSec):
     for j in range(200):
         tmp= [ZallCols[col][j,i] for col in colList]
         arr[j,i]= np.max(tmp)-np.min(tmp)
@@ -2279,9 +2909,627 @@ for i in range(18):
 
 
 
+# imInp_Orig = cv2.imread(pth)
+
+# Roi={}
+
+# Roi['x']=[660,8380]
+# Roi[0]=[2200,2500]
+# Roi[1]=[2750,3050]
+# Roi[2]=[3250,3550]
+# Roi[3]=[3750,4050]
+# Roi[4]=[4300,4600]
+# Roi[5]=[4800,5100]
+# Roi[6]=[5300,5600]
+# Roi[7]=[5800,6100]
+# Roi[8]=[6300,6600]
+# Roi[9]=[6850,7150]
+# Roi[10]=[7350,7650]
+# Roi[11]=[7850,8150]
+# Roi[12]=[8400,8700]
+# Roi[13]=[8900,9200]
+# Roi[14]=[9400,9700]
+# Roi[15]=[9900,10200]
+
+# StartRoiCoed={key:value[0]-Roi[0][0] for key,value in Roi.items() if key != 'x'}
+
+# ImRoi={}
+
+
+# for i in range(NumOfSec):
+#    ImRoi[i]=imInp_Orig[Roi['x'][0]:Roi['x'][1],Roi[i][0]:Roi[i][1],:]
+
+
+
+
+
+# for i in range(NumOfSec):
+#     plt.figure(i)
+#     plt.imshow(ImRoi[0])
+##################################################################################
+
+
+
+# circles_sorted2 = sorted(circle_centers, key=lambda x: x[1])
+
+# x_values = [center[0] for center in circles_sorted2]
+
+# y_values = [center[1] for center in circles_sorted2]
+
+
+# # plt.figure()
+# # # plt.plot(y_values,'-x')
+# # plt.plot(np.diff(y_values),'-x')
+
+# current_line={}
+# indeces_y=np.argwhere(abs(np.diff(y_values))>(DistBtwCrcle/2))
+# ii=0
+# for indx in indeces_y:
+#     if ii==0:
+#         for k in range(indx[0]+1):
+#             current_line[k]=[(x_values[k],y_values[k])]
+#         ii=indx[0]+1
+#         continue;
+#     for j in range(ii,indx[0]+1):
+#         gotValue=False
+#         for k in current_line.keys():
+#             if  abs(current_line[k][len( current_line[k])-1][0]- x_values[j])<(DistBtwCrcle/5):
+#                 current_line[k].append((x_values[j],y_values[j]))
+#                 gotValue=True
+#                 break;
+#         if not gotValue:
+#                 current_line[len(current_line)]=[(x_values[j],y_values[j])]
+#     ii=indx[0]+1
+
+
+# for j in range(ii,len(y_values)):
+#     gotValue=False
+
+#     for k in current_line.keys():
+#         if  abs(current_line[k][len( current_line[k])-1][0]- x_values[j])<(DistBtwCrcle/5):
+#             current_line[k].append((x_values[j],y_values[j]))
+#             gotValue=True
+#             break;
+#     if not gotValue:
+#             current_line[len(current_line)]=[(x_values[j],y_values[j])]
+             
+
+
+
+# current_line_sorted={}
+# avregeLoc={}
+
+# for key in current_line.keys():
+#     x_values = [center[0] for center in current_line[key]]
+#     avregeLoc[np.mean(x_values)]=key
+
+# sorted_avregeLoc = sorted(list(avregeLoc.keys()))
+# sorted_Index=[avregeLoc[itm] for itm in sorted_avregeLoc]
+
+# for i,k in enumerate(sorted_Index):
+#     current_line_sorted[i]=current_line[k]
+
+
+
+# ###################################################################################
+# ClrDF_raw={}
+# ClrDF_rawXY={}
+
+# current_line_sortedDIC={}
+
+
+# circle_image_all={}
+# gray_all={}
+
+# for i in range(len(ImRoi.keys())):
+    
+#     circle_centers,gray,circle_image,edges=Circles(pth).find_circles(ImRoi[i],CircleArea);
+    
+    
+#     circle_image_all[i]=circle_image
+    
+#     gray_all[i]=gray
+    
+#     current_line_sorted=Circles(pth).SortCircle_Coord(circle_centers);
+    
+#     if len(current_line_sorted.keys()) < 7:
+#         current_line_sorted=Circles(pth).SortCircle_Coord_y(circle_centers)
+    
+#     if len(current_line_sorted.keys()) < 7:
+#         current_line_sorted=Circles(pth).defineCOLOR(ImRoi[i],circle_centers)
+    
+#     if len(current_line_sorted.keys()) > 7:
+#         keysOverLimit=[key for key in  current_line_sorted.keys() if key>6]
+#         for key in keysOverLimit:
+#             del current_line_sorted[key]
+    
+#     # current_line_sorted,cntMissingCircles=Circles(pth).AddMissingCircles(current_line_sorted);
+    
+#     current_line_sorted,cntMissingCircles=Circles(pth).AddMissingCircles_withPolyFIT(current_line_sorted);
+
+#     # current_line_sorted = Circles(pth).filterCircles(current_line_sorted)
+    
+#     current_line_sorted = Circles(pth).filterCircles_WithPol(current_line_sorted)
+
+    
+#     current_line_sorted,cntMissingCircles=Circles(pth).AddMissingCircles_withPolyFIT(current_line_sorted);
+
+#     # current_line_sorted,cntMissingCircles=Circles(pth).AddMissingCircles(current_line_sorted);
+
+    
+#     ClrDF=pd.DataFrame()
+#     ClrDF_x=pd.DataFrame()
+
+#     tmp_df=pd.DataFrame()
+#     for Key,Value in ColorDic.items():
+#         tmp_df = pd.DataFrame({Value: Circles(pth).CreatColorList(Key,current_line_sorted)})
+#         ClrDF = pd.concat([ClrDF, tmp_df], axis=1)
+#         ClrDF_x = pd.concat([ClrDF_x, tmp_df], axis=1)
+#         tmp_df_x = pd.DataFrame({Value+'_x': Circles(pth).CreatColorList_x(Key,current_line_sorted,StartRoiCoed[i])})
+#         ClrDF_x = pd.concat([ClrDF_x, tmp_df_x], axis=1)
+
+               
+               
+           
+            
+#     current_line_sortedDIC[i] = current_line_sorted
+#     ClrDF_raw[i]=ClrDF
+#     ClrDF_rawXY[i]=ClrDF_x
+
+           
+
+
+
+
+
+# ###################################################################################
+
+
+# cntMissingCircles={}
+
+
+
+# yFirst=[]
+# yLast=[]
+# for k in current_line_sorted.keys():   
+#     y = [center[1] for center in current_line_sorted[k]] 
+#     yFirst.append(y[0])
+#     yLast.append(y[len(y)-1])
+
+# yF= np.min(yFirst )
+# yL=np.max(yLast)
+
+# for k in current_line_sorted.keys():           
+    
+#     y = [center[1] for center in current_line_sorted[k]]
+    
+#     dymean=np.mean(np.diff(y))
+    
+#     if dymean > DistBtwCrcle*1.02:
+#         dymean = DistBtwCrcle*AQMscale
+    
+#     dymax=max(np.diff(y))
+#     cntMissingCircles[k]=0;
+    
+   
+#     while abs(dymax)> abs(dymean*1.3):
+#         x = [center[0] for center in current_line_sorted[k]]
+#         degree = 4
+
+#         coefficients = np.polyfit(y, x, degree)
+
+#         # Create a polynomial function using the coefficients
+#         poly_function = np.poly1d(coefficients)
+
+#         # Generate x values for the fitted curve
+#         y_fit = np.linspace(yF, yL,439)
+
+#         # Calculate corresponding y values based on the fitted polynomial
+#         x_fit = poly_function(y_fit)
+        
+#         if abs(dymax)> abs(dymean*1.3):
+#             maxIn= np.argmax(np.diff(y))
+#             closest_index = min(range(len(y_fit)), key=lambda i: abs(y_fit[i] - (y[maxIn]+dymean)))
+
+#             current_line_sorted[k].insert(maxIn+1, (x_fit[closest_index],y[maxIn]+dymean))
+#         y = [center[1] for center in current_line_sorted[k]]
+#         dymean=np.mean(np.diff(y))
+        
+#         if dymean > DistBtwCrcle*1.02:
+#             dymean = DistBtwCrcle*AQMscale
+            
+#         dymax=max(np.diff(y))
+#         cntMissingCircles[k]=cntMissingCircles[k]+1
+        
+        
+        
+#         # print('abs('+str(dymax)+')> abs('+str(dymean*1.1)+')')
+        
+        
+# # plt.figure(10)
+# # plt.plot(np.diff(y))       
+
+# # plt.figure(0)
+# # plt.scatter(y, x, label='Data')
+# # plt.plot(y_fit, x_fit, label=f'Fitted Polynomial (Degree {degree})', color='red')
+# # plt.xlabel('y')
+# # plt.ylabel('x')
+# # plt.title('Polynomial Fitting Example')
+# # plt.legend()
+# # plt.grid(True)
+# # plt.show()
+
+
+# plt.figure(00)
+# plt.plot(np.diff(y))
+
+
+
+# for k in current_line_sorted.keys():   
+#     y = [center[1] for center in current_line_sorted[k]]
+#     x = [center[0] for center in current_line_sorted[k]]
+    
+    
+#     degree = 4
+
+#     coefficients = np.polyfit(y, x, degree)
+
+#     # Create a polynomial function using the coefficients
+#     poly_function = np.poly1d(coefficients)
+
+#     # Generate x values for the fitted curve
+#     y_fit = np.linspace(yF, yL,439)
+
+#     # Calculate corresponding y values based on the fitted polynomial
+#     x_fit = poly_function(y_fit)
+    
+
+     
+#     while len(y) != 439:
+
+#         dyF=int(abs(y[0]-yF)/(dymean-5))
+#         if dyF>0:
+#             closest_index = min(range(len(y_fit)), key=lambda i: abs(y_fit[i] - (current_line_sorted[k][0][1]-dymean)))
+#             current_line_sorted[k].insert(0, (x_fit[closest_index],current_line_sorted[k][0][1]-dymean ))
+#             cntMissingCircles[k]=cntMissingCircles[k]+1
+#         else:
+#             # if abs(y[len(y)-1]- np.mean(yLast))>10:
+#             closest_index = min(range(len(y_fit)), key=lambda i: abs(y_fit[i] - (y[len(y)-1] + dymean)))
+    
+#             current_line_sorted[k].append((x_fit[closest_index],y[len(y)-1] + dymean))
+#             cntMissingCircles[k]=cntMissingCircles[k]+1
+#         y = [center[1] for center in current_line_sorted[k]]
+#         x = [center[0] for center in current_line_sorted[k]] 
+#         degree = 4
+
+#         coefficients = np.polyfit(y, x, degree)
+
+#         # Create a polynomial function using the coefficients
+#         poly_function = np.poly1d(coefficients)
+
+#         # Generate x values for the fitted curve
+#         y_fit = np.linspace(yF, yL,439)
+
+#         # Calculate corresponding y values based on the fitted polynomial
+#         x_fit = poly_function(y_fit)
+                    
+
+# ###################################################################################
+
+
+# # ######################################################################################
+
+# yFirst=[]
+# yLast=[]
+# for k in current_line_sorted.keys():   
+#     y = [center[1] for center in current_line_sorted[k]] 
+#     yFirst.append(y[0])
+#     yLast.append(y[len(y)-1])
+
+# yF= np.min(yFirst )
+# yL=np.max(yLast)
+        
+# for k in  current_line_sorted.keys():
+#     y_values = [center[1] for center in current_line_sorted[k]]
+
+#     dymean= np.mean(np.diff(np.array(y_values)))
+#     indices = np.argwhere(abs(np.diff(np.array(y_values)))<(dymean/2))
+#     current_line_sorted[k] = Circles(pth).delete_indices_with_numpy(current_line_sorted[k],indices)
+    
+#     y_values = [center[1] for center in current_line_sorted[k]]
+#     x_values = [center[0] for center in current_line_sorted[k]]
+    
+#     degree = 4
+
+#     coefficients = np.polyfit(y_values, x_values, degree)
+
+#     # Create a polynomial function using the coefficients
+#     poly_function = np.poly1d(coefficients)
+
+#     # Generate x values for the fitted curve
+#     y_fit = np.linspace(yF, yL,len(y_values))
+
+#     # Calculate corresponding y values based on the fitted polynomial
+#     x_fit = poly_function(y_fit)
+    
+    
+#     indeces_x=np.argwhere(abs(x_fit-x_values)>(DistBtwCrcle/2))
+#     current_line_sorted[k] = Circles(pth).delete_indices_with_numpy(current_line_sorted[k],indeces_x)
 
 
 
 
 
 
+# # ####################################################################
+# colorList= []
+# # centerByColor={}
+
+# # for l in colorList[:7]:
+# #     centerByColor[l]=l
+    
+# scoreList={}    
+
+# for threshold in [5,10,15,20,25,30]:
+#     centerByColor={}
+
+#     for itm in circle_centers:
+        
+#         x=[int(itm[0])-2,int(itm[0])+2]
+#         y=[int(itm[1])-2,int(itm[1])+2]
+        
+     
+        
+#         circle= ImRoi[1][y[0]:y[1],x[0]:x[1],:]
+        
+#         # plt.figure()
+#         # plt.imshow(circle)
+        
+#         colorCode=Circles(pth).identify_dominant_color(circle)
+        
+#         centerByColor=Circles(pth).findColorsInDIC(centerByColor,colorCode,itm,threshold)
+        
+#         colorList.append(colorCode)
+        
+        
+#         centerByColorLenght={key:len(centerByColor[key])/395 for key in centerByColor if len(centerByColor[key])>100}
+    
+#     score=0
+#     for value in centerByColorLenght.values():
+        
+#         if int(value)>1:
+            
+#             score=score+0
+#         else: 
+#             score=score+int(value)
+#     scoreList[threshold]=score
+#     if score == 7:
+#         break;
+            
+        
+# if score != 7:
+#     for itm in circle_centers:
+        
+#         x=[int(itm[0])-2,int(itm[0])+2]
+#         y=[int(itm[1])-2,int(itm[1])+2]
+        
+#         # plt.figure()
+#         # plt.imshow(circle)
+        
+#         circle= ImRoi[10][y[0]:y[1],x[0]:x[1],:]
+        
+#         colorCode=Circles(pth).identify_dominant_color(circle)
+        
+#         centerByColor=Circles(pth).findColorsInDIC(centerByColor,colorCode,itm,scoreList[max(list(scoreList.keys()))])
+    
+    
+# toDel=[]
+# for key in centerByColor.keys():
+#     if len(centerByColor[key])<100:
+#         toDel.append(key)
+
+# for key in toDel:
+#     del centerByColor[key]
+    
+# current_line_sorted={}
+# avregeLoc={}
+
+# for key in centerByColor.keys():
+#     x_values = [center[0] for center in centerByColor[key]]
+#     avregeLoc[np.mean(x_values)]=key
+
+# sorted_avregeLoc = sorted(list(avregeLoc.keys()))
+
+
+
+
+
+# for key in centerByColor.keys():
+    
+#     x_values = [center[0] for center in centerByColor[key]]
+
+#     y_values = [center[1] for center in centerByColor[key]]
+    
+#     enumerated_list = list(enumerate(y_values))
+
+#     sorted_list = sorted(enumerated_list, key=lambda x: x[1])
+
+#     sorted_indices, sorted_values = zip(*sorted_list)
+#     l=[]
+    
+#     for i in sorted_indices:
+#         l.append((x_values[i],y_values[i]))
+     
+#     current_line_sorted[sorted_avregeLoc.index(np.mean(x_values))]=l
+    
+
+# current_line_sorted  = current_line  
+# plt.figure();
+# for sc in [0,1,2,3]:
+#     current_line_sorted=current_line_sortedDIC[sc]
+
+    
+#     for key in current_line_sorted.keys():#[6]:
+        
+#         x_values = [center[0] for center in current_line_sorted[key]]
+        
+#         y_values = [center[1] for center in current_line_sorted[key]]
+        
+#         plt.plot(x_values,y_values,'x',color= ColorDic[key])
+
+
+
+
+
+
+# # ######################################################################################
+
+
+# # ######################
+# # plt.figure()
+# # plt.plot(x_values[:-1],np.diff(y_values),'-x')
+
+# # # plt.figure()
+# # plt.plot(np.diff(x_values),'-o')
+
+
+
+# # plt.figure()
+# # plt.plot(x_values,y_values,'x')
+
+
+# # plt.figure()
+# # plt.plot(x_values_sorted,'-x')
+
+
+# # plt.figure()
+# # plt.plot(y_values_sorted,'-x')
+
+
+# # plt.figure()
+# # plt.plot(x_values1,y_values1,'-x')
+
+
+# # plt.figure()
+# # plt.plot(y_values_sorted,'-x')
+
+
+# # plt.figure(1)
+# # plt.plot(sorted_values,'-x')
+# # ######################
+
+# # circles_sorted1 = sorted(circle_centers, key=lambda x: x[0])
+# # circles_sorted2 = sorted(circle_centers, key=lambda y: y[1])
+
+
+# # x_values = [center[0] for center in circles_sorted2]
+
+# # y_values = [center[1] for center in circles_sorted2]
+
+
+
+# # x_values1 = [center[0] for center in current_line[0]]
+
+# # y_values1 = [center[1] for center in current_line[0]]
+
+# # s=[center[1]+center[0] for center in circle_centers]
+
+# # enumerated_list = list(enumerate(s))
+# # sorted_list = sorted(enumerated_list, key=lambda x: x[1])
+# # sorted_indices, sorted_values = zip(*sorted_list)
+
+# # x_values_sorted=[x_values[indx] for indx in sorted_indices]
+
+# # y_values_sorted=[y_values[indx] for indx in sorted_indices]
+
+
+# # # current_line = {}
+
+# # # k=0
+# # # l=[]
+
+# # # for i in range(len(x_values_sorted) - 1):
+  
+# # #     diff = x_values_sorted[i + 1] - x_values_sorted[i]
+# # #     l.append((x_values_sorted[i],y_values_sorted[i]))
+  
+# # #     if abs(diff) > 5:  # Adjust the threshold as needed
+# # #         if len(l)<10:
+# # #             l=[] 
+# # #             continue;
+# # #         current_line[k]=l
+# # #         l=[]        
+# # #         k=k+1;    
+
+
+# # current_line = {}
+
+# # k=0
+# # l=[]
+
+# # for i in range(len(y_values_sorted)-1):
+  
+# #     diff = y_values_sorted[i + 1] - y_values_sorted[i]
+    
+  
+# #     if abs(diff) > 10:  # Adjust the threshold as needed
+# #         for c in range(k):
+# #             if not c in current_line.keys():
+# #                 current_line[c]=[]
+# #             current_line[c].append(l[c])
+            
+# #         l=[] 
+# #         k=0;
+# #     l.append((x_values_sorted[i],y_values_sorted[i]))
+# #     k=k+1;
+
+# # # l.append((x_values[len(x_values)-1],y_values[len(x_values)-1]))
+
+# # # current_line[k]=l
+
+# # # current_line_sorted={}
+# # # for k,l in current_line.items():
+# # #     l_sorted = sorted(l, key=lambda x: x[1])
+# # #     current_line_sorted[k]=l_sorted
+
+
+
+# # ########################
+
+# adjusted_image = np.where(gray > 220, 220, np.where(gray < 50, 70, gray))
+
+# dIm=(circle_image.astype(np.int32)-adjusted_image.astype(np.int32))
+
+# dIm2=(ClrDF_rawXY_image_Pnl[Pnl][sc].astype(np.int32)-adjusted_image.astype(np.int32))
+
+# dIm3=(targetImage_Pnl[Pnl][sc].astype(np.int32)-adjusted_image.astype(np.int32))
+
+# dIm4=(targetImage_Pnl[Pnl][sc].astype(np.int32)-ClrDF_rawXY_image_Pnl[Pnl][sc].astype(np.int32))
+
+
+# dIm[dIm<0]=0
+# dIm2[dIm2<0]=0
+# dIm3[dIm3<0]=0
+# dIm4[dIm4<0]=0
+
+# plt.figure(1)
+# plt.imshow(dIm)
+
+# # plt.figure(2)
+# # plt.imshow(circle_image)
+
+
+# # plt.figure(1)
+# # plt.imshow(gray)
+
+
+# # imInp_Orig = cv2.imread(pth)
+
+
+# # plt.figure(2)
+# # plt.imshow(imInp_Orig)
+
+
+
+# plt.figure(6)
+# plt.imshow(ImRoi[5])

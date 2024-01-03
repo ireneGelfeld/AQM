@@ -11,7 +11,9 @@ Created on Wed Jun 16 16:30:46 2021
 # pio.renderers
 # pio.renderers.default='browser'
 ##############################################################################
-global DistBetweenSets,GlobalScale,PanelLengthInMM,JobLengthתcolor_combinations,FullColorList,JobLengthWave,MoveAveWave,MoveAveWaveScale,OBGfactor,colorID_aqm;
+global DistBetweenSets,GlobalScale,PanelLengthInMM,JobLengthתcolor_combinations,FullColorList,JobLengthWave,MoveAveWave,MoveAveWaveScale,OBGfactor,colorID_aqm,dataPercentage;
+
+dataPercentage=95 #for press C2C overview
 
 # For setting the min job length for Change Wave plot- this parameter should be used for setting the allowble moving avarage- for example set JobLengthWave= 100, MoveAveWave=20;
 JobLengthWave=50;
@@ -2784,5 +2786,31 @@ print(endFigure - startFigure)
 
 # 
 ##### TILL HERE!!!!
+RegistrationSummery=pd.DataFrame();
+
+columnsOfCSV=['JobName','meanC2C_Front','stdC2C_Front','percentile_'+str(dataPercentage)+'_C2C_Front','meanC2C_Back','stdC2C_Back','percentile_'+str(dataPercentage)+'_C2C_Back']
+for col in DataPivotFront.columns:
+    tmp=pd.DataFrame(columns=columnsOfCSV);
+    tmp['JobName']=[col]
+    tmp['meanC2C_Front']=[np.mean(DataPivotFront[col])];
+    tmp['stdC2C_Front']=[ np.std(DataPivotFront[col])];
+    tmp['percentile_'+str(dataPercentage)+'_C2C_Front'] = [np.percentile(DataPivotFront[col].dropna(), dataPercentage)]
+    try:
+        tmp['meanC2C_Back']=[np.mean(DataPivotBack[col])];
+        tmp['stdC2C_Back']=[ np.std(DataPivotBack[col])];
+        tmp['percentile_'+str(dataPercentage)+'_C2C_Back'] = [np.percentile(DataPivotBack[col].dropna(), dataPercentage)]
+    except:
+        continue;
+    
+    RegistrationSummery=pd.concat([RegistrationSummery,tmp],axis=0)    
+
+        
+RegistrationSummery=RegistrationSummery.reset_index(drop=True)
 
 
+RegistrationSummery.to_csv(pthF+'C2C_preesOverview.csv', index=False)
+    
+    
+    
+    
+    

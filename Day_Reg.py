@@ -16,7 +16,7 @@ global DistBetweenSets,GlobalScale,PanelLengthInMM,JobLengthתcolor_combinations
 dataPercentage=95 #for press C2C overview
 
 # For setting the min job length for Change Wave plot- this parameter should be used for setting the allowble moving avarage- for example set JobLengthWave= 100, MoveAveWave=20;
-JobLengthWave=50;
+JobLengthWave=100;
 MoveAveWave=20;
 S_g_Degree=1;
 
@@ -52,12 +52,12 @@ JobLength = 0;
 colorID_aqm={'Cyan':1,'Magenta':2,'Yellow':3,'Black':4,'Orange':5,'Blue':6,'Green':7}       
 
 #### Plots
-I2Splot=1 # Plot I2S 
+I2Splot=0 # Plot I2S 
 C2Cplot=1 # Plot C2C
 ScalePlot=1 # Plot Scale
 WaveChangePlot=1 # Plot Wave Change
-c2cChangePlot = 1 # Plot c2c Change MUST be align with Plot Wave Change
-scaleChangePlot = 1 # Plot scale Change MUST be align with Plot Wave Change
+c2cChangePlot = 0 # Plot c2c Change MUST be align with Plot Wave Change
+scaleChangePlot = 0 # Plot scale Change MUST be align with Plot Wave Change
 
 YuriMethod=0
 
@@ -2792,23 +2792,27 @@ columnsOfCSV=['JobName','meanC2C_Front','stdC2C_Front','percentile_'+str(dataPer
 for col in DataPivotFront.columns:
     tmp=pd.DataFrame(columns=columnsOfCSV);
     tmp['JobName']=[col]
-    tmp['meanC2C_Front']=[np.mean(DataPivotFront[col])];
-    tmp['stdC2C_Front']=[ np.std(DataPivotFront[col])];
+    tmp['meanC2C_Front']=[np.mean(DataPivotFront[col].dropna())];
+    tmp['stdC2C_Front']=[ np.std(DataPivotFront[col].dropna())];
     tmp['percentile_'+str(dataPercentage)+'_C2C_Front'] = [np.percentile(DataPivotFront[col].dropna(), dataPercentage)]
+    # tmp['meanC2C_Back']=[0];
+    # tmp['stdC2C_Back']=[0];
+    # tmp['percentile_'+str(dataPercentage)+'_C2C_Back'] = [0]
     try:
-        tmp['meanC2C_Back']=[np.mean(DataPivotBack[col])];
-        tmp['stdC2C_Back']=[ np.std(DataPivotBack[col])];
+        tmp['meanC2C_Back']=[np.mean(DataPivotBack[col].dropna())];
+        tmp['stdC2C_Back']=[ np.std(DataPivotBack[col].dropna())];
         tmp['percentile_'+str(dataPercentage)+'_C2C_Back'] = [np.percentile(DataPivotBack[col].dropna(), dataPercentage)]
     except:
-        continue;
+        1;
     
     RegistrationSummery=pd.concat([RegistrationSummery,tmp],axis=0)    
 
         
 RegistrationSummery=RegistrationSummery.reset_index(drop=True)
 
+pthF.split('/')
 
-RegistrationSummery.to_csv(pthF+'C2C_preesOverview.csv', index=False)
+RegistrationSummery.to_csv(pthF+'C2C_pressOverview_'+pthF.split('/')[len(pthF.split('/'))-2]+'.csv', index=False)
     
     
     

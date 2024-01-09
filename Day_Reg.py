@@ -11,7 +11,7 @@ Created on Wed Jun 16 16:30:46 2021
 # pio.renderers
 # pio.renderers.default='browser'
 ##############################################################################
-global DistBetweenSets,GlobalScale,PanelLengthInMM,JobLengthתcolor_combinations,FullColorList,JobLengthWave,MoveAveWave,MoveAveWaveScale,OBGfactor,colorID_aqm,dataPercentage;
+global DistBetweenSets,GlobalScale,PanelLengthInMM,JobLengthתcolor_combinations,FullColorList,JobLengthWave,MoveAveWave,MoveAveWaveScale,OBGfactor,colorID_aqm,dataPercentage,AI_preName;
 
 dataPercentage=95 #for press C2C overview
 
@@ -56,8 +56,8 @@ I2Splot=0 # Plot I2S
 C2Cplot=1 # Plot C2C
 ScalePlot=1 # Plot Scale
 WaveChangePlot=1 # Plot Wave Change
-c2cChangePlot = 0 # Plot c2c Change MUST be align with Plot Wave Change
-scaleChangePlot = 0 # Plot scale Change MUST be align with Plot Wave Change
+c2cChangePlot = 1 # Plot c2c Change MUST be align with Plot Wave Change
+scaleChangePlot = 1 # Plot scale Change MUST be align with Plot Wave Change
 
 YuriMethod=0
 
@@ -88,7 +88,7 @@ color_combinations = [    ['Black', 'Yellow'],
 
 FullColorList=['Black','Blue','Cyan','Green','Magenta','Orange','Yellow']
 
-
+AI_jobs=[]
 ##############################################################################
 import os
 
@@ -776,9 +776,11 @@ class CalcC2C_AvrgOfAll(DispImagePlacment):
         
             if sub_folder+'/'+file_name in sub_folder_files:
                 fname = file_name
+                AI_jobs.append(f)
             else:
                 
                 fname = 'Registration_'+pageSide+'.csv'
+                
         
         return  fname;
 
@@ -1818,11 +1820,14 @@ class PlotPlotly():
         
         for i in rnge:
         # for i in rnge:
+            AI_preName=''
+            if col[i] in AI_jobs:
+                AI_preName='AI_'
             fig.add_trace(go.Scatter(y=list(db1[col[i]]),
-                        name=col[i]+' '+dbName1),row=1, col=1)
+                        name=AI_preName+col[i]+' '+dbName1),row=1, col=1)
             try:
                 fig.add_trace(go.Scatter(y=list(db2[col[i]]),
-                            name=col[i]+' '+dbName2), row=2, col=1)
+                            name=AI_preName+col[i]+' '+dbName2), row=2, col=1)
             except:
                 continue;
         
@@ -1869,10 +1874,14 @@ class PlotPlotly():
        ymax=np.max(WaveChangeDF[clr])+100
         
        for key, value in indexJobNameDic.items():
+           
+            AI_preName=''
+            if value[0] in AI_jobs:
+                AI_preName='AI_'
             fig.add_trace(go.Scatter(x=[key], y=[ymax],
                                     marker=dict(color="green", size=6),
                                     mode="markers",
-                                    text=value[0]+','+value[1],
+                                    text=AI_preName+value[0]+','+value[1],
                                     # font_size=18,
                                     hoverinfo='text'))
             
@@ -1894,10 +1903,13 @@ class PlotPlotly():
     def PlotJobNameAndWaveJob(self,fig,ymax,ymaxWaveJob,indexJobNameDic,WaveJobPrintedDic):
         
         for key, value in indexJobNameDic.items():
+             AI_preName=''
+             if value[0] in AI_jobs:
+                AI_preName='AI_'           
              fig.add_trace(go.Scatter(x=[key], y=[ymax],
                                      marker=dict(color="green", size=10),
                                      mode="markers",
-                                     text=value[0],
+                                     text=AI_preName+value[0],
                                      # font_size=18,
                                      hoverinfo='text'))
              
@@ -1928,10 +1940,13 @@ class PlotPlotly():
     def PlotJobNameAndWaveJobWith_BlanketRep(self,fig,ymax,ymaxWaveJob,indexJobNameDic,WaveJobPrintedDic,BlnketReplacmentDic):
         
         for key, value in indexJobNameDic.items():
+             AI_preName=''
+             if value[0] in AI_jobs:
+                AI_preName='AI_'               
              fig.add_trace(go.Scatter(x=[key], y=[ymax],
                                      marker=dict(color="green", size=10),
                                      mode="markers",
-                                     text=value[0],
+                                     text=AI_preName+value[0],
                                      # font_size=18,
                                      hoverinfo='text'))
              
@@ -2817,4 +2832,21 @@ RegistrationSummery.to_csv(pthF+'C2C_pressOverview_'+pthF.split('/')[len(pthF.sp
     
     
     
-    
+############################################
+
+# side='Front'
+# pageSide="Right"
+
+# zip_file_path = pthF+'/'+f
+# sub_folder = side+'/'+'RawResults'  # Path to the subfolder within the zip
+# file_name = 'C2CRegistration_'+pageSide+'.csv'      # Name of the file you want to check
+
+# with zipfile.ZipFile(zip_file_path, 'r') as zip_ref:
+#     sub_folder_files = [name for name in zip_ref.namelist() if name.startswith(sub_folder)]
+
+#     if sub_folder+'/'+file_name in sub_folder_files:
+#         fname = file_name
+#         AI_jobs.append(f)
+#     else:
+        
+#         fname = 'Registration_'+pageSide+'.csv'    

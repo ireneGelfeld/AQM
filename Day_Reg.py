@@ -2805,11 +2805,17 @@ RegistrationSummery=pd.DataFrame();
 
 columnsOfCSV=['JobName','meanC2C_Front','stdC2C_Front','percentile_'+str(dataPercentage)+'_C2C_Front','meanC2C_Back','stdC2C_Back','percentile_'+str(dataPercentage)+'_C2C_Back']
 for col in DataPivotFront.columns:
+    if  'Wave'  in col:
+        continue;
+    if 'RegistrationCalibration' in col:
+        continue;
     tmp=pd.DataFrame(columns=columnsOfCSV);
     tmp['JobName']=[col]
     tmp['meanC2C_Front']=[np.mean(DataPivotFront[col].dropna())];
     tmp['stdC2C_Front']=[ np.std(DataPivotFront[col].dropna())];
     tmp['percentile_'+str(dataPercentage)+'_C2C_Front'] = [np.percentile(DataPivotFront[col].dropna(), dataPercentage)]
+    if tmp['meanC2C_Front'][0]== 0 or tmp['stdC2C_Front'][0]==0 or tmp['percentile_'+str(dataPercentage)+'_C2C_Front'][0]==0:
+        continue;
     # tmp['meanC2C_Back']=[0];
     # tmp['stdC2C_Back']=[0];
     # tmp['percentile_'+str(dataPercentage)+'_C2C_Back'] = [0]
@@ -2828,10 +2834,6 @@ RegistrationSummery=RegistrationSummery.reset_index(drop=True)
 pthF.split('/')
 
 RegistrationSummery.to_csv(pthF+'C2C_pressOverview_'+pthF.split('/')[len(pthF.split('/'))-2]+'.csv', index=False)
-    
-    
-    
-    
 ############################################
 
 # side='Front'

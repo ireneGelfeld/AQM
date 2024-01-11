@@ -15,7 +15,7 @@ import math
 
 ##############################
 global dataPracentage
-bins=10
+bins=20
 Name_of_columns_4_hist={'meanC2C_Front':1,
                         'stdC2C_Front':0,
                         'percentile_95_C2C_Front':1,
@@ -58,21 +58,22 @@ def load_csvs_and_plot_histogram(directory, string_in_filename):
 
 def FilterFromDataExtremVals(concatenated_df):
     
-        concatenated_df_fitered=pd.DataFrame() 
-        for col in concatenated_df.columns:
-            
-            try:
-                 percentile_x_1 = np.percentile(concatenated_df[col], dataPracentage)
-                 percentile_1 = np.percentile(concatenated_df[col], 100-dataPracentage)
-                
-                 inx2copy = [i for i, x in enumerate(concatenated_df[col]) if x >= percentile_1 and x <= percentile_x_1]
-                 if math.isnan(percentile_1):
-                     continue;
-                 
-                 concatenated_df_fitered=pd.concat([concatenated_df_fitered,concatenated_df[col][inx2copy].reset_index(drop=True)],axis=1)
-            except:
-                 continue;
-        return concatenated_df_fitered                     
+    concatenated_df_fitered=pd.DataFrame()
+     
+    for col in concatenated_df.columns:
+        if col=='JobName':
+            continue;
+        
+    
+        percentile_x_1 = np.percentile(concatenated_df[col], dataPracentage)
+        percentile_1 = np.percentile(concatenated_df[col], 100-dataPracentage)
+       
+        if math.isnan(percentile_1):
+            continue;
+        inx2copy = [i for i, x in enumerate(concatenated_df[col]) if x >= percentile_1 and x <= percentile_x_1]
+    
+        concatenated_df_fitered=pd.concat([concatenated_df_fitered,concatenated_df[col][inx2copy].reset_index(drop=True)],axis=1)          
+    return concatenated_df_fitered                     
 
     
 def PlotHistogram(concatenated_df,colName,bins):  
@@ -112,3 +113,6 @@ for key,value in Name_of_columns_4_hist.items():
             PlotHistogram(concatenated_df_fitered,key,bins)
     except:
         continue;
+
+
+

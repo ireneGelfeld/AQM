@@ -12,6 +12,7 @@ from plotly.offline import download_plotlyjs, init_notebook_mode,  plot
 from plotly.subplots import make_subplots
 import plotly.express as px
 import math
+import numpy as np
 
 ##############################
 global dataPracentage

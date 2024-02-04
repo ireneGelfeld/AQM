@@ -16,7 +16,7 @@ import numpy as np
 
 ##############################
 global dataPracentage
-bins=20
+bins=100
 Name_of_columns_4_hist={'meanC2C_Front':1,
                         'stdC2C_Front':0,
                         'percentile_95_C2C_Front':1,

@@ -216,11 +216,14 @@ class DispImagePlacment():
         subdir_name_in_zip = self.side+'/'+'RawResults';
         file_name_in_zip = 'ImagePlacement_Left.csv';
         
-        try:
-            dbtmp=self.GetFileFromZip(zip_file_path,subdir_name_in_zip,file_name_in_zip);
-            if len(dbtmp['Flat Id'])>self.JobLength:
-                vlid= True;
-        except:
+        if not( 'Wave' in f):         
+            try:
+                dbtmp=self.GetFileFromZip(zip_file_path,subdir_name_in_zip,file_name_in_zip);
+                if len(dbtmp['Flat Id'])>self.JobLength:
+                    vlid= True;
+            except:
+                vlid=False;
+        else:
             vlid=False;
                         
         return vlid;
@@ -631,10 +634,11 @@ class CalcC2C_AvrgOfAll(DispImagePlacment):
 
          for c in St1dataAllColors.columns:
               for inx in St1dataAllColors.index:
-                  y= PanelColorSet[c][inx]
-                  z = np.polyfit(x, y, 1)
-                  p = np.poly1d(z)
                   try:
+                      y= PanelColorSet[c][inx]
+                      z = np.polyfit(x, y, 1)
+                      p = np.poly1d(z)
+                      
                       Scale[c][inx]=(RefSETloc['Slop'][inx]/list(p)[0]-1)*self.PanelLengthInMM*1000
                   except:
                       continue;
@@ -794,6 +798,8 @@ class CalcC2C_AvrgOfAll(DispImagePlacment):
             DataAllMeanColorSET1,DataAllMeanColorSET2,DataAllMeanColorSET3,colorDic,RefSETloc = self.CalcScaleFromTarget();
 
         for f in self.fldrs:
+           if 'Wave' in f:
+               continue;
            stP=pd.DataFrame();
            fname= self.CheckForAI(self.pageSide,f);
            if LoadTarget:
@@ -841,6 +847,8 @@ class CalcC2C_AvrgOfAll(DispImagePlacment):
 
         for f in self.fldrs:
            # stP=pd.DataFrame();
+           if 'Wave' in f:
+               continue;
 
            fname= self.CheckForAI(self.pageSide,f);
            
@@ -1271,6 +1279,8 @@ class CalcC2C_AvrgOfAll(DispImagePlacment):
                     
  
                 C2Creg,indexNumberFailed = self.CalcC2CSingleSideColorPair(self.CheckForAI('Left',f),self.CheckForAI('Right',f),f,DataAllMeanColorSET1Left,DataAllMeanColorSET2Left,DataAllMeanColorSET3Left,DataAllMeanColorSET1Right,DataAllMeanColorSET2Right,DataAllMeanColorSET3Right)
+                if 'Wave' in f:
+                    continue;
                 WaveChangeList=WaveChangeList+C2Creg
                 indexJobNameDic[len(WaveChangeList)-1]=[f,lngth]
                 indexJobNameDicRev[f]=len(WaveChangeList)-1
@@ -1501,13 +1511,17 @@ class CalcC2C_AvrgOfAll(DispImagePlacment):
         subdir_name_in_zip = self.side+'/'+'RawResults';
         file_name_in_zip='ImagePlacement_Left.csv';
         
-        try:
-            dbtmp=self.GetFileFromZip(zip_file_path,subdir_name_in_zip,file_name_in_zip);
-            if len(dbtmp['Flat Id'])>JobLengthWave:
-                vlid= True;
-            lngth=len(dbtmp['Flat Id'])
-        except:
-            vlid=False;
+        if not( 'Wave' in f):
+        
+            try:
+                dbtmp=self.GetFileFromZip(zip_file_path,subdir_name_in_zip,file_name_in_zip);
+                if len(dbtmp['Flat Id'])>JobLengthWave:
+                    vlid= True;
+                lngth=len(dbtmp['Flat Id'])
+            except:
+                vlid=False;
+        else:
+           vlid=False; 
             
         return vlid,lngth;
     
@@ -2836,19 +2850,31 @@ pthF.split('/')
 RegistrationSummery.to_csv(pthF+'C2C_pressOverview_'+pthF.split('/')[len(pthF.split('/'))-2]+'.csv', index=False)
 ############################################
 
-# side='Front'
-# pageSide="Right"
 
-# zip_file_path = pthF+'/'+f
-# sub_folder = side+'/'+'RawResults'  # Path to the subfolder within the zip
-# file_name = 'C2CRegistration_'+pageSide+'.csv'      # Name of the file you want to check
 
-# with zipfile.ZipFile(zip_file_path, 'r') as zip_ref:
-#     sub_folder_files = [name for name in zip_ref.namelist() if name.startswith(sub_folder)]
 
-#     if sub_folder+'/'+file_name in sub_folder_files:
-#         fname = file_name
-#         AI_jobs.append(f)
-#     else:
-        
-#         fname = 'Registration_'+pageSide+'.csv'    
+
+
+ScaleMaxMinDF=pd.DataFrame();
+
+# fname= 'Registration_'+self.pageSide+'.csv';
+
+if not LoadTarget:
+    DataAllMeanColorSET1,DataAllMeanColorSET2,DataAllMeanColorSET3,colorDic,RefSETloc = CalcC2C_AvrgOfAll(pthF,folder,'Front',JobLength,PanelLengthInMM,'Left').CalcScaleFromTarget();
+
+for f in CalcC2C_AvrgOfAll(pthF,folder,'Front',JobLength,PanelLengthInMM,'Left').fldrs:
+   if 'Wave' in f:
+       continue;
+   stP=pd.DataFrame();
+   fname= CalcC2C_AvrgOfAll(pthF,folder,'Front',JobLength,PanelLengthInMM,'Left').CheckForAI(CalcC2C_AvrgOfAll(pthF,folder,'Front',JobLength,PanelLengthInMM,'Left').pageSide,f);
+   if LoadTarget:
+       DataAllMeanColorSET1,DataAllMeanColorSET2,DataAllMeanColorSET3,colorDic,RefSETloc = CalcC2C_AvrgOfAll(pthF,folder,'Front',JobLength,PanelLengthInMM,'Left').CalcScaleFromTarget_WhenLoadTarget(f);
+
+
+   try:
+       St1dataAllColors,St2dataAllColors,St3dataAllColors,RefSETloc,Scale,ScaleMaxMin,colorDic=CalcC2C_AvrgOfAll(pthF,folder,'Front',JobLength,PanelLengthInMM,'Left').DataForCalcSCALE_FromData(DataAllMeanColorSET1,DataAllMeanColorSET2,DataAllMeanColorSET3,colorDic,RefSETloc,fname,f);
+     
+       stP[f]=ScaleMaxMin;
+       ScaleMaxMinDF=pd.concat([ScaleMaxMinDF, stP[f]],axis=1);
+   except:
+       continue;

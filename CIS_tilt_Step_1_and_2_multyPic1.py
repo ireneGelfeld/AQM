@@ -668,43 +668,6 @@ while 1:
 #########################################################################################
 
 
-pName='12k'
-
-
-RawData_Tilt, tlt, z = ReduceNoise(
-    RawData).CalcAndRemoveTilT()
-
-RawData_Tilt_list = list(RawData_Tilt)
-   
-dataPracentage= (1-limitDataCount)*100
-   
-percentile_x_1 = np.percentile(RawData_Tilt_list, dataPracentage)
-percentile_1 = np.percentile(RawData_Tilt_list, 100-dataPracentage)
-   
-inx2delete = [i for i, x in enumerate(RawData_Tilt_list) if x <= percentile_1 or x >= percentile_x_1]
-   
-RawDataCopy =  ReduceNoise(
-    RawData).RawData.copy()
-RawDataCopy.drop(index=inx2delete, inplace=True)
-
-meanDrop=np.mean(RawDataCopy[1])
-
-RawDataCopy_2=ReduceNoise(
-    RawData).RawData.copy()
-
-
-RawDataCopy_2[1][inx2delete]=meanDrop
-
-RawDataCopy = RawDataCopy.reset_index(drop=True)
-   
-plt.figure(pName)
-   
-plt.plot(ReduceNoise(RawData).RawData[0], ReduceNoise(RawData).RawData[1], 'o')
-plt.plot(RawDataCopy[0], RawDataCopy[1], 'x')
-plt.plot(RawDataCopy_2[0], RawDataCopy_2[1], '+')
-
-plt.title('LimitDataCount='+str(limitDataCount))
-
 
 
 

@@ -50,7 +50,7 @@ class CsvPickerWindow(QMainWindow):
         table = ax.table(cellText=table_data, colLabels=['Parameter', 'Value'], loc='center', cellLoc='left', fontsize=20)
        # Set font size for the table
         table.auto_set_font_size(False)
-        table.set_fontsize(8)
+        table.set_fontsize(12)
         fig.suptitle(file_path.split('/')[-1])
 
         # table.set_title(file_path.split('\\')[-1])

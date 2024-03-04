@@ -103,17 +103,17 @@ class DataVisualization:
         average_values_read = self.filtered_data_read.iloc[:, 7:].mean(axis=0)
         average_values_write = self.filtered_data_write.iloc[:, 7:].mean(axis=0)
 
-        average_trace_all = go.Scatter(x=list(range(len(average_values_all))), y=average_values_all, 
-                                   mode='lines', name='Average all', line=dict(color='red', width=4))
-        if  PlotRead:
-            average_trace_read = go.Scatter(x=list(range(len(average_values_read))), y=average_values_read, 
-                                   mode='lines', name='Average read', line=dict(color='green', width=4))
-            fig.add_trace(average_trace_read)
+        # average_trace_all = go.Scatter(x=list(range(len(average_values_all))), y=average_values_all, 
+        #                            mode='lines', name='Average all', line=dict(color='red', width=4))
+        # if  PlotRead:
+        #     average_trace_read = go.Scatter(x=list(range(len(average_values_read))), y=average_values_read, 
+        #                            mode='lines', name='Average read', line=dict(color='green', width=4))
+        #     fig.add_trace(average_trace_read)
             
-        if PlotWrite:
-            average_trace_write = go.Scatter(x=list(range(len(average_values_write))), y=average_values_write, 
-                                   mode='lines', name='Average write', line=dict(color='purple', width=4))
-            fig.add_trace(average_trace_write)
+        # if PlotWrite:
+        #     average_trace_write = go.Scatter(x=list(range(len(average_values_write))), y=average_values_write, 
+        #                            mode='lines', name='Average write', line=dict(color='purple', width=4))
+        #     fig.add_trace(average_trace_write)
 
         
         average_values_barID_write={}
@@ -141,7 +141,7 @@ class DataVisualization:
 
         
         # Add the average trace to the figure
-        fig.add_trace(average_trace_all)
+        # fig.add_trace(average_trace_all)
         
 
         if PlotWrite:

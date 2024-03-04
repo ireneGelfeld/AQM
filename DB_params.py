@@ -45,12 +45,16 @@ class CsvPickerWindow(QMainWindow):
            if param in paramList:
                table_data.append([param, value])
            if paramId in paramID:
-               table_data.append([paramPath+' '+param, value])
+               table_data.append([param, value])
 
         table = ax.table(cellText=table_data, colLabels=['Parameter', 'Value'], loc='center', cellLoc='left', fontsize=20)
        # Set font size for the table
         table.auto_set_font_size(False)
         table.set_fontsize(8)
+        fig.suptitle(file_path.split('/')[-1])
+
+        # table.set_title(file_path.split('\\')[-1])
+
        # Hide axes
         ax.axis('off')
 

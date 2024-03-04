@@ -47,6 +47,7 @@ RecDimY = 5
 global MaxWaveWindow, StpWindowSize, SvGolPol, limitDataCount, BarNum, CISsavgolWindow, CISsavgolWindow12k, PixelSize_um
 global limitDataCount
 YuriFormat = 0
+fullAQMPixelCount=12480
 
 MaxWaveWindow = 100
 MaxWaveWindow12k = 1000
@@ -185,15 +186,25 @@ class ReduceNoise():
         
          RawDataCopy =  self.RawData.copy()
          RawDataCopy.drop(index=inx2delete, inplace=True)
-         RawDataCopy = RawDataCopy.reset_index(drop=True)
-        
-         plt.figure(pName)
-        
-         plt.plot(self.RawData[0], self.RawData[1], 'o')
-         plt.plot(RawDataCopy[0], RawDataCopy[1], 'x')
-         plt.title('LimitDataCount='+str(limitDataCount))
+         meanDrop=np.mean(RawDataCopy[1])
 
-         return RawDataCopy
+         RawDataCopy_2=  self.RawData.copy()
+
+
+         RawDataCopy_2[1][inx2delete]=meanDrop
+
+         RawDataCopy_2 = RawDataCopy_2.reset_index(drop=True)
+            
+         plt.figure(pName)
+            
+         plt.plot(ReduceNoise(RawData).RawData[0], ReduceNoise(RawData).RawData[1], 'o')
+         plt.plot(RawDataCopy[0], RawDataCopy[1], 'x')
+         plt.plot(RawDataCopy_2[0], RawDataCopy_2[1], '+')
+
+         plt.title('LimitDataCount='+str(limitDataCount))
+         
+         
+         return RawDataCopy_2
 
     def CutDataTo385Points(self):
 
@@ -656,5 +667,7 @@ while 1:
 
 #########################################################################################
 
-plt.figure(2)
-plt.imshow(img)
+
+
+
+

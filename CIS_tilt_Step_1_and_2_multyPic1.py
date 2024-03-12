@@ -635,7 +635,7 @@ while 1:
 
     print('Please Enter Data Limit in the Dialog box')
     limitDataCount = float(simpledialog.askstring(
-        "Input", "Enter Data Pracentege to ignore(from 1- 0):", parent=root))
+        "Input", "Enter Data Pracentege to ignore(from 0 - 100):", parent=root))
     print('Done')
     print('**************************************************************************')
     

@@ -11,7 +11,7 @@ import os
 import sys
 from PyQt5.QtWidgets import QApplication, QMainWindow, QPushButton, QFileDialog
 from plotly.offline import download_plotlyjs, init_notebook_mode,  plot
-
+import subprocess 
 import plotly.graph_objects as go
 
 ##########################################
@@ -47,7 +47,7 @@ class CsvPickerWindow(QMainWindow):
             print(f'Selected file: {file_path}')
         # file_path=r'E:\DB_gdls\D16_GDLS_Params_05032024_151946.csv'
         df = pd.read_csv(file_path)
-        
+        os.chdir(os.path.dirname(file_path))
         backGroundCLR='rgb(200, 200, 200)'
         HeaderCLR='rgb(0, 255, 255)'
         fillcolorList=[]
@@ -197,7 +197,10 @@ class CsvPickerWindow(QMainWindow):
         table.show()
 
 
-        plot(table, auto_play=True, filename=file_path.split('/')[-1]+'.html')
+        plot(table, auto_play=True, filename=file_path.split('/')[-1][:-4]+'.html')
+        
+        url = 'file:///' + os.path.dirname(file_path)+'//' + file_path.split('/')[-1][:-4]+'.html'
+        subprocess.Popen(['start', 'chrome', url], shell=True)
 
         # paramList.append('')
         # valueList.append('')

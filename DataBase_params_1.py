@@ -25,7 +25,7 @@ paramListQCS=['SavitzkyGolay','PolynomialOrder','Radius']
 ##Default PrintDirection
 paramList_CrossPrintDirection=['Set_0/Y','Set_1/Y1','Set_2/Y2','Set_3/Y3']
 ##SyntheticEncoder
-paramListQCS_SyntheticEnc=['SlotId_1','SlotId_2','SlotId_3','SlotId_4','SlotId_5','SlotId_6','SlotId_7','SlotId_8']
+paramListQCS_SyntheticEnc=['SlotId_2','SlotId_3','SlotId_4','SlotId_5','SlotId_6','SlotId_7','SlotId_8']
 #########################################
 class CsvPickerWindow(QMainWindow):
     def __init__(self):
@@ -122,6 +122,8 @@ class CsvPickerWindow(QMainWindow):
         paramList.append('Default PrintDirection')
         valueList.append('')
         ##SyntheticEncoder header
+        BackFront=''
+        RightLeft=''
         for paramId,param, value,paramPath in zip(df['Parameter ID'],df['Parameter Name'], df['Parameter Actual Value'],df['Parameter Tree Path Name']):
            
             # if param== 'Default PrintDirection':    
@@ -129,7 +131,19 @@ class CsvPickerWindow(QMainWindow):
             
                 result = self.check_list_in_string(paramList_CrossPrintDirection, paramPath)
                 if result:
-                    paramList.append(param+' '+result)
+                    if 'Front' in paramPath:
+                        BackFront='Front'
+                    elif 'Back' in paramPath:
+                        BackFront='Back'
+                    else:
+                        BackFront=''
+                    if 'Left' in paramPath:
+                        RightLeft='Left'
+                    elif 'Right' in paramPath:
+                        RightLeft='Right'
+                    else:
+                        RightLeft=''
+                    paramList.append(param+' '+result+' '+BackFront+' '+RightLeft)
                     valueList.append(value)
                     fillcolorList.append(backGroundCLR)
             
@@ -157,10 +171,10 @@ class CsvPickerWindow(QMainWindow):
                     paramList.append(param+' '+result)
                     valueList.append(value)
                     fillcolorList.append(backGroundCLR)
-                else:
-                    paramList.append(param)
-                    valueList.append(value)
-                    fillcolorList.append(backGroundCLR)
+                # else:
+                #     paramList.append(param)
+                #     valueList.append(value)
+                #     fillcolorList.append(backGroundCLR)
             
         ListofList=[]
         ListofList.append(paramList)

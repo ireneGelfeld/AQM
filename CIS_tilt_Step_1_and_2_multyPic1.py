@@ -486,7 +486,7 @@ class plotPlotly(CIScurveFromImage):
             step = dict(
                 method="update",
                 args=[{"visible": [False] * len(fig.data)},
-                      {"title": self.plotTitle +'Pracentage: ' + '{:.2f}'.format(i*0.2)}],  # layout attribute
+                      {"title": self.plotTitle +'Pracentage: ' + '{:.4f}'.format((i*0.2+0.01))}],  # layout attribute
             )
     
             if i+1 < len(fig.data):
@@ -529,7 +529,12 @@ yTotalPics385p=pd.DataFrame();
 yTotalPics12kp=pd.DataFrame();
 
 MachineName =''
-
+print('**************************************************************************')
+if not len(MachineName):
+    print('Please Enter  machine Name in the Dialog box')
+    MachineName = simpledialog.askstring(
+        "Input", "Enter The machine Name:", parent=root)
+    print('Done')
 # pthF = filedialog.askdirectory()
 while 1:
 
@@ -574,8 +579,8 @@ while 1:
 
 
     # url = py.plot(figCIScalc, filename=fileName)
-    url = 'file:///' + pth4save + fileName
-    subprocess.Popen(['start', 'chrome', url], shell=True)
+    # url = 'file:///' + pth4save + fileName
+    # subprocess.Popen(['start', 'chrome', url], shell=True)
     
     
     # # url = 'file:///C:/Users/gevay/Downloads/C_Users_gevay_Downloads_Cropped%20images_CIS.html'
@@ -606,12 +611,7 @@ while 1:
     
     # Step 2
     
-    print('**************************************************************************')
-    if not len(MachineName):
-        print('Please Enter  machine Name in the Dialog box')
-        MachineName = simpledialog.askstring(
-            "Input", "Enter The machine Name:", parent=root)
-        print('Done')
+ 
     print('Machine Name: '+MachineName)
     print('**************************************************************************')
     
@@ -621,7 +621,7 @@ while 1:
     RawData = RawData.reset_index()
     RawData = RawData.rename(columns={'index': 0, 'Value': 1})
     
-    plotTitle = pthF+" Pracentege Removal"
+    plotTitle = pthF+" Pick Pracentege Removal: "
     fileName = pthF.replace('/', '_').replace(f1,
                                               "").replace(":", "") + "Pracentege Removal" + ".html"
     xdb = 0

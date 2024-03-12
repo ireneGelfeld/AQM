@@ -168,6 +168,25 @@ class ReduceNoise():
         
 
         return RawData_Tilt, tlt, z
+    
+    def update(self,dataPracentage):
+         RawData_Tilt, tlt, z = self.CalcAndRemoveTilT()
+
+         RawData_Tilt_list = list(RawData_Tilt)
+        
+         # dataPracentage= (1-limitDataCount)*100
+        
+         percentile_x_1 = np.percentile(RawData_Tilt_list, 100-dataPracentage)
+         percentile_1 = np.percentile(RawData_Tilt_list, dataPracentage)
+         # print(percentile_x_1)
+        
+         inx2delete = [i for i, x in enumerate(RawData_Tilt_list) if x <= percentile_1 or x >= percentile_x_1]
+        
+
+
+         RawDataCopy_2= self.RawData.iloc[inx2delete].reset_index(drop=True)
+
+         return RawDataCopy_2
 
 
     def RemoveUnwantedData(self,pName):
@@ -440,6 +459,63 @@ class plotPlotly(CIScurveFromImage):
         return fig
 
 
+    def PlotReducedNoise_data(self,RawData):
+        fig = go.Figure()
+    
+    
+        fig.add_trace(
+            go.Scatter(x=list(RawData[0]),y=list(RawData[1]), mode='markers', marker=dict(symbol='x', size=10, color='blue'),
+                showlegend=False, name='raw Data'))
+    
+    
+        ##### Fiter Vs Befor ####
+        for dataPracentage in np.arange(0,10,0.2):
+            # print(dataPracentage)
+            RawDataCopy_2 =  ReduceNoise(RawData).update(dataPracentage)
+            # print(len(RawDataCopy_2))
+            fig.add_trace(
+                go.Scatter(x=list(RawDataCopy_2[0]),y=list(RawDataCopy_2[1]), mode='markers', marker=dict(symbol='circle', size=10, color='orange'),
+                    showlegend=False, name='Discarted Data'))
+    
+        # Make 10th trace visible
+        fig.data[10].visible = True
+    
+        # Create and add slider
+        steps = []
+        for i in range(len(fig.data)):
+            step = dict(
+                method="update",
+                args=[{"visible": [False] * len(fig.data)},
+                      {"title": self.plotTitle +'Pracentage: ' + '{:.2f}'.format(i*0.2)}],  # layout attribute
+            )
+    
+            if i+1 < len(fig.data):
+                # Toggle i'th trace to "visible"
+                step["args"][0]["visible"][i+1] = True
+    
+            step["args"][0]["visible"][0] = True
+            step["args"][0]["visible"][1] = True
+    
+            steps.append(step)
+    
+        sliders = [dict(
+            active=10,
+            currentvalue={"prefix": "Pracentage: "},
+            pad={"t": 100},
+            steps=steps
+        )]
+    
+        fig.update_layout(
+            sliders=sliders
+        )
+    
+        fig.show()
+    
+        plot(fig, filename=self.fileName)
+        
+        
+
+
 ################################################################################################################
 ################################################################################################################
 ################################################################################################################
@@ -462,7 +538,7 @@ while 1:
     if not "Cropped images" in pthF:
     
         f2delete = pthF.split('/')[len(pthF.split('/'))-1]
-        f = "1.bmp"
+        f1 = "1.bmp"
         pth4save = pthF.replace(f2delete, "")
         os.chdir(pth4save)
         img = cv2.imread(pthF)
@@ -470,9 +546,9 @@ while 1:
     
     
     else:
-        f = pthF.split('/')[len(pthF.split('/'))-1]
+        f1 = pthF.split('/')[len(pthF.split('/'))-1]
         I1 = cv2.imread(pthF)
-        pth4save = pthF.replace("Cropped images/"+f, "")
+        pth4save = pthF.replace("Cropped images/"+f1, "")
     
     
     ImageGL = 0.2989 * I1[:, :, 0] + 0.5870 * I1[:, :, 1] + 0.1140 * I1[:, :, 2]
@@ -481,7 +557,7 @@ while 1:
     # PLOT
     
     plotTitle = pthF+" CIS edge T_Lum= "
-    fileName = pthF.replace('/', '_').replace(f,
+    fileName = pthF.replace('/', '_').replace(f1,
                                               "").replace(":", "") + "CIS" + ".html"
     xdb = 0
     ydb = 0
@@ -540,6 +616,23 @@ while 1:
     print('**************************************************************************')
     
     print('**************************************************************************')
+    
+    # PLOT
+    RawData = RawData.reset_index()
+    RawData = RawData.rename(columns={'index': 0, 'Value': 1})
+    
+    plotTitle = pthF+" Pracentege Removal"
+    fileName = pthF.replace('/', '_').replace(f1,
+                                              "").replace(":", "") + "Pracentege Removal" + ".html"
+    xdb = 0
+    ydb = 0
+    tlt = 0
+    z = 0
+    figCIScalc = plotPlotly(ImageGL, plotTitle, fileName,
+                            RecDimX, RecDimY, xdb, ydb, tlt, z).PlotReducedNoise_data(RawData)
+    
+    print('**************************************************************************')
+
     print('Please Enter Data Limit in the Dialog box')
     limitDataCount = float(simpledialog.askstring(
         "Input", "Enter Data Pracentege to ignore(from 1- 0):", parent=root))
@@ -552,8 +645,7 @@ while 1:
     os.chdir(pthF1)
     
     # RawData=pd.read_csv(pthF1+'/RawData.csv',header = None);
-    RawData = RawData.reset_index()
-    RawData = RawData.rename(columns={'index': 0, 'Value': 1})
+    
     
     # FIX FORMAT from ariel raw data to yuri rawdata
     if YuriFormat:

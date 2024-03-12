@@ -78,7 +78,7 @@ class CsvPickerWindow(QMainWindow):
 
         try:       
             # paramList,valueList=self.OrderParams(paramListMemory,paramList_tmp, valueList_tmp, paramList, valueList)
-            L_added_vals,paramList,valueList=OrderParams(paramListMemory,paramList_tmp, valueList_tmp, paramList, valueList)
+            L_added_vals,paramList,valueList=self.OrderParams(paramListMemory,paramList_tmp, valueList_tmp, paramList, valueList)
             
             for i in range(L_added_vals):
                 fillcolorList.append(backGroundCLR)
@@ -104,7 +104,7 @@ class CsvPickerWindow(QMainWindow):
             
         try:
             # paramList,valueList=self.OrderParams(paramListQCS,paramList_tmp, valueList_tmp, paramList, valueList)
-            L_added_vals,paramList,valueList=OrderParams(paramListQCS,paramList_tmp, valueList_tmp, paramList, valueList)
+            L_added_vals,paramList,valueList=self.OrderParams(paramListQCS,paramList_tmp, valueList_tmp, paramList, valueList)
             for i in range(L_added_vals):
                 fillcolorList.append(backGroundCLR)
 
@@ -127,7 +127,7 @@ class CsvPickerWindow(QMainWindow):
             # if param== 'Default PrintDirection':    
                 # break
             
-                result = check_list_in_string(paramList_CrossPrintDirection, paramPath)
+                result = self.check_list_in_string(paramList_CrossPrintDirection, paramPath)
                 if result:
                     paramList.append(param+' '+result)
                     valueList.append(value)
@@ -151,7 +151,7 @@ class CsvPickerWindow(QMainWindow):
             if param== 'SyntheticEncoder':    
                 # break
                 # paramList.append(param+' '+self.check_list_in_string(paramList_CrossPrintDirection, paramPath))
-                result = check_list_in_string(paramListQCS_SyntheticEnc, paramPath)
+                result = self.check_list_in_string(paramListQCS_SyntheticEnc, paramPath)
 
                 if result:
                     paramList.append(param+' '+result)
@@ -229,27 +229,27 @@ class CsvPickerWindow(QMainWindow):
     def closeEvent(self, event):
         QApplication.quit()
 
-def OrderParams(TargetList,paramList_tmp,valueList_tmp,paramList,valueList):
-    # TargetList=paramListQCS
-    index_list=[]
-    for val in TargetList:
-        try:
-            index_list.append(paramList_tmp.index(val) )
-        except:
-            continue
+    def OrderParams(self,TargetList,paramList_tmp,valueList_tmp,paramList,valueList):
+        # TargetList=paramListQCS
+        index_list=[]
+        for val in TargetList:
+            try:
+                index_list.append(paramList_tmp.index(val) )
+            except:
+                continue
+        
+        for inx in index_list:
+            
+            paramList.append(paramList_tmp[inx])
+            valueList.append(valueList_tmp[inx]) 
+            
+        return len(index_list),paramList,valueList
     
-    for inx in index_list:
-        
-        paramList.append(paramList_tmp[inx])
-        valueList.append(valueList_tmp[inx]) 
-        
-    return len(index_list),paramList,valueList
-
-
-def check_list_in_string(lst, string):
-    result = next((item for item in lst if item in string), None)
-
-    return result
+    
+    def check_list_in_string(self,lst, string):
+        result = next((item for item in lst if item in string), None)
+    
+        return result
 
 
 

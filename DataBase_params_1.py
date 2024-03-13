@@ -23,7 +23,7 @@ paramListMemory=['ChangeDirectionPageNum','SafeMarginSizeMM','MaxAllowedMovement
 paramListQCS=['SavitzkyGolay','PolynomialOrder','Radius']
 
 ##Default PrintDirection
-paramList_CrossPrintDirection=['Set_0/Y','Set_1/Y1','Set_2/Y2','Set_3/Y3']
+paramList_CrossPrintDirection=['Set_0/Y','Set_1/Y','Set_2/Y','Set_3/Y','Set_1/Y1','Set_2/Y2','Set_3/Y3']
 ##SyntheticEncoder
 paramListQCS_SyntheticEnc=['SlotId_2','SlotId_3','SlotId_4','SlotId_5','SlotId_6','SlotId_7','SlotId_8']
 #########################################

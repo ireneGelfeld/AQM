@@ -196,7 +196,7 @@ class ReduceNoise():
  
          RawData_Tilt_list = list(RawData_Tilt)
         
-         dataPracentage= (1-limitDataCount)*100
+         dataPracentage=100- limitDataCount
         
          percentile_x_1 = np.percentile(RawData_Tilt_list, dataPracentage)
          percentile_1 = np.percentile(RawData_Tilt_list, 100-dataPracentage)
@@ -659,6 +659,7 @@ while 1:
     RawData_12k = ReduceNoise(
         RawData).RemoveUnwantedData('p12k')
     
+   
     
     Data385,  y, z1, tlt1, z, tlt = ReduceNoise(
         RawData).PrepareData4Saving()

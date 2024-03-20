@@ -601,7 +601,6 @@ while 1:
     
     RawData['Value'] = list(max_index)
     
-    RawData.to_csv(pth4save+'RawData.csv', header=None)
     
     
     plt.figure()
@@ -659,7 +658,8 @@ while 1:
     RawData_12k = ReduceNoise(
         RawData).RemoveUnwantedData('p12k')
     
-   
+    RawData_12k.to_csv(pth4save+'RawData_12k.csv', header=None)
+
     
     Data385,  y, z1, tlt1, z, tlt = ReduceNoise(
         RawData).PrepareData4Saving()
@@ -690,18 +690,36 @@ while 1:
         
         yTotalPics385p=pd.concat([yTotalPics385p,pd.Series(y)],axis=1)
      
+        # aa=pd.DataFrame(padded_values)
+        # ab=RawData_12k[1]
+        # RawData_12k_refine=RawData_12k[1]+  pd.DataFrame(padded_values)[0] / PixelSize_um
     
-            
-    
+        # plt.figure()
+        # plt.plot(RawData_12k_refine)
         # plt.figure()
         # plt.plot(CIScurve.loc[0, :])
         # plt.title('385 points'+' windowSize='+str(CISsavgolWindow))
+    RefineCIS=0
+    print('**************************************************************************')
+
+    print('Please Enter to refine CIS')
+    RefineCIS = float(simpledialog.askstring(
+        "Input", "Refine CIS curve? Yes-1\\No-0:", parent=root))
+    print('Done')
+    print('**************************************************************************')
+    
+    if RefineCIS:
+        RawData_refined=pd.read_csv(pth4save+'\\Refined_CIS_curve.csv',index_col=None, header=None)
+        RawData_12k[1]=RawData_12k[1]+  RawData_refined[0] / PixelSize_um
+    
     
     
     # 12k point
     if plot12k:
         xdb = RawData_12k[0]
         ydb = RawData_12k[1]
+        # ydb = RawData_12k_refine
+
         plotTitle = pthF1+'-->'+f1+' Tilt in um=' + "{0:.3f}".format(tlt1[0]-tlt1[len(
             tlt1)-1])+" _12k points - For CIS (for implamentation) Slider switched to Step: "  # Can modify Plot title
         fileName = f1 + " CIS curve raw data and filter 12k implament" + ".html"

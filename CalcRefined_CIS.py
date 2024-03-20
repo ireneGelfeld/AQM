@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 """
-Created on Thu Oct  6 15:59:12 2022
+Created on Wed Mar 20 11:56:41 2024
 
 @author: Ireneg
 """
+
 from IPython import get_ipython
 get_ipython().magic('reset -sf')
 
@@ -1228,459 +1229,109 @@ class PlotGraphPlotly(CalcWaveFromRawData):
         plot(figTableAverage,filename=fileName+"_.html")   
         
         return figTableAverage;
-# plt.figure()
-# plt.plot(y)
-# plt.plot(tlt)
-# plt.plot(x,tlt1,'o')
-
-
-                
-# WaveRawDataDic=WaveRawDataDicFRONT;
-# WaveDataWithMaxFilterDic=WaveDataWithMaxFilterDicFRONT;
-# PHloc=PHlocFRONT;
-
+    
+    
+    
+    
 #################################################################################
 #################################################################################
 #################################################################################
 
 from tkinter import filedialog
 from tkinter import *
-root = Tk()
-root.withdraw()
-# pthF = filedialog.askdirectory()
+from tkinter import simpledialog
 
-
-pthF = filedialog.askopenfilename()
-
-f=pthF.split('/')[len(pthF.split('/'))-1]
-
-DirectorypathF=pthF.replace(f,"")[:-1]
-
-
-
-# f=pthF.split('/')[len(pthF.split('/'))-1]
-# DirectorypathF=pthF.replace(f,'');
-os.chdir(DirectorypathF)
-
-side='Front';
-
-ColorList= CalcWaveFromRawData(pthF,side,Panel).getColors();
-
-LocatorIndex= CalcWaveFromRawData(pthF,side,Panel).GetLocatorIndex(ColorForDisplay);
-# FlatList= CalcWaveFromRawData(pthF,side,Panel,ColorForDisplay).getNumberOfFlats();
-if CIScurve:
-    cisBACKold,cisFRONTold=CIScurveFromRawData(pthF).GetCIScurveOldVersion()
+ContinueCalc= 1
+while (1):
+    root = Tk()
+    root.withdraw()
+    # pthF = filedialog.askdirectory()
     
     
-    if len(cisFRONTold) == 0:
-        cisBACKold,cisFRONTold=CIScurveFromRawData(pthF).GetCIScurveOldVersion_SecondTry()
-
-    cisBACKnew,cisFRONTnew=CIScurveFromRawData(pthF).GetCIScurveNewVersion()
-
-    if len(cisFRONTnew) == 0:
-        cisBACKnew,cisFRONTnew=CIScurveFromRawData(pthF).GetCIScurveNewVersion_secondTry()
-       
-        
+    pthF = filedialog.askopenfilename(title='Select Wave calibration zip file')
     
-if registrationBetweenWavePrints:
-    DFdicPerClrFRONT =  CalcRegistrationFromWaveData(pthF,side,Panel,ColorList,MainColor,StartCycle).DeltaForCycleAndColor() 
-    try:
-        DFdicPerClrBACK =  CalcRegistrationFromWaveData(pthF,'Back',Panel,ColorList,MainColor,StartCycle).DeltaForCycleAndColor() 
-    except:
-        1
-
-
-WaveRawDataDicFRONT=CalcWaveFromRawData(pthF,side,Panel).CreateDicOfWaveRawData();
-# WaveDataWithMaxFilterDicFRONT=CalcWaveFromRawData(pthF,side,Panel).FilterWaveDataDic()
-WaveDataWithMaxFilterDicFRONT=CalcWaveFromRawData(pthF,side,Panel).FilterWaveDataDicTEST(WaveRawDataDicFRONT)
-
-PHlocFRONT= CalcWaveFromRawData(pthF,side,Panel).CalcPHlocation(ColorForDisplay)
-try:
-    WaveRawDataDicBACK=CalcWaveFromRawData(pthF,'Back',Panel).CreateDicOfWaveRawData();
-    WaveDataWithMaxFilterDicBACK=CalcWaveFromRawData(pthF,'Back',Panel).FilterWaveDataDic()
-    PHlocBACK= CalcWaveFromRawData(pthF,'Back',Panel).CalcPHlocation(ColorForDisplay)
-
-except:
-    1
-
-
-
-################ Calc offset and tilt
-
-PHoffSetFRONT,PHtiltFRONT,PHoffsetPerHFRONT,PHtiltPerHFRONT=CalcMeanAndTilt(WaveRawDataDicFRONT,WaveDataWithMaxFilterDicFRONT,PHlocFRONT)
-
-try:
-   PHoffSetBACK,PHtiltBACK,PHoffsetPerHBACK,PHtiltPerHBACK=CalcMeanAndTilt(WaveRawDataDicBACK,WaveDataWithMaxFilterDicBACK,PHlocBACK)
-except:
-    1
-############
-
-#################### Calc curev, filetr, offset, tilt after correction
-
-WaveRawDataDicAfterCorrFRONT,WaveDataWithMaxFilterDicAfterCorrFRONT,CorrectionArrFRONT=RepareDistortions(WaveRawDataDicFRONT,WaveDataWithMaxFilterDicFRONT,ColorList).correctWaveRawData();
-try:
-    WaveRawDataDicAfterCorrBACK,WaveDataWithMaxFilterDicAfterCorrBACK,CorrectionArrBACK=RepareDistortions(WaveRawDataDicBACK,WaveDataWithMaxFilterDicBACK,ColorList).correctWaveRawData();
-except:
-    1
-
-PHoffSetFRONTAfterCorr,PHtiltFRONTAfterCorr,PHoffsetPerHFRONTAfterCorr,PHtiltPerHFRONTAfterCorr=CalcMeanAndTilt(WaveRawDataDicAfterCorrFRONT,WaveDataWithMaxFilterDicAfterCorrFRONT,PHlocFRONT)
-
-try:
-   PHoffSetBACKAfterCorr,PHtiltBACKAfterCorr,PHoffsetPerHBACKAfterCorr,PHtiltPerHBACKAfterCorr=CalcMeanAndTilt(WaveRawDataDicAfterCorrBACK,WaveDataWithMaxFilterDicAfterCorrBACK,PHlocBACK)
-except:
-    1
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-#######################################################################################
-#######################################################################################
-#############################PLOT############################################
-#############################Wave RawData Per Cycle###################################
-##### Front
-if plotPerCycle:
-    offSetType='Average All'
-    PlotTitle='- Left Side Offset WAVE RAW DATA --->'+f +' offSetType='+offSetType; # Can modify Plot title
-    fileName=f+" Left Side WaveResult_RawDataPerCycle Panel Number "; # Can modify File nmae
-    side='Front'
-    # db=CalcWaveFromRawData(pthF,side,Panel).ArrangeRawDataForAnalize(ColorForDisplay);
-    figLeftsideFRONT=PlotGraphPlotly(pthF,side,Panel,ColorList).ShowWaveRawData_SubOffset_PerCycle(PlotTitle,offSetType,fileName,Panel)
+    f=pthF.split('/')[len(pthF.split('/'))-1]
     
-    
-    offSetType='Average Left Right' 
-    PlotTitle='- Right Side Offset WAVE RAW DATA --->'+f+' offSetType='+offSetType;# Can modify Plot title
-    fileName=f+" Right Side WaveResult_RawDataPerCycle Panel Number ";# Can modify File nmae
-    side='Front'
-    db=CalcWaveFromRawData(pthF,side,Panel).ArrangeRawDataForAnalize(ColorForDisplay);
-    figRightsideFRONT=PlotGraphPlotly(pthF,side,Panel,ColorList).ShowWaveRawData_SubOffset_PerCycle(PlotTitle,offSetType,fileName,Panel)
-    
-   
-    
-    PlotTitle='- <b>STD </b> Side Offset WAVE RAW DATA --->'+f# Can modify Plot title
-    fileName=f+" STD SideOffset_ WaveResult_RawDataPerColor Panel Number "# Can modify File nmae
-    side='Front'
-    figSTDFRONT=PlotGraphPlotly(pthF,side,Panel,ColorList).ShowSTDforRawWaveWithOffset(PlotTitle,fileName,Panel)
-    
-    #### Back
-    try:
-        offSetType='Average All'
-        PlotTitle='- Left Side Offset WAVE RAW DATA --->'+f+' offSetType='+offSetType;# Can modify Plot title
-        fileName=f+" Left Side WaveResult_RawDataPerCycle Panel Number ";# Can modify File nmae
-        side='Back'
-        # db=CalcWaveFromRawData(pthF,side,Panel).ArrangeRawDataForAnalize(ColorForDisplay);
-        figLeftsideBACK=PlotGraphPlotly(pthF,side,Panel,ColorList).ShowWaveRawData_SubOffset_PerCycle(PlotTitle,offSetType,fileName,Panel)
-        
-        
-        offSetType='Average Left Right' 
-        PlotTitle='- Right Side Offset WAVE RAW DATA --->'+f+' offSetType='+offSetType;# Can modify Plot title
-        fileName=f+" Right Side WaveResult_RawDataPerCycle Panel Number ";# Can modify File nmae
-        side='Back'
-        # db=CalcWaveFromRawData(pthF,side,Panel).ArrangeRawDataForAnalize(ColorForDisplay);
-        figRightsideBACK=PlotGraphPlotly(pthF,side,Panel,ColorList).ShowWaveRawData_SubOffset_PerCycle(PlotTitle,offSetType,fileName,Panel)
-        
-        # offSetType='Middle'
-        # PlotTitle='- Middle Offset WAVE RAW DATA --->'+f;# Can modify Plot title
-        # fileName=f+" Middle WaveResult_RawDataPerCycle Panel Number ";# Can modify File nmae
-        # side='Back'
-        # # db=CalcWaveFromRawData(pthF,side,Panel).ArrangeRawDataForAnalize(ColorForDisplay);
-        # figMiddlesideBACK=PlotGraphPlotly(pthF,side,Panel,ColorList).ShowWaveRawData_SubOffset_PerCycle(PlotTitle,offSetType,fileName,Panel)
-        
-        PlotTitle='- <b>STD </b> Side Offset WAVE RAW DATA --->'+f# Can modify Plot title
-        fileName=f+" STD SideOffset_ WaveResult_RawDataPerColor Panel Number "# Can modify File nmae
-        side='Back'
-        figSTDBACK=PlotGraphPlotly(pthF,side,Panel,ColorList).ShowSTDforRawWaveWithOffset(PlotTitle,fileName,Panel)
-    except:
-        1
-
-########################################################################################
-#############################Wave RawData Per Panel###################################
-##### Front
-if plotPerPanel:
-    offSetType='Average All'
-    PlotTitle='- offSetType='+offSetType+' WAVE RAW DATA (For one Cycle)--->'+f;
-    fileName=f+'- offSetType='+offSetType+" WaveResult_RawDataPerPanel ";
-    side='Front'
-    # db=CalcWaveFromRawData(pthF,side,Panel).ArrangeRawDataForAnalize(ColorForDisplay);
-    figLeftsideFRONTperPanel=PlotGraphPlotly(pthF,side,Panel,ColorList).ShowWaveRawData_SubOffset_PerPanel(PlotTitle,offSetType,fileName,CycleNumber)
+    DirectorypathF=pthF.replace(f,"")[:-1]
     
     
     
-    offSetType='Average Left Right' 
-    PlotTitle='- offSetType='+offSetType+' WAVE RAW DATA (For one Cycle)--->'+f;
-    fileName=f+'- offSetType='+offSetType+" WaveResult_RawDataPerPanel ";
-    side='Front'
-    # db=CalcWaveFromRawData(pthF,side,Panel).ArrangeRawDataForAnalize(ColorForDisplay);
-    figRightsideFRONTperPanel=PlotGraphPlotly(pthF,side,Panel,ColorList).ShowWaveRawData_SubOffset_PerPanel(PlotTitle,offSetType,fileName,CycleNumber)
+    # f=pthF.split('/')[len(pthF.split('/'))-1]
+    # DirectorypathF=pthF.replace(f,'');
+    os.chdir(DirectorypathF)
     
-    # offSetType='Middle'
-    # PlotTitle='- Middle Offset WAVE RAW DATA (For one Cycle)--->'+f;
-    # fileName=f+" Right Side WaveResult_RawDataPerPanel ";
-    # side='Front'
-    # # db=CalcWaveFromRawData(pthF,side,Panel).ArrangeRawDataForAnalize(ColorForDisplay);
-    # figMiddlesideFRONTperPanel=PlotGraphPlotly(pthF,side,Panel,ColorList).ShowWaveRawData_SubOffset_PerPanel(PlotTitle,offSetType,fileName,CycleNumber)
-    
-    
-    #### Back
-    try:
-        offSetType='Average All'
-        PlotTitle='- offSetType='+offSetType+' WAVE RAW DATA (For one Cycle)--->'+f;
-        fileName=f+'- offSetType='+offSetType+" WaveResult_RawDataPerPanel ";
-        side='Back'
-        # db=CalcWaveFromRawData(pthF,side,Panel).ArrangeRawDataForAnalize(ColorForDisplay);
-        figLeftsideBACKperPanel=PlotGraphPlotly(pthF,side,Panel,ColorList).ShowWaveRawData_SubOffset_PerPanel(PlotTitle,offSetType,fileName,CycleNumber)
-        
-        
-        
-        offSetType='Average Left Right' 
-        PlotTitle='- offSetType='+offSetType+' WAVE RAW DATA (For one Cycle)--->'+f;
-        fileName=f+'- offSetType='+offSetType+" WaveResult_RawDataPerPanel ";
-        side='Back'
-        # db=CalcWaveFromRawData(pthF,side,Panel).ArrangeRawDataForAnalize(ColorForDisplay);
-        figRightsideBACKperPanel=PlotGraphPlotly(pthF,side,Panel,ColorList).ShowWaveRawData_SubOffset_PerPanel(PlotTitle,offSetType,fileName,CycleNumber)
-        
-        # offSetType='Middle'
-        # PlotTitle='- Middle Offset WAVE RAW DATA (For one Cycle)--->'+f;
-        # fileName=f+" Right Side WaveResult_RawDataPerPanel ";
-        # side='Back'
-        # # db=CalcWaveFromRawData(pthF,side,Panel).ArrangeRawDataForAnalize(ColorForDisplay);
-        # figMiddlesideBACKperPanel=PlotGraphPlotly(pthF,side,Panel,ColorList).ShowWaveRawData_SubOffset_PerPanel(PlotTitle,offSetType,fileName,CycleNumber)
-    
-    except:
-        1
-
-########################################################################################
-#############################Plot Wave Data SUB Average Per Panel Per Cycle###################################
-##### Front
-if WaveDataSUBAverage_PerPanel_PerCycle:
-    offSetType='Average All' ;
-    PlotTitle='- Wave Behavior- Avi  Method --->'+f+' offSetType='+offSetType;
-    fileName=f+" Wave Behavior- Avi  Method Offsettype_"+offSetType;
-    side='Front'
-    figWaveDataSubAveragePerPanet=PlotGraphPlotly(pthF,side,Panel,ColorList).PlotWaveDataSUBAveragePerPanelPerCycle_withMAX_MIN_diff(WaveRawDataDicFRONT,offSetType,PlotTitle,fileName);
-
-    offSetType='Average Left Right' ;
-    PlotTitle='- Wave Behavior- Avi  Method --->'+f+' offSetType='+offSetType;
-    fileName=f+" Wave Behavior- Avi  Method Offsettype_"+offSetType;
-    side='Front'
-    figWaveDataSubAveragePerPanet=PlotGraphPlotly(pthF,side,Panel,ColorList).PlotWaveDataSUBAveragePerPanelPerCycle_withMAX_MIN_diff(WaveRawDataDicFRONT,offSetType,PlotTitle,fileName);
-        
-    #####Back
-    try:
-        offSetType='Average All' #
-        PlotTitle='- Wave Behavior- Avi  Method --->'+f+' offSetType='+offSetType;
-        fileName=f+" Wave Behavior- Avi  Method Offsettype_"+offSetType;
-        
-        side='Back'
-        figWaveDataSubAveragePerPanet=PlotGraphPlotly(pthF,side,Panel,ColorList).PlotWaveDataSUBAveragePerPanelPerCycle_withMAX_MIN_diff(WaveRawDataDicBACK,offSetType,PlotTitle,fileName);
-        
-        offSetType='Average Left Right' #    
-        PlotTitle='- Wave Behavior- Avi  Method --->'+f+' offSetType='+offSetType;
-        fileName=f+" Wave Behavior- Avi  Method Offsettype_"+offSetType;
-        side='Back'
-        figWaveDataSubAveragePerPanet=PlotGraphPlotly(pthF,side,Panel,ColorList).PlotWaveDataSUBAveragePerPanelPerCycle_withMAX_MIN_diff(WaveRawDataDicBACK,offSetType,PlotTitle,fileName);
-
-    except:
-        1
-
-##################################################################################
-################################CIS Curve 
-######FRONT
-if CIScurve:
-
-    try:
-        PlotTitle='FRONT CIS curve (old version)--->'+f;
-        fileName=f+' old ';
-        side='Front';
-        cisCurve=cisFRONTold
-        figCISFRONT=PlotGraphPlotly(pthF,side,Panel,ColorList).PlotCIScurve(cisCurve,PlotTitle,fileName);
-    except:
-        1
-        
-    #######BACK
-    try:
-        PlotTitle='BACK CIS curve (old version)--->'+f;
-        fileName=f+' old ';
-        side='Back';
-        cisCurve=cisBACKold
-        figCISBACK=PlotGraphPlotly(pthF,side,Panel,ColorList).PlotCIScurve(cisCurve,PlotTitle,fileName); 
-    except:
-        1
-
-    try:
-        PlotTitle='FRONT CIS curve (new version)--->'+f;
-        fileName=f+' new ';
-        side='Front';
-        cisCurve=cisFRONTnew
-        figCISFRONT=PlotGraphPlotly(pthF,side,Panel,ColorList).PlotCIScurve(cisCurve,PlotTitle,fileName);
-    except:
-        1
-        
-    #######BACK
-    try:
-        PlotTitle='BACK CIS curve (new version)--->'+f;
-        fileName=f+' new ';
-        side='Back';
-        cisCurve=cisBACKnew
-        figCISBACK=PlotGraphPlotly(pthF,side,Panel,ColorList).PlotCIScurve(cisCurve,PlotTitle,fileName); 
-    except:
-        1
-
-##################################################################################
-################################Registration Between Wave Prints
-######FRONT  & BACK
-if registrationBetweenWavePrints: ##Yuval method
-    try:
-        fileName=f
-        side='Front'
-        figRegistrationBetweenWavePrintsFRONT=PlotGraphPlotly(pthF,side,Panel,ColorList).PlotRegistrationBetweenWavePrints(DFdicPerClrFRONT,MainColor,rgistBtwPntStartCycle,rgistBtwPntEndCycle,fileName)
-    
-        side='Back'
-        figRegistrationBetweenWavePrintsBACK=PlotGraphPlotly(pthF,side,Panel,ColorList).PlotRegistrationBetweenWavePrints(DFdicPerClrBACK,MainColor,rgistBtwPntStartCycle,rgistBtwPntEndCycle,fileName)
-    except:
-        1
-##################################################################################
-################################ Residue (Wave- S.Go filter) Before and  After Aplied AVRG Correction
-######FRONT 
-if BeforAndAfterCorr:
-    PlotTitle=' Residue (Wave- S.Go filter) before and after correction ---> '+f;
-    fileName=f+'Residue _Wave sub S.Go filter_ before and after correction_';
     side='Front';
-    figCorrAvrBeforeAndAfterFRONT=PlotGraphPlotly(pthF,side,Panel,ColorList).PlotDesidueBeforAfterAndAverageCorr(WaveRawDataDicFRONT,WaveRawDataDicAfterCorrFRONT,WaveDataWithMaxFilterDicFRONT,WaveDataWithMaxFilterDicAfterCorrFRONT,CorrectionArrFRONT,PlotTitle,fileName)
-    df = pd.DataFrame(CorrectionArrFRONT)    
-    # Save DataFrame to CSV
-    df.to_csv(DirectorypathF+'//'+'CorrectionArrFRONT.csv', index=False)
-    ######BACK
-    try:
-        
-        PlotTitle=' Residue (Wave- S.Go filter) before and after correction ---> '+f;
-        fileName=f+'Residue _Wave sub S.Go filter_ before and after correction_';
-        side='Back';
-        figCorrAvrBeforeAndAfterBACK=PlotGraphPlotly(pthF,side,Panel,ColorList).PlotDesidueBeforAfterAndAverageCorr(WaveRawDataDicBACK,WaveRawDataDicAfterCorrBACK,WaveDataWithMaxFilterDicBACK,WaveDataWithMaxFilterDicAfterCorrBACK,CorrectionArrBACK,PlotTitle,fileName)
-    except:
-        1
-
-##################################################################################
-################################Wave Data Before and  After Aplied AVRG Correction
-######FRONT 
-if BeforAndAfterCorr:
-    PlotTitle=' wave raw data before and after correction ---> '+f;
-    fileName=f+'wave raw data before and after correction_';
-    side='Front';
-    figClrBeforeAndAfterFRONT=PlotGraphPlotly(pthF,side,Panel,ColorList).PlotWaveDataAfterApliedAVRGCorrection(WaveRawDataDicFRONT,WaveRawDataDicAfterCorrFRONT,CorrectionArrFRONT,PlotTitle,fileName)
     
-    ######BACK
-    try:
-        
-        PlotTitle=' wave raw data before and after correction ---> '+f;
-        fileName=f+'wave raw data before and after correction_';
-        side='Back';
-        figClrBeforeAndAfterBACK=PlotGraphPlotly(pthF,side,Panel,ColorList).PlotWaveDataAfterApliedAVRGCorrection(WaveRawDataDicBACK,WaveRawDataDicAfterCorrBACK,CorrectionArrBACK,PlotTitle,fileName)
-    except:
-        1
-
-#################################################################################
-##################################Plot DX Wave DataResidue After correction
-########FRONT
-if WaveFilterResidue_dxPlot:
-    PlotTitle=' After Correction Wave Data S.Golay = '+ str(MaxWaveWindow)+'---> '+f
-    fileName=f+'  After Correction Wave Data S.Golay _'+ str(MaxWaveWindow)
-    side='Front';
-    figWaveResidueAfterCorrFRONT=PlotGraphPlotly(pthF,side,Panel,ColorList).PlotWaveDataResidue(WaveRawDataDicAfterCorrFRONT,WaveDataWithMaxFilterDicAfterCorrFRONT,PHlocFRONT,PHoffSetFRONTAfterCorr,PHtiltFRONTAfterCorr,PlotTitle,fileName)
-    ########BACK
-    try:
-        PlotTitle=' After Correction Wave Data S.Golay = '+ str(MaxWaveWindow)+'---> '+f
-        fileName=f+'  After Correction Wave Data S.Golay _'+ str(MaxWaveWindow)
-        side='Back';
-        figWaveResidueAfterCorrBACK=PlotGraphPlotly(pthF,side,Panel,ColorList).PlotWaveDataResidue(WaveRawDataDicAfterCorrBACK,WaveDataWithMaxFilterDicAfterCorrBACK,PHlocBACK,PHoffSetBACKAfterCorr,PHtiltBACKAfterCorr,PlotTitle,fileName)
-    except:
-         1     
-
-
-#################################################################################
-####################### Table: Offset Table -  After correction
-#############Front
-if PlotTables:
-    PlotTitle=' offset (Correction-For simplex) table S.Golay = '+ str(MaxWaveWindow)+'---> '+f
-    fileName=f+" Offset Table"
-    side='Front';
-    TableOffsetAfterCorrFRONT=PlotGraphPlotly(pthF,side,Panel,ColorList).PlotOffsetTabel(PHoffsetPerHFRONTAfterCorr,PlotTitle,fileName)
+    ColorList= CalcWaveFromRawData(pthF,side,Panel).getColors();
+    
+    LocatorIndex= CalcWaveFromRawData(pthF,side,Panel).GetLocatorIndex(ColorForDisplay);
     
     
-    #####Back
+    WaveRawDataDicFRONT=CalcWaveFromRawData(pthF,side,Panel).CreateDicOfWaveRawData();
+    # WaveDataWithMaxFilterDicFRONT=CalcWaveFromRawData(pthF,side,Panel).FilterWaveDataDic()
+    WaveDataWithMaxFilterDicFRONT=CalcWaveFromRawData(pthF,side,Panel).FilterWaveDataDicTEST(WaveRawDataDicFRONT)
     
     try:
-        PlotTitle=' offset (Correction-For simplex) table S.Golay = '+ str(MaxWaveWindow)+'---> '+f
-        fileName=f+" Offset Table"
-        side='Back';
-        TableOffsetAfterCorrBACK=PlotGraphPlotly(pthF,side,Panel,ColorList).PlotOffsetTabel(PHoffsetPerHBACKAfterCorrAfterCorr,PlotTitle,fileName)
-    except:
-     1     
+        WaveRawDataDicBACK=CalcWaveFromRawData(pthF,'Back',Panel).CreateDicOfWaveRawData();
+        WaveDataWithMaxFilterDicBACK=CalcWaveFromRawData(pthF,'Back',Panel).FilterWaveDataDic()
+        PHlocBACK= CalcWaveFromRawData(pthF,'Back',Panel).CalcPHlocation(ColorForDisplay)
     
-    #################################################################################
-    ####################### Table: Tilt Table -  After correction
-    #############Front
-    
-    PlotTitle=' Tilt table S.Golay = '+ str(MaxWaveWindow)+'---> '+f
-    fileName=f+" Tilt Table"
-    side='Front';
-    TableTiltAfterCorrFRONT=PlotGraphPlotly(pthF,side,Panel,ColorList).PlotTiltTable(PHtiltPerHFRONTAfterCorr,ColorLevelsTilt,DivideByNumTilt,PlotTitle,fileName)
-    
-    #####Back
-    try:
-        PlotTitle=' Tilt table S.Golay = '+ str(MaxWaveWindow)+'---> '+f
-        fileName=f+" Tilt Table"
-        side='Back';
-        TableTiltAfterCorrBACK=PlotGraphPlotly(pthF,side,Panel,ColorList).PlotTiltTable(PHtiltPerHBACKAfterCorr,ColorLevelsTilt,DivideByNumTilt,PlotTitle,fileName)
     except:
         1
     
-    #################################################################################
-    ####################### Table: FRONT -BACK Delta - After correction
     
+    
+    #################### Calc curev, filetr, offset, tilt after correction
+    
+    WaveRawDataDicAfterCorrFRONT,WaveDataWithMaxFilterDicAfterCorrFRONT,CorrectionArrFRONT=RepareDistortions(WaveRawDataDicFRONT,WaveDataWithMaxFilterDicFRONT,ColorList).correctWaveRawData();
     try:
-        PlotTitle='Delta offset table S.Golay = '+ str(MaxWaveWindow)+'---> '+f
-        fileName=f+" Delta Offset Table"
-        side='Front';
-        TableFRONT_BACK_AverageAfterCorrFRONT=PlotGraphPlotly(pthF,side,Panel,ColorList).PlotFRONT_BACKDeltaTable(PHoffsetPerHFRONTAfterCorr,PHoffsetPerHBACKAfterCorr,DivideByNum,ColorLevels,PlotTitle,fileName);
+        WaveRawDataDicAfterCorrBACK,WaveDataWithMaxFilterDicAfterCorrBACK,CorrectionArrBACK=RepareDistortions(WaveRawDataDicBACK,WaveDataWithMaxFilterDicBACK,ColorList).correctWaveRawData();
     except:
         1
-        
-    #################################################################################
-    ####################### Table: FRONT -BACK Average -  After correction
-    try:
-        PlotTitle='Correction table S.Golay = '+ str(MaxWaveWindow)+'---> '+f
-        fileName=f+" FRONT -BACK Average Table"
-        side='Front';
-        TableFRONT_BACK_AverageAfterCorrFRONT=PlotGraphPlotly(pthF,side,Panel,ColorList).PlotFRONT_BACKAverageTable(PHoffsetPerHFRONTAfterCorr,PHoffsetPerHBACKAfterCorr,PlotTitle,fileName);
-    except:
-        1
+    
+    ############
+    ############
+    ############
+    
+    
+    
+    values =CorrectionArrFRONT
+    l= 385
+    values_extended385=[]
+    if len(values)<385:
+        print('**************************************************************************')
+    
+        print('Please enter your answer- continue? Yes\\No')
+        ContinueCalc = float(simpledialog.askstring(
+            "Input", "There are less with 385 points! continue? Yes=1\\No=0:", parent=root))
+        print('Done')
+        print('**************************************************************************')
+        l= 385 - len(values)
+        values_extended385=[values[0]] * int(l/2) + values + [values[len(values)-1]]*(l-int(l/2)) 
+    
+    if not ContinueCalc:
+        continue
+    if len(values_extended385):
+        values= values_extended385
+    # Number of points to pad to
+    total_points = 12480
+    
+    # Calculate the length of each chunk
+    chunk_length = total_points // len(values)+1
+    
+    # Pad the list to the total number of points
+    padded_values = np.repeat(values, chunk_length)
+    
+    ll=len(padded_values)-12480
+    # Trim the padded values to exactly the total number of points
+    padded_values = padded_values[int(ll/2):len(padded_values)-int(ll/2)]
+    
+    pthF=DirectorypathF
+    pthF = filedialog.askdirectory(title="Select a Directory of CIS curve")
+
+
+    pd.DataFrame(padded_values).to_csv(pthF+'//Refined_CIS_curve.csv', index=False, header=None)
+    break;
 
 
 
-
-
-#########################################################################################
-
-# jobData=CIScurveFromRawData(pthF).LoadRawData()
-# sub='CisCurvatureDataBasedOnWaveFormat=';
-# indices = []
-
-# for line_num, line in enumerate(jobData):
-#     if len(line)>1:
-#         if sub in line[0]:
-#             indices.append(line_num) 
-   
-# cisFRONT = list(map(float, jobData[indices[0]][1:]))
-# if len(indices)>1:
-#     cisBACK = list(map(float, jobData[indices[1]][1:]))

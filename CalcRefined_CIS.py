@@ -1241,7 +1241,6 @@ from tkinter import filedialog
 from tkinter import *
 from tkinter import simpledialog
 
-ContinueCalc= 1
 while (1):
     root = Tk()
     root.withdraw()
@@ -1298,6 +1297,8 @@ while (1):
     values =CorrectionArrFRONT
     l= 385
     values_extended385=[]
+    ContinueCalc= 1
+
     if len(values)<385:
         print('**************************************************************************')
     

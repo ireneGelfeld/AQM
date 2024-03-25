@@ -482,7 +482,7 @@ class plotPlotly(CIScurveFromImage):
     
     
         ##### Fiter Vs Befor ####
-        for dataPracentage in np.arange(0,10,0.2):
+        for dataPracentage in np.arange(0,20,0.1):
             # print(dataPracentage)
             RawDataCopy_2 =  ReduceNoise(RawData).update(dataPracentage)
             # print(len(RawDataCopy_2))
@@ -499,7 +499,7 @@ class plotPlotly(CIScurveFromImage):
             step = dict(
                 method="update",
                 args=[{"visible": [False] * len(fig.data)},
-                      {"title": self.plotTitle +'Pracentage: ' + '{:.4f}'.format((i*0.2+0.01))}],  # layout attribute
+                      {"title": self.plotTitle +'Pracentage: ' + '{:.4f}'.format((i*0.1+0.01))}],  # layout attribute
             )
     
             if i+1 < len(fig.data):

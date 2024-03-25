@@ -712,18 +712,18 @@ while 1:
         # plt.figure()
         # plt.plot(CIScurve.loc[0, :])
         # plt.title('385 points'+' windowSize='+str(CISsavgolWindow))
-    RefineCIS=0
-    print('**************************************************************************')
+    # RefineCIS=0
+    # print('**************************************************************************')
 
-    print('Please Enter to refine CIS')
-    RefineCIS = float(simpledialog.askstring(
-        "Input", "Refine CIS curve? Yes-1\\No-0:", parent=root))
-    print('Done')
-    print('**************************************************************************')
+    # print('Please Enter to refine CIS')
+    # RefineCIS = float(simpledialog.askstring(
+    #     "Input", "Refine CIS curve? Yes-1\\No-0:", parent=root))
+    # print('Done')
+    # print('**************************************************************************')
     
-    if RefineCIS:
-        RawData_refined=pd.read_csv(pth4save+'\\Refined_CIS_curve.csv',index_col=None, header=None)
-        RawData_12k[1]=RawData_12k[1]+  RawData_refined[0] / PixelSize_um
+    # if RefineCIS:
+    #     RawData_refined=pd.read_csv(pth4save+'\\Refined_CIS_curve.csv',index_col=None, header=None)
+    #     RawData_12k[1]=RawData_12k[1]+  RawData_refined[0] / PixelSize_um
     
     
     

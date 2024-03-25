@@ -12,9 +12,14 @@ import plotly.express as px
 
 #####################################Params #############################################################
 #########################################################################################################
-global StartCycle,StartCycle4Avr,PHpoitToIgnor,MaxWaveWindow,DistanceBtWPointMM,Panel,Cycle2Display,Panel2Disply,colorPNL,MaxMinPcnt
+global StartCycle,StartCycle4Avr,PHpoitToIgnor,MaxWaveWindow,DistanceBtWPointMM,Panel,Cycle2Display,Panel2Disply,colorPNL,MaxMinPcnt,SvGolPol,StpWindowSize12k,MaxWaveWindow12k,RecDimX,RecDimY
 
 
+RecDimX = 5
+RecDimY = 5
+MaxWaveWindow12k = 1000
+StpWindowSize12k = 10
+SvGolPol = 1
 
 ## for plot per panel and plot per cycle and WaveData SUB Average_PerPanel_PerCycle
 plotPerPanel=1;# On/OFF plot
@@ -60,6 +65,9 @@ ColorLevels= 5; # Heat Map for offset- number of levels of colors from white to 
 DivideByNum= 20; # Correction for offset Haet map- if occurs error try to increase this number
 ColorLevelsTilt=7; #Heat Map for tilt- number of levels of colors from white to hot red
 DivideByNumTilt=1;# Correction for tilt Haet map- if occurs error try to increase this number
+
+PixelSize_um = 84.6666
+
 
 #########################################################################################################
 
@@ -1231,6 +1239,416 @@ class PlotGraphPlotly(CalcWaveFromRawData):
         return figTableAverage;
     
     
+class CIScurveFromImage():
+    def __init__(self, ImageGL):
+        self.ImageGL = ImageGL
+
+    def AplyFilters(self, T_Lum, RecDimX, RecDimY):
+
+        I2 = self.ImageGL
+        # I2 = cv2.convertScaleAbs(I2)
+        bw = cv2.threshold(I2, 255*T_Lum, 255, cv2.THRESH_BINARY)[1]
+        BWdfill = cv2.morphologyEx(
+            bw, cv2.MORPH_OPEN, np.ones((RecDimX, RecDimY)))
+        diff_bw = np.diff(BWdfill, axis=0)
+        max_val = []
+        max_index = []
+
+        for i in range(diff_bw.shape[1]):
+            max_val.append(np.amax(diff_bw[:, i]))
+            max_index.append(np.argmax(diff_bw[:, i]))
+
+        return max_val, max_index
+class ReduceNoise():
+    def __init__(self, RawData):
+        self.RawData = RawData
+
+    def FixRawDatFromat_OneRow(self):
+        RawDataFix = self.RawData.reset_index(drop=False)
+        RawDataFix = RawDataFix.rename(columns={'index': 0, 0: 1})
+        return RawDataFix
+
+    def CalcAndRemoveTilT(self):
+
+        z = np.polyfit(self.RawData[0], self.RawData[1], 1)
+        tlt = (z[0]*(self.RawData[0])+z[1])
+        RawData_Tilt = self.RawData[1]-tlt
+
+
+        # # Calculate the 1st percentile of the data
+        # percentile_limitDataCount = np.percentile(RawData_Tilt, limitDataCount)
+       
+        # # Filter out any values less than the 1st percentile
+        # filtered_data = [x for x in RawData_Tilt if x >= percentile_limitDataCount]      
+        
+        # plt.figure('12kpoints')
+        
+        # plt.plot(self.RawData[0], self.RawData[1], 'o')
+        # plt.plot(RawDataCopy[0], RawDataCopy[1], 'x')
+        # plt.title('LimitDataCount='+str(limitDataCount))
+        
+        
+
+        return RawData_Tilt, tlt, z
+    
+    def update(self,dataPracentage):
+         RawData_Tilt, tlt, z = self.CalcAndRemoveTilT()
+
+         RawData_Tilt_list = list(RawData_Tilt)
+        
+         # dataPracentage= (1-limitDataCount)*100
+        
+         percentile_x_1 = np.percentile(RawData_Tilt_list, 100-dataPracentage)
+         percentile_1 = np.percentile(RawData_Tilt_list, dataPracentage)
+         # print(percentile_x_1)
+        
+         inx2delete = [i for i, x in enumerate(RawData_Tilt_list) if x <= percentile_1 or x >= percentile_x_1]
+        
+
+
+         RawDataCopy_2= self.RawData.iloc[inx2delete].reset_index(drop=True)
+
+         return RawDataCopy_2
+
+
+    def RemoveUnwantedData(self,pName):
+
+       
+         RawData_Tilt, tlt, z = self.CalcAndRemoveTilT()
+ 
+         RawData_Tilt_list = list(RawData_Tilt)
+        
+         dataPracentage=100- limitDataCount
+        
+         percentile_x_1 = np.percentile(RawData_Tilt_list, dataPracentage)
+         percentile_1 = np.percentile(RawData_Tilt_list, 100-dataPracentage)
+        
+         inx2delete = [i for i, x in enumerate(RawData_Tilt_list) if x <= percentile_1 or x >= percentile_x_1]
+        
+         RawDataCopy =  self.RawData.copy()
+         RawDataCopy.drop(index=inx2delete, inplace=True)
+         # meanDrop=np.mean(RawDataCopy[1])
+
+         RawDataCopy_2=  self.RawData.copy()
+         RawDataCopy=RawDataCopy.reset_index(drop=True)
+
+         ### Update for calc mean
+
+         RawDataCopy=RawDataCopy.reset_index(drop=True)
+        
+         for inx in inx2delete:
+            if inx+20<len(RawDataCopy):
+                RawDataCopy_2[1][inx]=int(np.mean(RawDataCopy[1][inx:inx+20]))
+            else:
+                RawDataCopy_2[1][inx]=int(RawDataCopy[1][len(RawDataCopy[1])-1])
+        
+         RawDataCopy_2 = RawDataCopy_2.reset_index(drop=True)
+        
+         ## OriginL
+         # RawDataCopy_2[1][inx2delete]=meanDrop
+
+         RawDataCopy_2 = RawDataCopy_2.reset_index(drop=True)
+            
+         plt.figure(pName)
+            
+         plt.plot(ReduceNoise(RawData).RawData[0], ReduceNoise(RawData).RawData[1], 'o')
+         plt.plot(RawDataCopy[0], RawDataCopy[1], 'x')
+         plt.plot(RawDataCopy_2[0], RawDataCopy_2[1], '+')
+
+         plt.title('LimitDataCount='+str(limitDataCount))
+         
+         
+         return RawDataCopy_2
+
+    def CutDataTo385Points(self):
+
+        # Data385=pd.DataFrame();
+        RawDataCopy = self.RemoveUnwantedData('p385')
+
+        DistBtwPFULL = int((self.RawData[0][len(self.RawData[0])-1])/385)
+        XvalueMeanFULL = []
+        xinxFULL = []
+        PxFull = self.RawData[0][0]
+        for i in range(385):
+            XvalueMeanFULL.append(PxFull)
+            st = np.where(self.RawData[0] == PxFull)
+            xinxFULL.append(st)
+            PxFull = PxFull+DistBtwPFULL
+            if PxFull > self.RawData[0][len(self.RawData[0])-1]:
+                break
+        stLoc = []
+        enLoc = []
+        YvalueMeanFULL = []
+
+        for i in range(len(XvalueMeanFULL)-1):
+            st = np.where(RawDataCopy[0] == XvalueMeanFULL[i])
+            en = np.where(RawDataCopy[0] == XvalueMeanFULL[i+1])
+            if not (len(st[0]) == 0) and not len(en[0]) == 0:
+                stLoc.append(st[0][0])
+                enLoc.append(en[0][0])
+            if not len(enLoc) == 0:
+                YvalueMeanFULL.append(
+                    np.mean(RawDataCopy[1][stLoc[len(stLoc)-1]:enLoc[len(enLoc)-1]]))
+
+        YvalueMeanFULL.append(RawDataCopy[1][len(RawDataCopy[1])-1])
+        # YvalueMeanFULL=YvalueMeanFULL[0:3]+YvalueMeanFULL
+        if len(XvalueMeanFULL) > len(YvalueMeanFULL):
+            dlt = len(XvalueMeanFULL)-len(YvalueMeanFULL)
+            YvalueMeanFULL = YvalueMeanFULL[0:dlt]+YvalueMeanFULL
+        # plt.figure()
+        # plt.plot(RawDataCopy[0], RawDataCopy[1], '-x')
+        # plt.plot(XvalueMeanFULL, YvalueMeanFULL, '-o')
+
+        return XvalueMeanFULL, YvalueMeanFULL, RawDataCopy
+
+    def PrepareData4Saving(self):
+
+        XvalueMeanFULL, YvalueMeanFULL, RawDataCopy = self.CutDataTo385Points()
+        Data385 = pd.DataFrame()
+        Data385[0] = XvalueMeanFULL
+
+        Data385[1] = YvalueMeanFULL
+        Data385[2] = -Data385[1]*PixelSize_um
+        Data385[3] = (Data385[1]-Data385[1][0])
+
+        # Data385[1]=Data385[1]-Data385[1][0]
+
+        z = np.polyfit(Data385[0], Data385[3], 1)
+
+        tlt = (z[0]*(Data385[0])+z[1])
+
+        z1 = np.polyfit(Data385[0], Data385[2], 1)
+
+        tlt1 = (z1[0]*(Data385[0])+z1[1])
+
+
+        y = savgol_filter(Data385[2], CISsavgolWindow, SvGolPol)
+
+     
+        return Data385,  y, z1, tlt1, z, tlt
+
+    def PrepareData4Saving12k(self,CISsavgolWindow12k):
+        
+        # # Calculate the 1st percentile of the data
+        # percentile_limitDataCount = np.percentile(self.RawData[1], limitDataCount)
+        
+        # # Filter out any values less than the 1st percentile
+        # filtered_data = [x for x in self.RawData[1] if x >= percentile_limitDataCount]
+
+        y = savgol_filter(self.RawData[1], CISsavgolWindow12k, SvGolPol)
+
+        return y
+
+
+    def SaveCSV(self, fileName,y):
+        
+        CIScurve = pd.DataFrame()
+
+        for i, yy in enumerate(y):
+            CIScurve[i] = [yy]-y[0]
+        
+        
+        CIScurve.to_csv(fileName, index=False, header=False)
+        
+        return CIScurve
+   
+    
+class plotPlotly(CIScurveFromImage):
+    def __init__(self, ImageGL, plotTitle, fileName, RecDimX, RecDimY, xdb, ydb, tlt, z):
+        super().__init__(ImageGL)
+
+        self.plotTitle = plotTitle
+        self.fileName = fileName
+        self.RecDimX = RecDimX
+        self.RecDimY = RecDimY
+        self.xdb = xdb
+        self.ydb = ydb
+
+        self.z = z
+        self.tlt = tlt
+
+    def PlotCIS385_12k(self, MaxWaveWindow, StpWindowSize,SvGolPol):
+        fig = go.Figure()
+
+        # Add traces, one for each slider step
+        # fig.add_trace(
+        #     go.Scatter(x=list(self.xdb),y=list(self.ydb),line_color='red' ,
+        #                 name='raw Data'))
+
+        # fig.add_trace(
+        #     go.Scatter(x=list(self.xdb),y=self.tlt,line_color='blue' ,
+        #                 name='Tilt '+'Slope(x1000)='+"{0:.3f}".format(self.z[0]*1000)))
+        fig.add_trace(
+            go.Scatter(y=list(self.ydb), line_color='red',
+                       name='raw Data'))
+
+        fig.add_trace(
+            go.Scatter(y=self.tlt, line_color='blue',
+                       name='Tilt '+'Slope(x1000)='+"{0:.3f}".format(self.z[0]*1000)))
+        # fig.add_trace(
+        #     go.Scatter(y=list(db[ColorForDisplay]),line_color=ColorForDisplay , line=dict(dash='dash'),
+        #                 name=ColorForDisplay+'_After'), row=2, col=1)
+
+        ##### Fiter Vs Befor ####
+        for step in np.arange(3, MaxWaveWindow+3, StpWindowSize):
+            fig.add_trace(
+                go.Scatter(
+                    visible=False,
+                    line=dict(color='green', width=2),
+                    name="Window Size = " + str(step),
+                    y=savgol_filter(self.ydb, step, SvGolPol)))
+
+        # Make 10th trace visible
+        fig.data[10].visible = True
+
+        # Create and add slider
+        steps = []
+        for i in range(len(fig.data)):
+            step = dict(
+                method="update",
+                args=[{"visible": [False] * len(fig.data)},
+                      {"title": self.plotTitle + str(i)}],  # layout attribute
+            )
+
+            if i+1 < len(fig.data):
+                # Toggle i'th trace to "visible"
+                step["args"][0]["visible"][i+1] = True
+
+            step["args"][0]["visible"][0] = True
+            step["args"][0]["visible"][1] = True
+
+            steps.append(step)
+
+        sliders = [dict(
+            active=10,
+            currentvalue={"prefix": "Window Size: "},
+            pad={"t": int(MaxWaveWindow/StpWindowSize)},
+            steps=steps
+        )]
+
+        fig.update_layout(
+            sliders=sliders
+        )
+
+        fig.show()
+
+        plot(fig, filename=self.fileName)
+
+        return fig
+
+    def PlotCIS(self):
+        fig = go.Figure()
+
+        # Add traces, one for each slider step
+        NumberSteps = 101
+        StepSize = 1 / NumberSteps
+        ##### Fiter Vs Befor ####
+        for T_Lum in np.arange(0, 1, StepSize):
+
+            MaxValue, CISedge = self.AplyFilters(T_Lum, RecDimX, RecDimY)
+
+            fig.add_trace(
+                go.Scatter(
+                    visible=False,
+                    line=dict(color='red', width=2),
+                    name="T_Lum = " + "{:.2f}".format(T_Lum), x=list(range(len(CISedge))),
+                    y=CISedge))
+
+        # Make 10th trace visible
+        fig.data[10].visible = True
+
+        # Create and add slider
+        steps = []
+        for i in range(len(fig.data)):
+            step = dict(
+                method="update",
+                args=[{"visible": [False] * len(fig.data)},
+                      {"title": self.plotTitle + "{:.2f}".format(i/NumberSteps)}],  # layout attribute
+            )
+
+            if i+1 < len(fig.data):
+                # Toggle i'th trace to "visible"
+                step["args"][0]["visible"][i+1] = True
+
+            # step["args"][0]["visible"][0] = True
+            # step["args"][0]["visible"][1] = True
+
+            steps.append(step)
+
+        sliders = [dict(
+            active=10,
+            currentvalue={"prefix": "Window Size: "},
+            pad={"t": int(NumberSteps)},
+            steps=steps
+        )]
+
+        fig.update_layout(
+            sliders=sliders
+        )
+
+        # fig.show()
+
+        plot(fig, filename=self.fileName)
+
+
+        return fig
+
+
+    def PlotReducedNoise_data(self,RawData):
+        fig = go.Figure()
+    
+    
+        fig.add_trace(
+            go.Scatter(x=list(RawData[0]),y=list(RawData[1]), mode='markers', marker=dict(symbol='x', size=10, color='blue'),
+                showlegend=False, name='raw Data'))
+    
+    
+        ##### Fiter Vs Befor ####
+        for dataPracentage in np.arange(0,10,0.2):
+            # print(dataPracentage)
+            RawDataCopy_2 =  ReduceNoise(RawData).update(dataPracentage)
+            # print(len(RawDataCopy_2))
+            fig.add_trace(
+                go.Scatter(x=list(RawDataCopy_2[0]),y=list(RawDataCopy_2[1]), mode='markers', marker=dict(symbol='circle', size=10, color='orange'),
+                    showlegend=False, name='Discarted Data'))
+    
+        # Make 10th trace visible
+        fig.data[10].visible = True
+    
+        # Create and add slider
+        steps = []
+        for i in range(len(fig.data)):
+            step = dict(
+                method="update",
+                args=[{"visible": [False] * len(fig.data)},
+                      {"title": self.plotTitle +'Pracentage: ' + '{:.4f}'.format((i*0.2+0.01))}],  # layout attribute
+            )
+    
+            if i+1 < len(fig.data):
+                # Toggle i'th trace to "visible"
+                step["args"][0]["visible"][i+1] = True
+    
+            step["args"][0]["visible"][0] = True
+            step["args"][0]["visible"][1] = True
+    
+            steps.append(step)
+    
+        sliders = [dict(
+            active=10,
+            currentvalue={"prefix": "Pracentage: "},
+            pad={"t": 100},
+            steps=steps
+        )]
+    
+        fig.update_layout(
+            sliders=sliders
+        )
+    
+        fig.show()
+    
+        plot(fig, filename=self.fileName)
+        
+        
     
     
 #################################################################################
@@ -1253,7 +1671,10 @@ while (1):
     
     DirectorypathF=pthF.replace(f,"")[:-1]
     
-    
+    print('Please Enter  machine Name in the Dialog box')
+    MachineName = simpledialog.askstring(
+        "Input", "Enter The machine Name:", parent=root)
+    print('Done')
     
     # f=pthF.split('/')[len(pthF.split('/'))-1]
     # DirectorypathF=pthF.replace(f,'');
@@ -1329,10 +1750,57 @@ while (1):
     
     pthF=DirectorypathF
     pthF = filedialog.askdirectory(title="Select a Directory of CIS curve")
+    os.chdir(pthF)
+    RawData_12k=pd.read_csv(pthF+'/RawData_12k.csv',index_col=False)
+    
+    RawData_12k.rename(columns={'0': 0, '1': 1}, inplace=True)
+    
+    RawData_Tilt, tlt12k, z12k = ReduceNoise(
+        RawData_12k).CalcAndRemoveTilT()
+    new_row = {0: RawData_12k[0][len(RawData_12k[0])-1]+1, 1: RawData_12k[1][len(RawData_12k[0])-1]}
+    RawData_12k.append(new_row, ignore_index=True)
+    
+    xdb = RawData_12k[0]
+    ydb = RawData_12k[1]+  pd.DataFrame(padded_values)[0][:-1] / PixelSize_um
+    # ydb = RawData_12k_refine
+    
+    # plt.figure()
+    # plt.plot(ydb)
+
+    plotTitle = pthF+'-->'+' Tilt in um=' + "{0:.3f}".format(tlt12k[0]-tlt12k[len(
+        tlt12k)-1])+" _12k points - For CIS (for implamentation) Slider switched to Step: "  # Can modify Plot title
+    fileName = "CIS curve raw data and filter 12k implament" + ".html"
+
+    figCIScalc = plotPlotly(0, plotTitle, fileName, RecDimX, RecDimY, xdb,
+                            ydb, tlt12k, z12k).PlotCIS385_12k(MaxWaveWindow12k, StpWindowSize12k,SvGolPol)
+    print('**************************************************************************')
+    print('Please Enter  WindowSize12k in the Dialog box')
+    CISsavgolWindow12k = int(simpledialog.askstring(
+        "Input", "Enter WindowSize12k value:", parent=root))
+    print('Done')
+    print('**************************************************************************')
+    
+    current_date = datetime.now().date().strftime("%Y_%m_%d")
+
+    FileNameCSV12k = 'CURVE_' +MachineName+ '_12k_'+current_date+'.csv'
+    y12k = ReduceNoise(RawData_12k).PrepareData4Saving12k(CISsavgolWindow12k)
+
+    CIScurve12kp= ReduceNoise(RawData_12k).SaveCSV(FileNameCSV12k, y12k)
+
+    # y = savgol_filter(ReduceNoise(RawData_12k).RawData[1], CISsavgolWindow12k, SvGolPol)    
+
+    # yTotalPics12kp=pd.concat([yTotalPics12kp,pd.Series(y12k)],axis=1)
+    
+        # plt.figure()
+        # plt.plot(ReduceNoise(RawData_12k).RawData[1])
+        # plt.plot(y)
+
+        # plt.title('12k points'+' windowSize='+str(CISsavgolWindow12k))
 
 
-    pd.DataFrame(padded_values).to_csv(pthF+'//Refined_CIS_curve.csv', index=False, header=None)
     break;
 
-
+#######################################
+#######################################
+#######################################
 

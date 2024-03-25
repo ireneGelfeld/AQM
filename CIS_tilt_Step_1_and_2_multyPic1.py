@@ -205,12 +205,25 @@ class ReduceNoise():
         
          RawDataCopy =  self.RawData.copy()
          RawDataCopy.drop(index=inx2delete, inplace=True)
-         meanDrop=np.mean(RawDataCopy[1])
+         # meanDrop=np.mean(RawDataCopy[1])
 
          RawDataCopy_2=  self.RawData.copy()
+         RawDataCopy=RawDataCopy.reset_index(drop=True)
 
+         ### Update for calc mean
 
-         RawDataCopy_2[1][inx2delete]=meanDrop
+         RawDataCopy=RawDataCopy.reset_index(drop=True)
+        
+         for inx in inx2delete:
+            if inx+20<len(RawDataCopy):
+                RawDataCopy_2[1][inx]=int(np.mean(RawDataCopy[1][inx:inx+20]))
+            else:
+                RawDataCopy_2[1][inx]=int(RawDataCopy[1][len(RawDataCopy[1])-1])
+        
+         RawDataCopy_2 = RawDataCopy_2.reset_index(drop=True)
+        
+         ## OriginL
+         # RawDataCopy_2[1][inx2delete]=meanDrop
 
          RawDataCopy_2 = RawDataCopy_2.reset_index(drop=True)
             
@@ -777,6 +790,47 @@ while 1:
     
 
 #########################################################################################
+
+
+# RawData_Tilt, tlt, z = ReduceNoise(RawData).CalcAndRemoveTilT()
+
+# RawData_Tilt_list = list(RawData_Tilt)
+   
+# dataPracentage=100- limitDataCount
+   
+# percentile_x_1 = np.percentile(RawData_Tilt_list, dataPracentage)
+# percentile_1 = np.percentile(RawData_Tilt_list, 100-dataPracentage)
+   
+# inx2delete = [i for i, x in enumerate(RawData_Tilt_list) if x <= percentile_1 or x >= percentile_x_1]
+   
+# RawDataCopy =  ReduceNoise(RawData).RawData.copy()
+# RawDataCopy.drop(index=inx2delete, inplace=True)
+# meanDrop=np.mean(RawDataCopy[1])
+
+# RawDataCopy_2=  ReduceNoise(RawData).RawData.copy()
+
+# RawDataCopy=RawDataCopy.reset_index(drop=True)
+
+# for i,inx in enumerate(inx2delete):
+#     # try:
+#         if inx+20<len(RawDataCopy):
+#             RawDataCopy_2[1][inx]=int(np.mean(RawDataCopy[1][inx:inx+20]))
+#         else:
+#             RawDataCopy_2[1][inx]=int(RawDataCopy[1][len(RawDataCopy[1])-1])
+#     # except:
+#     #     1
+
+# RawDataCopy_2 = RawDataCopy_2.reset_index(drop=True)
+   
+# plt.figure('12k')
+   
+# plt.plot(ReduceNoise(RawData).RawData[0], ReduceNoise(RawData).RawData[1], 'o')
+# plt.plot(RawDataCopy[0], RawDataCopy[1], 'x')
+# plt.plot(RawDataCopy_2[0], RawDataCopy_2[1], '+')
+
+# plt.title('LimitDataCount='+str(limitDataCount))
+
+
 
 
 

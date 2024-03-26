@@ -1467,7 +1467,7 @@ class plotPlotly(CIScurveFromImage):
         self.z = z
         self.tlt = tlt
 
-    def PlotCIS385_12k(self, MaxWaveWindow, StpWindowSize,SvGolPol):
+    def PlotCIS385_12k(self, MaxWaveWindow, StpWindowSize,SvGolPol,Curve_noRefine,padded_valuesList):
         fig = go.Figure()
 
         # Add traces, one for each slider step
@@ -1482,6 +1482,12 @@ class plotPlotly(CIScurveFromImage):
             go.Scatter(y=list(self.ydb), line_color='red',
                        name='raw Data'))
 
+        fig.add_trace(
+            go.Scatter(y=Curve_noRefine, line_color='Magenta',
+                       name='Curve not refine'))
+        fig.add_trace(
+            go.Scatter(y=padded_valuesList, line_color='Orange',
+                       name='padded values from wave'))
         fig.add_trace(
             go.Scatter(y=self.tlt, line_color='blue',
                        name='Tilt '+'Slope(x1000)='+"{0:.3f}".format(self.z[0]*1000)))
@@ -1762,6 +1768,14 @@ while (1):
     
     xdb = RawData_12k[0]
     ydb = RawData_12k[1]+  pd.DataFrame(padded_values)[0][:-1] / PixelSize_um
+    
+    padded_valuesList=list(pd.DataFrame(padded_values)[0][:-1] / PixelSize_um)
+    
+    files = glob.glob('*CURVE*12k*.csv')
+
+    Curve_noRefine=pd.read_csv(pthF+'/'+files[0],header=None)
+    Curve_noRefineList=list(Curve_noRefine.iloc[0])
+
     # ydb = RawData_12k_refine
     
     # plt.figure()
@@ -1772,7 +1786,7 @@ while (1):
     fileName = "CIS curve raw data and filter 12k implament" + ".html"
 
     figCIScalc = plotPlotly(0, plotTitle, fileName, RecDimX, RecDimY, xdb,
-                            ydb, tlt12k, z12k).PlotCIS385_12k(MaxWaveWindow12k, StpWindowSize12k,SvGolPol)
+                            ydb, tlt12k, z12k).PlotCIS385_12k(MaxWaveWindow12k, StpWindowSize12k,SvGolPol,Curve_noRefineList,padded_valuesList)
     print('**************************************************************************')
     print('Please Enter  WindowSize12k in the Dialog box')
     CISsavgolWindow12k = int(simpledialog.askstring(

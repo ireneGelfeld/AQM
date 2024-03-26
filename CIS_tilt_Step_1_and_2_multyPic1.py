@@ -148,7 +148,7 @@ class ReduceNoise():
 
     def CalcAndRemoveTilT(self):
 
-        z = np.polyfit(RawData[0], self.RawData[1], 1)
+        z = np.polyfit( self.RawData[0], self.RawData[1], 1)
         tlt = (z[0]*(self.RawData[0])+z[1])
         RawData_Tilt = self.RawData[1]-tlt
 
@@ -169,18 +169,42 @@ class ReduceNoise():
 
         return RawData_Tilt, tlt, z
     
-    def update(self,dataPracentage):
-         RawData_Tilt, tlt, z = self.CalcAndRemoveTilT()
+    def CalcAndRemoveS_Goly(self):
+        
+        y_S_Goly=savgol_filter(self.RawData[1], 1000, 1)
 
-         RawData_Tilt_list = list(RawData_Tilt)
+        
+        RawData_S_Goly= self.RawData[1]-pd.DataFrame(y_S_Goly)[0]
+
+
+        # # Calculate the 1st percentile of the data
+        # percentile_limitDataCount = np.percentile(RawData_Tilt, limitDataCount)
+       
+        # # Filter out any values less than the 1st percentile
+        # filtered_data = [x for x in RawData_Tilt if x >= percentile_limitDataCount]      
+        
+        # plt.figure('12kpoints')
+        
+        # plt.plot(self.RawData[0], self.RawData[1], 'o')
+        # plt.plot(RawDataCopy[0], RawDataCopy[1], 'x')
+        # plt.title('LimitDataCount='+str(limitDataCount))
+        
+        
+
+        return RawData_S_Goly
+    
+    def update(self,dataPracentage):
+         RawData_S_Goly = self.CalcAndRemoveS_Goly()
+
+         RawData_S_Goly_list = list(RawData_S_Goly)
         
          # dataPracentage= (1-limitDataCount)*100
         
-         percentile_x_1 = np.percentile(RawData_Tilt_list, 100-dataPracentage)
-         percentile_1 = np.percentile(RawData_Tilt_list, dataPracentage)
+         percentile_x_1 = np.percentile(RawData_S_Goly_list, 100-dataPracentage)
+         percentile_1 = np.percentile(RawData_S_Goly_list, dataPracentage)
          # print(percentile_x_1)
         
-         inx2delete = [i for i, x in enumerate(RawData_Tilt_list) if x <= percentile_1 or x >= percentile_x_1]
+         inx2delete = [i for i, x in enumerate(RawData_S_Goly_list) if x <= percentile_1 or x >= percentile_x_1]
         
 
 
@@ -192,16 +216,16 @@ class ReduceNoise():
     def RemoveUnwantedData(self,pName):
 
        
-         RawData_Tilt, tlt, z = self.CalcAndRemoveTilT()
- 
-         RawData_Tilt_list = list(RawData_Tilt)
+         RawData_S_Goly = self.CalcAndRemoveS_Goly()
+
+         RawData_S_Goly_list = list(RawData_S_Goly)
         
          dataPracentage=100- limitDataCount
         
-         percentile_x_1 = np.percentile(RawData_Tilt_list, dataPracentage)
-         percentile_1 = np.percentile(RawData_Tilt_list, 100-dataPracentage)
+         percentile_x_1 = np.percentile(RawData_S_Goly_list, dataPracentage)
+         percentile_1 = np.percentile(RawData_S_Goly_list, 100-dataPracentage)
         
-         inx2delete = [i for i, x in enumerate(RawData_Tilt_list) if x <= percentile_1 or x >= percentile_x_1]
+         inx2delete = [i for i, x in enumerate(RawData_S_Goly_list) if x <= percentile_1 or x >= percentile_x_1]
         
          RawDataCopy =  self.RawData.copy()
          RawDataCopy.drop(index=inx2delete, inplace=True)
@@ -482,7 +506,7 @@ class plotPlotly(CIScurveFromImage):
     
     
         ##### Fiter Vs Befor ####
-        for dataPracentage in np.arange(0,20,0.1):
+        for dataPracentage in np.arange(0,7,0.1):
             # print(dataPracentage)
             RawDataCopy_2 =  ReduceNoise(RawData).update(dataPracentage)
             # print(len(RawDataCopy_2))
@@ -789,49 +813,33 @@ while 1:
     
 
 #########################################################################################
+# y_S_Goly=savgol_filter(ReduceNoise(RawData).RawData[1], 1000, 1)
 
 
-# RawData_Tilt, tlt, z = ReduceNoise(RawData).CalcAndRemoveTilT()
+# RawData_S_Goly= ReduceNoise(RawData).RawData[1]-pd.DataFrame(y_S_Goly)[0]
 
-# RawData_Tilt_list = list(RawData_Tilt)
+
+
+# RawData_S_Goly = ReduceNoise(RawData).CalcAndRemoveS_Goly()
+
+# RawData_S_Goly_list = list(RawData_S_Goly)
+  
+
+# plt.figure()
+# plt.plot(RawData[1])    
+# plt.plot(y_S_Goly)    
+# plt.plot(RawData_S_Goly)    
+
+# # dataPracentage= (1-limitDataCount)*100
    
-# dataPracentage=100- limitDataCount
+# percentile_x_1 = np.percentile(RawData_S_Goly_list, 100-dataPracentage)
+# percentile_1 = np.percentile(RawData_S_Goly_list, dataPracentage)
+# # print(percentile_x_1)
    
-# percentile_x_1 = np.percentile(RawData_Tilt_list, dataPracentage)
-# percentile_1 = np.percentile(RawData_Tilt_list, 100-dataPracentage)
+# inx2delete = [i for i, x in enumerate(RawData_S_Goly_list) if x <= percentile_1 or x >= percentile_x_1]
    
-# inx2delete = [i for i, x in enumerate(RawData_Tilt_list) if x <= percentile_1 or x >= percentile_x_1]
-   
-# RawDataCopy =  ReduceNoise(RawData).RawData.copy()
-# RawDataCopy.drop(index=inx2delete, inplace=True)
-# meanDrop=np.mean(RawDataCopy[1])
-
-# RawDataCopy_2=  ReduceNoise(RawData).RawData.copy()
-
-# RawDataCopy=RawDataCopy.reset_index(drop=True)
-
-# for i,inx in enumerate(inx2delete):
-#     # try:
-#         if inx+20<len(RawDataCopy):
-#             RawDataCopy_2[1][inx]=int(np.mean(RawDataCopy[1][inx:inx+20]))
-#         else:
-#             RawDataCopy_2[1][inx]=int(RawDataCopy[1][len(RawDataCopy[1])-1])
-#     # except:
-#     #     1
-
-# RawDataCopy_2 = RawDataCopy_2.reset_index(drop=True)
-   
-# plt.figure('12k')
-   
-# plt.plot(ReduceNoise(RawData).RawData[0], ReduceNoise(RawData).RawData[1], 'o')
-# plt.plot(RawDataCopy[0], RawDataCopy[1], 'x')
-# plt.plot(RawDataCopy_2[0], RawDataCopy_2[1], '+')
-
-# plt.title('LimitDataCount='+str(limitDataCount))
 
 
-
-
-
+# RawDataCopy_2= ReduceNoise(RawData).RawData.iloc[inx2delete].reset_index(drop=True)
 
 

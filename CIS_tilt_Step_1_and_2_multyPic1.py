@@ -672,7 +672,6 @@ while 1:
         RawData).RemoveUnwantedData('p12k')
     
     RawData_12k.to_csv(pth4save+'RawData_12k.csv', index=False)
-
     
     Data385,  y, z1, tlt1, z, tlt = ReduceNoise(
         RawData).PrepareData4Saving()

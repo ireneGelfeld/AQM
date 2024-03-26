@@ -1782,7 +1782,7 @@ while (1):
     
     current_date = datetime.now().date().strftime("%Y_%m_%d")
 
-    FileNameCSV12k = 'CURVE_' +MachineName+ '_12k_'+current_date+'.csv'
+    FileNameCSV12k = 'Fine_Curvature' +MachineName+ '_12k_'+current_date+'.csv'
     y12k = ReduceNoise(RawData_12k).PrepareData4Saving12k(CISsavgolWindow12k)
 
     CIScurve12kp= ReduceNoise(RawData_12k).SaveCSV(FileNameCSV12k, y12k)

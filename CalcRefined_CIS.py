@@ -1516,12 +1516,14 @@ class plotPlotly(CIScurveFromImage):
                       {"title": self.plotTitle + str(i)}],  # layout attribute
             )
 
-            if i+1 < len(fig.data):
+            if i+3 < len(fig.data):
                 # Toggle i'th trace to "visible"
                 step["args"][0]["visible"][i+1] = True
 
             step["args"][0]["visible"][0] = True
             step["args"][0]["visible"][1] = True
+            step["args"][0]["visible"][2] = True
+            step["args"][0]["visible"][3] = True
 
             steps.append(step)
 
@@ -1731,7 +1733,7 @@ while (1):
     
         print('Please enter your answer- continue? Yes\\No')
         ContinueCalc = float(simpledialog.askstring(
-            "Input", "There are less with 385 points! continue? Yes=1\\No=0:", parent=root))
+            "Input", 'length ='+str(len(values))+" :There are less with 385 points! continue? Yes=1\\No=0:", parent=root))
         print('Done')
         print('**************************************************************************')
         l= 385 - len(values)
@@ -1767,7 +1769,7 @@ while (1):
     RawData_12k.append(new_row, ignore_index=True)
     
     xdb = RawData_12k[0]
-    ydb = RawData_12k[1]+  pd.DataFrame(padded_values)[0][:-1] / PixelSize_um
+    ydb = RawData_12k[1]+  pd.DataFrame(padded_values)[0][:-1] / PixelSize_um-RawData_12k[1][0]
     
     padded_valuesList=list(pd.DataFrame(padded_values)[0][:-1] / PixelSize_um)
     
@@ -1786,7 +1788,7 @@ while (1):
     fileName = "CIS curve raw data and filter 12k implament" + ".html"
 
     figCIScalc = plotPlotly(0, plotTitle, fileName, RecDimX, RecDimY, xdb,
-                            ydb, tlt12k, z12k).PlotCIS385_12k(MaxWaveWindow12k, StpWindowSize12k,SvGolPol,Curve_noRefineList,padded_valuesList)
+                            ydb, tlt12k-RawData_12k[1][0], z12k).PlotCIS385_12k(MaxWaveWindow12k, StpWindowSize12k,SvGolPol,Curve_noRefineList,padded_valuesList)
     print('**************************************************************************')
     print('Please Enter  WindowSize12k in the Dialog box')
     CISsavgolWindow12k = int(simpledialog.askstring(

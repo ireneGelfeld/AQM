@@ -1893,7 +1893,7 @@ while (1):
         FrontBack='Front'
 
         RawData_12k=pd.DataFrame(cisFRONTnew)[0]
-        RawData_12k = pd.concat([RawData_12k, pd.Series(RawData_12k[len(RawData_12k)-1])])
+        # RawData_12k = pd.concat([RawData_12k, pd.Series(RawData_12k[len(RawData_12k)-1])])
         # curveData_385.append(pd.Series(curveData_385[len(curveData_385)-1]))
         RawData_12k = RawData_12k.reset_index(drop=True)
         RawData_12k = RawData_12k.reset_index()
@@ -1907,10 +1907,11 @@ while (1):
 
         
         xdb = RawData_12k[0]
-        ydb = RawData_12k[1]+  pd.DataFrame(padded_valuesFront)[0][:-1] / PixelSize_um-RawData_12k[1][0]
+        ydb = RawData_12k[1]+  pd.DataFrame(padded_valuesFront)[0][:-1] / PixelSize_um
         
         padded_valuesList=list(pd.DataFrame(padded_valuesFront)[0][:-1] / PixelSize_um)
-        
+        cis_original=RawData_12k[1]
+
 
         # ydb = RawData_12k_refine
         
@@ -1921,7 +1922,7 @@ while (1):
         fileName = FrontBack+ " Optimized Curvature 12k" + ".html"
     
         figCIScalc = plotPlotly(0, plotTitle, fileName, RecDimX, RecDimY, xdb,
-                                ydb, tlt12k-RawData_12k[1][0], z12k).PlotCIS385_12k(MaxWaveWindow12k, StpWindowSize12k,SvGolPol,padded_valuesList)
+                                ydb, tlt12k-RawData_12k[1][0], z12k).PlotCIS385_12k(MaxWaveWindow12k, StpWindowSize12k,SvGolPol,cis_original,padded_valuesList)
         print('**************************************************************************')
         print('Please Enter  WindowSize12k in the Dialog box')
         CISsavgolWindow12k = int(simpledialog.askstring(
@@ -1951,7 +1952,7 @@ while (1):
         FrontBack='Back'
 
         RawData_12k=pd.DataFrame(cisBACKnew)[0]
-        RawData_12k = pd.concat([RawData_12k, pd.Series(RawData_12k[len(RawData_12k)-1])])
+        # RawData_12k = pd.concat([RawData_12k, pd.Series(RawData_12k[len(RawData_12k)-1])])
         # curveData_385.append(pd.Series(curveData_385[len(curveData_385)-1]))
         RawData_12k = RawData_12k.reset_index(drop=True)
         RawData_12k = RawData_12k.reset_index()
@@ -1965,10 +1966,11 @@ while (1):
 
         
         xdb = RawData_12k[0]
-        ydb = RawData_12k[1]+  pd.DataFrame(padded_valuesBack)[0][:-1] / PixelSize_um-RawData_12k[1][0]
+        ydb = RawData_12k[1]+  pd.DataFrame(padded_valuesBack)[0][:-1] / PixelSize_um
         
         padded_valuesList=list(pd.DataFrame(padded_valuesBack)[0][:-1] / PixelSize_um)
         
+        cis_original=RawData_12k[1]
 
         # ydb = RawData_12k_refine
         
@@ -1979,7 +1981,7 @@ while (1):
         fileName = FrontBack+ " Optimized Curvature 12k" + ".html"
     
         figCIScalc = plotPlotly(0, plotTitle, fileName, RecDimX, RecDimY, xdb,
-                                ydb, tlt12k-RawData_12k[1][0], z12k).PlotCIS385_12k(MaxWaveWindow12k, StpWindowSize12k,SvGolPol,padded_valuesList)
+                                ydb, tlt12k-RawData_12k[1][0], z12k).PlotCIS385_12k(MaxWaveWindow12k, StpWindowSize12k,SvGolPol,cis_original,padded_valuesList)
         print('**************************************************************************')
         print('Please Enter  WindowSize12k in the Dialog box')
         CISsavgolWindow12k = int(simpledialog.askstring(
@@ -2008,4 +2010,3 @@ while (1):
 #######################################
 #######################################
 #######################################
-

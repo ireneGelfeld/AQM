@@ -24,9 +24,9 @@ MaxWaveWindow = 100
 StpWindowSize = 2 
 PixelSize_um = 84.6666
 
-## DX plot - delta between wave and starvitzky filer (residue) 
-MaxWaveWindow=51;# S.gol filter window
-S_g_Degree=1;# S.gol filter degree
+## Wave starvitzky ----------PY DX plot - delta between wave and starvitzky filer (residue) 
+MaxWaveWindow=91;# S.gol filter window
+S_g_Degree=2;# S.gol filter degree
 
 ### To remove
 DistanceBtWPointMM=2.734

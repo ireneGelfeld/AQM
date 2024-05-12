@@ -383,7 +383,7 @@ class C2C_From_Panel_Length_Difference:
             
         return MaxPrintSession
     
-    def Calc_C2C_for_ContinusPrint(self):
+    def Calc_C2C_for_ongoing_printing(self):
         
         MaxPrintSession=self.Find_Print_Sessions()
         C2C_diff={}
@@ -751,7 +751,7 @@ if PlotSTD:
 C2C_From_Panel_Length_Difference=C2C_From_Panel_Length_Difference(label_data,index_print_name_dic_data)
 
 Main_Clock_bar, index_Print_C2C=C2C_From_Panel_Length_Difference.findMiddleTimeStampAndPrintStarts()
-C2C_continues=C2C_From_Panel_Length_Difference.Calc_C2C_for_ContinusPrint()
+C2C_continues=C2C_From_Panel_Length_Difference.Calc_C2C_for_ongoing_printing()
 
 
 plot_title='C2C diff'

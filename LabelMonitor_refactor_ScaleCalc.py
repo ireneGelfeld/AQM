@@ -294,22 +294,22 @@ class Plotter:
         return fig        
 
 
-class C2C_Sacle_due_To_Panel_read_Noise:
+class C2C_From_Panel_Length_Difference:
     def __init__(self,label_data,index_print_name_dic_data):
         ''' constructor ''' 
         self.label_data = label_data
         self.index_print_name_dic_data=index_print_name_dic_data
         
-    def Create_index_print_dic_perBar(self):
+    def printSessionStartIndexesPerBar(self):
         BarKeys={}
         for key,value in self.index_print_name_dic_data.items():
             BarKeys[key]=list(value.keys())
         
         return BarKeys
     
-    def Find_Sync_Prints_between_bars(self):
+    def filterSyncPrintsBetweenBars(self):
         
-        BarKeys=self.Create_index_print_dic_perBar()
+        BarKeys=self.printSessionStartIndexesPerBar()
         printSession_sync_dic={}  
     
         tmp=pd.DataFrame()  
@@ -337,9 +337,9 @@ class C2C_Sacle_due_To_Panel_read_Noise:
         
         return Sync_print_length,printSession_sync_dic
 
-    def Create_index_Dic_with_middle_TS(self):
+    def findMiddleTimeStampAndPrintStarts(self):
         
-        Sync_print_length,printSession_sync_dic=self.Find_Sync_Prints_between_bars()
+        Sync_print_length,printSession_sync_dic=self.filterSyncPrintsBetweenBars()
         Middel_Clock_Value_bar={}
         for key in printSession_sync_dic.keys():
             Middel_Clock_Value_bar[self.label_data[key]['Date'][printSession_sync_dic[key][0][0]]]=key
@@ -366,7 +366,7 @@ class C2C_Sacle_due_To_Panel_read_Noise:
 
     def Find_Print_Sessions(self):
         
-        Sync_print_length,printSession_sync_dic=self.Find_Sync_Prints_between_bars()
+        Sync_print_length,printSession_sync_dic=self.filterSyncPrintsBetweenBars()
         col_range=list(self.label_data[list(self.label_data.keys())[0]].columns)[16:28]
         MaxPrintSession={}
         for i,key in enumerate(self.label_data.keys()):
@@ -748,10 +748,10 @@ if PlotSTD:
 # if __name__ == "__main__":
 #     main()
 ####################################################################
-C2C_Sacle_due_To_Panel_read_Noise=C2C_Sacle_due_To_Panel_read_Noise(label_data,index_print_name_dic_data)
+C2C_From_Panel_Length_Difference=C2C_From_Panel_Length_Difference(label_data,index_print_name_dic_data)
 
-Main_Clock_bar, index_Print_C2C=C2C_Sacle_due_To_Panel_read_Noise.Create_index_Dic_with_middle_TS()
-C2C_continues=C2C_Sacle_due_To_Panel_read_Noise.Calc_C2C_for_ContinusPrint()
+Main_Clock_bar, index_Print_C2C=C2C_From_Panel_Length_Difference.findMiddleTimeStampAndPrintStarts()
+C2C_continues=C2C_From_Panel_Length_Difference.Calc_C2C_for_ContinusPrint()
 
 
 plot_title='C2C diff'

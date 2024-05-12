@@ -758,6 +758,7 @@ plot_title='C2C diff'
 file_name='C2C diff.html'
 titleX='Panel'
 titleY='[um]'
+key='C2C'
 figure_C2C_panel_WithStamp=plotter.regular_plot_C2C(C2C_continues, plot_title, file_name,
                                            titleX, titleY,key,index_Print_C2C,0,1)
 

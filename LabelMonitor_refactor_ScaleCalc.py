@@ -28,7 +28,7 @@ S_G_Degree =1
 TimeBetweenPrints = 10
 
 plot_LabelLength_Per_bar=0
-Plot_Panel_Length_Per_Bar_and_g_s=0
+Plot_Panel_Length_Per_Bar_and_g_s=1
 Plot_Panel_Length_Per_Bar_and_After_g_s=0
 PlotContinuesBalnkLength =0
 PlotSTD =0
@@ -342,7 +342,7 @@ class C2C_From_Panel_Length_Difference:
         Sync_print_length,printSession_sync_dic=self.filterSyncPrintsBetweenBars()
         Middel_Clock_Value_bar={}
         for key in printSession_sync_dic.keys():
-            Middel_Clock_Value_bar[self.label_data[key]['Date'][printSession_sync_dic[key][0][0]]]=key
+            Middel_Clock_Value_bar[str(self.label_data[key]['date_time'][printSession_sync_dic[key][0][0]])]=key
             
         timestamps=list(Middel_Clock_Value_bar.keys())
             
@@ -762,39 +762,12 @@ key='C2C'
 figure_C2C_panel_WithStamp=plotter.regular_plot_C2C(C2C_continues, plot_title, file_name,
                                            titleX, titleY,key,index_Print_C2C,0,1)
 
-# BarKeys={}
-# for key,value in index_print_name_dic_data.items():
-#     BarKeys[key]=list(value.keys())
 
 
-# printSession_sync_dic={}  
-
-# tmp=pd.DataFrame()  
-
-# arr=np.diff(BarKeys[key])
- 
-# for DynamicThreshold in range(30,100):
-#     indices = np.where(abs(arr-DynamicThreshold) < 3)[0]
-#     if not len(indices):
-#         break;
-
-# for key in BarKeys.keys():
-#     arr=np.diff(BarKeys[key])
-
-#     # indexBorder = np.where((arr == 30 + 1) | (arr == 30 + 2) | (arr == 30))[0]
-#     # arrBoder=pd.concat([arrBoder,pd.DataFrame(list(arr[indexBorder]))],axis=1).rename(columns={0: key})  
-#     indices = np.where(arr>DynamicThreshold)[0]
-#     printSession_sync_dic[key]=[]
-#     for inx in indices:
-#         printSession_sync_dic[key].append([BarKeys[key][inx],BarKeys[key][inx+1],arr[inx]])
-    
-#     tmp=pd.concat([tmp,pd.DataFrame(list(arr[indices]))],axis=1).rename(columns={0: key})   
-
-# Sync_print_length = tmp.min(axis=1)    
-
+# Sync_print_length,printSession_sync_dic=C2C_From_Panel_Length_Difference.filterSyncPrintsBetweenBars()
 # Middel_Clock_Value_bar={}
 # for key in printSession_sync_dic.keys():
-#     Middel_Clock_Value_bar[label_data[key]['Date'][printSession_sync_dic[key][0][0]]]=key
+#     Middel_Clock_Value_bar[str(C2C_From_Panel_Length_Difference.label_data[key]['date_time'][printSession_sync_dic[key][0][0]])]=key
     
 # timestamps=list(Middel_Clock_Value_bar.keys())
     
@@ -812,93 +785,7 @@ figure_C2C_panel_WithStamp=plotter.regular_plot_C2C(C2C_continues, plot_title, f
 # printLength=Sync_print_length[0]
 # for i,printLength in enumerate(Sync_print_length):
 #     Acamulate_PrintLength=Acamulate_PrintLength+printLength*10
-#     index_Print_C2C[Acamulate_PrintLength]=label_data[Main_Clock_bar]['Date'][printSession_sync_dic[Main_Clock_bar][i][0]]
+#     index_Print_C2C[Acamulate_PrintLength]=C2C_From_Panel_Length_Difference.label_data[Main_Clock_bar]['Date'][printSession_sync_dic[Main_Clock_bar][i][0]]
 
 
-# col_range=list(label_data[list(label_data.keys())[0]].columns)[16:28]
-# MaxPrintSession={}
-# for i,key in enumerate(label_data.keys()):
-#     tmp_continues=pd.DataFrame()
-#     for l,printLength in enumerate(Sync_print_length):
-#         tmp=pd.DataFrame()
-#         for col in col_range[2:]:
-#            inx1=printSession_sync_dic[key][l][0]
-#            inx2=inx1+printLength    
-#            tmp=pd.concat([tmp,label_data[key][col][inx1:inx2].reset_index(drop=True)],axis=1)
-#         tmp_continues=pd.concat([tmp_continues,tmp],axis=0).reset_index(drop=True)
 
-#     MaxPrintSession[key]=tmp_continues
-
-# # MaxPrintSession[key].columns
-# # plt.figure()
-# # plt.plot(MaxPrintSession[key]['Label[1,2]DistanceNM'])    
-
-# C2C_diff={}
-# col=col_range[2:][0]
-# MaxDiff={}
-# for col in col_range[2:]:
-#     MaxDiff[col]=[]
-#     C2C_diff[col]=[]
-
-# # MaxPrintSession_copy=copy.deepcopy(MaxPrintSession)
-
-# for col in col_range[2:]:
-#     for key in MaxPrintSession.keys():
-#         # key_mean=np.mean(MaxPrintSession[key][col])
-#         y= savgol_filter(MaxPrintSession[key][col],100,2)
-
-#         MaxDiff[col].append(list(MaxPrintSession[key][col]-y))
-#         # plt.plot(MaxPrintSession[key][col])
-#         # plt.plot(y)
-
-# # plt.figure()
-# # plt.plot(MaxPrintSession[key][col])
-# # plt.plot(y)
-
-
-# # plt.figure()
-# # plt.plot(MaxPrintSession_copy[key][col])
-
-
-# for label in MaxDiff.keys():
-
-#     for l in range(len(MaxDiff[label][0])):
-#         maxVal=-1e10
-#         minVal=1e10
-#         for i in range(7):
-#             if maxVal<MaxDiff[label][i][l]:
-#                 maxVal=MaxDiff[label][i][l]
-#             if minVal>MaxDiff[label][i][l]:
-#                 minVal=MaxDiff[label][i][l]
-#         C2C_diff[label].append(maxVal-minVal)
-        
-        
-        
-# C2C_pd=pd.DataFrame(C2C_diff) 
-
-# C2C_continues=pd.DataFrame()
-
-# for inx in C2C_pd.index:
-#     C2C_continues=pd.concat([C2C_continues,pd.Series(list(C2C_pd.loc[inx]))],axis=0)
-
-
-# C2C_continues=C2C_continues.reset_index(drop=True)     
-
-# plot_title='C2C diff'
-# file_name='C2C diff.html'
-# titleX='Panel'
-# titleY='[um]'
-# key='C2C'
-# figure_C2C_panel = plotter.regular_plot_C2C(C2C_continues, plot_title, file_name,
-#                                            titleX, titleY,key,0,0,1)
-
-
-# plot_title='C2C diff'
-# file_name='C2C diff.html'
-# titleX='Panel'
-# titleY='[um]'
-# figure_C2C_panel_WithStamp=plotter.regular_plot_C2C(C2C_continues, plot_title, file_name,
-#                                            titleX, titleY,key,index_Print_C2C,0,1)
-
-# plt.figure()
-# plt.plot(MaxPrintSession[key][col])

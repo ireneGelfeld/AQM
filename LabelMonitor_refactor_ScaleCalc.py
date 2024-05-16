@@ -267,7 +267,7 @@ class Plotter:
             fig = go.Figure()
             
 
-        fig.add_trace(go.Scatter(y=list(db[0]*1e-3), name=key ))
+        fig.add_trace(go.Scatter(y=list(db*1e-3), name=key ))
             
         
         fig.update_layout(title={
@@ -282,7 +282,7 @@ class Plotter:
                 namelength=-1
             )
         )
-        ymax = abs(np.mean(list(db[0]*1e-3)))
+        ymax = abs(np.mean(list(db*1e-3)))
         if isinstance(index_Print_C2C, dict):
             fig = self.plot_print(fig, ymax+100, index_Print_C2C, 'green', '')
 
@@ -383,44 +383,88 @@ class C2C_From_Panel_Length_Difference:
             
         return MaxPrintSession
     
+    def filterErrorValuePrints(self,labelData):
+        index_to_delete=[]
+        for key in labelData.keys():
+            if len(labelData[key][labelData[key] <  6*1e8].stack().index.tolist()):
+                index_to_delete=labelData[key][labelData[key] <  6*1e8].stack().index.tolist()+index_to_delete
+
+        unique_indexes = set()
+
+        # Iterate through the tuple list to extract unique indexes
+        for tup in index_to_delete:
+            unique_indexes.add(tup[0])
+        
+        # Convert set to a sorted list
+        unique_index_list_to_delete = sorted(list(unique_indexes))
+        
+        return unique_index_list_to_delete
+    
+    def create_continues_panel_lngth_per_bar(self,labelData,colrnge):
+        
+        unique_index_list_to_delete=self.filterErrorValuePrints(labelData)
+        
+        # labelData_copy=copy.deepcopy(labelData)
+        for barNum in labelData.keys():
+            labelData[barNum]=labelData[barNum].drop(unique_index_list_to_delete)
+            labelData[barNum]=labelData[barNum].reset_index(drop=True) 
+        
+        ContinuesPanelLngth=pd.DataFrame();
+        
+        for barNum in labelData.keys():
+            
+            db= labelData[barNum].copy()
+            
+            # dbFilter=copy.deepcopy(labelData[barNum])
+            # db,mean_Panel= self.calc_panel_mean(db,colrnge)
+            db= plotter.data_processor.calc_panel_S_goly(db,colrnge)
+    
+            # arrayForFilter=dbFilter[colrnge].values
+            array = db[colrnge].values
+            LongArray = array.reshape(-1)
+            # LongArrey_forFilter=arrayForFilter.reshape(-1)
+            new_column_series = pd.Series(list(LongArray), name=barNum)
+            # new_column_seriesForFilter = pd.Series(list(LongArrey_forFilter), name=barNum)
+    
+            ContinuesPanelLngth = pd.concat([ContinuesPanelLngth, new_column_series], axis=1)
+            
+        return ContinuesPanelLngth
+    
     def Calc_C2C_for_ongoing_printing(self):
         
-        MaxPrintSession=self.Find_Print_Sessions()
-        C2C_diff={}
-        col=col_range[2:][0]
-        MaxDiff={}
-        for col in col_range[2:]:
-            MaxDiff[col]=[]
-            C2C_diff[col]=[]
+        self.MaxPrintSession=self.Find_Print_Sessions()
+        
+        self.ContinuesPanelLngth=self.create_continues_panel_lngth_per_bar(self.MaxPrintSession,self.MaxPrintSession[key].columns)
+        
+        # plt.figure()
+        # # for i in range(7):
+        # # plt.plot( ContinuesPanelLngth['DPSBar2']) 
+        # # plt.plot( ContinuesPanelLngth['DPSBar4']) 
+        # # plt.plot( ContinuesPanelLngth['DPSBar6']) 
+        # # plt.plot( ContinuesPanelLngth['DPSBar8']) 
+        # plt.plot( ContinuesPanelLngth['DPSBar3']) 
+        # # plt.plot( ContinuesPanelLngth['DPSBar5']) 
+        
+        
 
-        for col in col_range[2:]:
-            for key in MaxPrintSession.keys():
-                # key_mean=np.mean(MaxPrintSession[key][col])
-                y= savgol_filter(MaxPrintSession[key][col],100,2)
+        C2C_diff=[]
 
-                MaxDiff[col].append(list(MaxPrintSession[key][col]-y))
- 
-        for label in MaxDiff.keys():
+        for inx in range(len(self.ContinuesPanelLngth)):
+            maxVal=-1e10
+            minVal=1e10
+            for col  in self.ContinuesPanelLngth.columns:
+                if maxVal<self.ContinuesPanelLngth[col][inx]:
+                    maxVal=self.ContinuesPanelLngth[col][inx]
+                if minVal>self.ContinuesPanelLngth[col][inx]:
+                    minVal=self.ContinuesPanelLngth[col][inx]
+            C2C_diff.append(maxVal-minVal)
+        
+        # plt.figure()
+        # plt.plot(C2C_diff)
 
-            for l in range(len(MaxDiff[label][0])):
-                maxVal=-1e10
-                minVal=1e10
-                for i in range(7):
-                    if maxVal<MaxDiff[label][i][l]:
-                        maxVal=MaxDiff[label][i][l]
-                    if minVal>MaxDiff[label][i][l]:
-                        minVal=MaxDiff[label][i][l]
-                C2C_diff[label].append(maxVal-minVal)
-                                              
-        C2C_pd=pd.DataFrame(C2C_diff) 
+                                     
+        C2C_continues=pd.DataFrame(C2C_diff) 
 
-        C2C_continues=pd.DataFrame()
-
-        for inx in C2C_pd.index:
-            C2C_continues=pd.concat([C2C_continues,pd.Series(list(C2C_pd.loc[inx]))],axis=0)
-
-        C2C_continues=C2C_continues.reset_index(drop=True)   
-    
         return C2C_continues
     
 
@@ -442,10 +486,56 @@ def create_even_odd_dict(d):
     return even_dict,odd_dict
 
 
+# def create_continues_panel_lngth_per_bar(labelData,colrnge):
+    
+#     unique_index_list_to_delete=filterErrorValuePrints(labelData)
+    
+#     # labelData_copy=copy.deepcopy(labelData)
+#     for barNum in labelData.keys():
+#         labelData[barNum]=labelData[barNum].drop(unique_index_list_to_delete)
+#         labelData[barNum]=labelData[barNum].reset_index(drop=True) 
+    
+#     ContinuesPanelLngth=pd.DataFrame();
+    
+#     for barNum in labelData.keys():
+        
+#         db= labelData[barNum].copy()
+        
+#         # dbFilter=copy.deepcopy(labelData[barNum])
+#         # db,mean_Panel= self.calc_panel_mean(db,colrnge)
+#         db= plotter.data_processor.calc_panel_S_goly(db,colrnge)
 
+#         # arrayForFilter=dbFilter[colrnge].values
+#         array = db[colrnge].values
+#         LongArray = array.reshape(-1)
+#         # LongArrey_forFilter=arrayForFilter.reshape(-1)
+#         new_column_series = pd.Series(list(LongArray), name=barNum)
+#         # new_column_seriesForFilter = pd.Series(list(LongArrey_forFilter), name=barNum)
 
+#         ContinuesPanelLngth = pd.concat([ContinuesPanelLngth, new_column_series], axis=1)
+#         # ContinuesPanelLngth_forFiltiring = pd.concat([ContinuesPanelLngth_forFiltiring, new_column_seriesForFilter], axis=1)
+      
+    
+#     return ContinuesPanelLngth
 
+# def filterErrorValuePrints(labelData):
+#     index_to_delete=[]
+#     for key in labelData.keys():
+#         if len(labelData[key][labelData[key] <  6*1e8].stack().index.tolist()):
+#             index_to_delete=labelData[key][labelData[key] <  6*1e8].stack().index.tolist()+index_to_delete
 
+#     unique_indexes = set()
+
+#     # Iterate through the tuple list to extract unique indexes
+#     for tup in index_to_delete:
+#         unique_indexes.add(tup[0])
+    
+#     # Convert set to a sorted list
+#     unique_index_list_to_delete = sorted(list(unique_indexes))
+    
+#     return unique_index_list_to_delete
+    
+    
 #######################################################
 #######################################################
 #######################################################
@@ -750,16 +840,17 @@ if PlotSTD:
 ####################################################################
 C2C_From_Panel_Length_Difference=C2C_From_Panel_Length_Difference(label_data,index_print_name_dic_data)
 
+
+
 Main_Clock_bar, index_Print_C2C=C2C_From_Panel_Length_Difference.findMiddleTimeStampAndPrintStarts()
 C2C_continues=C2C_From_Panel_Length_Difference.Calc_C2C_for_ongoing_printing()
 
-
-plot_title='C2C diff'
-file_name='C2C diff.html'
+plot_title='Paper Trail C2C Estimation by Encoder Mesurments'
+file_name='Paper Trail C2C Estimation.html'
 titleX='Panel'
 titleY='[um]'
 key='C2C'
-figure_C2C_panel_WithStamp=plotter.regular_plot_C2C(C2C_continues, plot_title, file_name,
+figure_C2C_panel_WithStamp=plotter.regular_plot_C2C(C2C_continues[0], plot_title, file_name,
                                            titleX, titleY,key,index_Print_C2C,0,1)
 
 
@@ -786,6 +877,5 @@ figure_C2C_panel_WithStamp=plotter.regular_plot_C2C(C2C_continues, plot_title, f
 # for i,printLength in enumerate(Sync_print_length):
 #     Acamulate_PrintLength=Acamulate_PrintLength+printLength*10
 #     index_Print_C2C[Acamulate_PrintLength]=C2C_From_Panel_Length_Difference.label_data[Main_Clock_bar]['Date'][printSession_sync_dic[Main_Clock_bar][i][0]]
-
 
 

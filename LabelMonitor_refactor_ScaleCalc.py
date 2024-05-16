@@ -316,8 +316,8 @@ class C2C_From_Panel_Length_Difference:
     
         arr=np.diff(BarKeys[list(BarKeys.keys())[0]])
          
-        for DynamicThreshold in range(30,100):
-            indices = np.where(abs(arr-DynamicThreshold) < 3)[0]
+        for self.DynamicThreshold in range(30,100):
+            indices = np.where(abs(arr-self.DynamicThreshold) < 3)[0]
             if not len(indices):
                 break;
     
@@ -326,7 +326,7 @@ class C2C_From_Panel_Length_Difference:
     
             # indexBorder = np.where((arr == 30 + 1) | (arr == 30 + 2) | (arr == 30))[0]
             # arrBoder=pd.concat([arrBoder,pd.DataFrame(list(arr[indexBorder]))],axis=1).rename(columns={0: key})  
-            indices = np.where(arr>DynamicThreshold)[0]
+            indices = np.where(arr>self.DynamicThreshold)[0]
             printSession_sync_dic[key]=[]
             for inx in indices:
                 printSession_sync_dic[key].append([BarKeys[key][inx],BarKeys[key][inx+1],arr[inx]])
@@ -844,6 +844,8 @@ C2C_From_Panel_Length_Difference=C2C_From_Panel_Length_Difference(label_data,ind
 
 Main_Clock_bar, index_Print_C2C=C2C_From_Panel_Length_Difference.findMiddleTimeStampAndPrintStarts()
 C2C_continues=C2C_From_Panel_Length_Difference.Calc_C2C_for_ongoing_printing()
+dynamicthreshold=C2C_From_Panel_Length_Difference.DynamicThreshold
+print('dynamicthreshold='+str(dynamicthreshold))
 
 plot_title='Paper Trail C2C Estimation by Encoder Mesurments'
 file_name='Paper Trail C2C Estimation.html'

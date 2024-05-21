@@ -465,11 +465,12 @@ class C2C_From_Panel_Length_Difference:
     def create_continues_panel_lngth_per_bar(self,labelData,colrnge):
         
         unique_index_list_to_delete=self.filterErrorValuePrints(labelData)
-        val=labelData['DPSBar2']['Label[1,2]DistanceNM'][unique_index_list_to_delete[0]-1]
-        # labelData_copy=copy.deepcopy(labelData)
-        
-        for key in labelData.keys():
-            labelData[key].iloc[unique_index_list_to_delete] = val
+        if len(unique_index_list_to_delete):
+            val=labelData['DPSBar2']['Label[1,2]DistanceNM'][unique_index_list_to_delete[0]-1]
+            # labelData_copy=copy.deepcopy(labelData)
+            
+            for key in labelData.keys():
+                labelData[key].iloc[unique_index_list_to_delete] = val
 
         
         ContinuesPanelLngth=pd.DataFrame();

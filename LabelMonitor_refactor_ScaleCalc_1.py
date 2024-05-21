@@ -302,12 +302,16 @@ class Plotter:
         
     def regular_plot_Each_Color(self, db,  plot_title, file_name, titleX, titleY,key,index_Print_C2C  ,fig,showFig):
         
+        sgWindow=50
         if not fig:
             fig = go.Figure()
             
 
         for col in db.columns:
             fig.add_trace(go.Scatter(y=list(db[col]*1e-3), name=col, line_color=self.data_processor.colorList[col] ))
+            
+        for col in db.columns:
+            fig.add_trace(go.Scatter(y=savgol_filter(list(db[col]*1e-3),sgWindow,1) , name=col+' S_G filter = '+str(sgWindow), line_color=self.data_processor.colorList[col] ))
             
         
         fig.update_layout(title={

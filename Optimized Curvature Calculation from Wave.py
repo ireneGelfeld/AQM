@@ -1409,7 +1409,7 @@ class ReduceNoise():
         # # Filter out any values less than the 1st percentile
         # filtered_data = [x for x in self.RawData[1] if x >= percentile_limitDataCount]
 
-        y = savgol_filter(self.RawData[1], CISsavgolWindow12k, SvGolPol)
+        y = savgol_filter(self.RawData, CISsavgolWindow12k, SvGolPol)
 
         return y
 
@@ -1992,9 +1992,9 @@ while (1):
         current_date = datetime.now().date().strftime("%Y_%m_%d")
     
         FileNameCSV12k =FrontBack+  ' Optimized Curvature ' +MachineName+ '_12k_'+current_date+'.csv'
-        y12k = ReduceNoise(RawData_12k).PrepareData4Saving12k(CISsavgolWindow12k)
+        y12k = ReduceNoise(ydb).PrepareData4Saving12k(CISsavgolWindow12k)
     
-        CIScurve12kp= ReduceNoise(RawData_12k).SaveCSV(FileNameCSV12k, y12k)
+        CIScurve12kp= ReduceNoise(ydb).SaveCSV(FileNameCSV12k, y12k)
 
     # y = savgol_filter(ReduceNoise(RawData_12k).RawData[1], CISsavgolWindow12k, SvGolPol)    
 

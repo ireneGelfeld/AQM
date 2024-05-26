@@ -1933,7 +1933,7 @@ while (1):
         current_date = datetime.now().date().strftime("%Y_%m_%d")
     
         FileNameCSV12k =FrontBack+  ' Optimized Curvature ' +MachineName+ '_12k_'+current_date+'.csv'
-        y12k = ReduceNoise(RawData_12k).PrepareData4Saving12k(CISsavgolWindow12k)
+        y12k = ReduceNoise(ydb).PrepareData4Saving12k(CISsavgolWindow12k)
     
         CIScurve12kp= ReduceNoise(RawData_12k).SaveCSV(FileNameCSV12k, y12k)
 
@@ -1992,7 +1992,7 @@ while (1):
         current_date = datetime.now().date().strftime("%Y_%m_%d")
     
         FileNameCSV12k =FrontBack+  ' Optimized Curvature ' +MachineName+ '_12k_'+current_date+'.csv'
-        y12k = ReduceNoise(ydb).PrepareData4Saving12k(CISsavgolWindow12k)
+        y12k = savgol_filter(ydb, CISsavgolWindow12k, SvGolPol)
     
         CIScurve12kp= ReduceNoise(ydb).SaveCSV(FileNameCSV12k, y12k)
 
@@ -2010,3 +2010,4 @@ while (1):
 #######################################
 #######################################
 #######################################
+# y = savgol_filter(ReduceNoise(ydb).RawData, CISsavgolWindow12k, SvGolPol)

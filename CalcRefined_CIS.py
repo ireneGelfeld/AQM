@@ -1435,7 +1435,7 @@ class ReduceNoise():
         # # Filter out any values less than the 1st percentile
         # filtered_data = [x for x in self.RawData[1] if x >= percentile_limitDataCount]
 
-        y = savgol_filter(self.RawData[1], CISsavgolWindow12k, SvGolPol)
+        y = savgol_filter(self.RawData, CISsavgolWindow12k, SvGolPol)
 
         return y
 
@@ -1787,6 +1787,8 @@ while (1):
         tlt12k)-1])+" _12k points - For CIS (for implamentation) Slider switched to Step: "  # Can modify Plot title
     fileName = "CIS curve raw data and filter 12k implament" + ".html"
 
+    # figCIScalc = plotPlotly(0, plotTitle, fileName, RecDimX, RecDimY, xdb,
+    #                         ydb, tlt12k-RawData_12k[1][0], z12k).PlotCIS385_12k(MaxWaveWindow12k, StpWindowSize12k,SvGolPol,Curve_noRefineList,padded_valuesList)
     figCIScalc = plotPlotly(0, plotTitle, fileName, RecDimX, RecDimY, xdb,
                             ydb, tlt12k-RawData_12k[1][0], z12k).PlotCIS385_12k(MaxWaveWindow12k, StpWindowSize12k,SvGolPol,Curve_noRefineList,padded_valuesList)
     print('**************************************************************************')
@@ -1799,7 +1801,7 @@ while (1):
     current_date = datetime.now().date().strftime("%Y_%m_%d")
 
     FileNameCSV12k = 'Fine_Curvature' +MachineName+ '_12k_'+current_date+'.csv'
-    y12k = ReduceNoise(RawData_12k).PrepareData4Saving12k(CISsavgolWindow12k)
+    y12k = ReduceNoise(ydb).PrepareData4Saving12k(CISsavgolWindow12k)
 
     CIScurve12kp= ReduceNoise(RawData_12k).SaveCSV(FileNameCSV12k, y12k)
 

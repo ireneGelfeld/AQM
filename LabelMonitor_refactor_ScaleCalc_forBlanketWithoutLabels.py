@@ -529,9 +529,16 @@ class C2C_From_Panel_Length_Difference:
         # # plt.plot( ContinuesPanelLngth['DPSBar6']) 
         # # plt.plot( ContinuesPanelLngth['DPSBar8']) 
         # plt.plot( ContinuesPanelLngth['DPSBar3']) 
-        # # plt.plot( ContinuesPanelLngth['DPSBar5']) 
-        
-        
+        # # plt.plot( ContinuesPanelLngth['DPSBar5'])
+        self.ContinuesPanelLngth_noLabels=self.ContinuesPanelLngth.copy()
+        for inx in range(len(self.ContinuesPanelLngth_noLabels)):
+            for col  in self.ContinuesPanelLngth_noLabels:
+                if inx%11 == 0:
+                    continue;
+                else:
+                    if inx>0:
+                       self.ContinuesPanelLngth_noLabels[col][inx]= self.ContinuesPanelLngth_noLabels[col][inx]+self.ContinuesPanelLngth_noLabels[col][inx-1]
+
 
         C2C_diff=[]
         C2C_diff_no_labels=[]
@@ -540,19 +547,22 @@ class C2C_From_Panel_Length_Difference:
         for inx in range(len(self.ContinuesPanelLngth)):
             maxVal=-1e10
             minVal=1e10
+            maxVal_noLabel=-1e10
+            minVal_noLabel=1e10
             for col  in self.ContinuesPanelLngth.columns:
                 if maxVal<self.ContinuesPanelLngth[col][inx]:
                     maxVal=self.ContinuesPanelLngth[col][inx]
                 if minVal>self.ContinuesPanelLngth[col][inx]:
                     minVal=self.ContinuesPanelLngth[col][inx]
+                    
+                if maxVal_noLabel<self.ContinuesPanelLngth_noLabels[col][inx]:
+                    maxVal_noLabel=self.ContinuesPanelLngth_noLabels[col][inx]
+                if minVal_noLabel>self.ContinuesPanelLngth_noLabels[col][inx]:
+                    minVal_noLabel=self.ContinuesPanelLngth_noLabels[col][inx]
             C2C_diff.append(maxVal-minVal)
+            C2C_diff_no_labels.append(maxVal_noLabel-minVal_noLabel)
 
-            if inx%11 == 0:
-                C2C_diff_no_labels.append(maxVal-minVal)
-            else:
-                if inx>0:
-                    C2C_diff_no_labels.append(C2C_diff_no_labels[inx-1]+maxVal-minVal)   
-                
+ 
         
         # plt.figure()
         # plt.plot(C2C_diff)
@@ -981,7 +991,7 @@ unique_index_list_to_delete=C2C_From_Panel_Length_Difference.unique_index_list_t
 
 
 C2C_continues,C2C_continues_no_labels=C2C_From_Panel_Length_Difference.Calc_C2C_for_ongoing_printing()
-
+ContinuesPanelLngth_noLabel= C2C_From_Panel_Length_Difference.ContinuesPanelLngth_noLabels
 MaxPrintSession=C2C_From_Panel_Length_Difference.MaxPrintSession
 
 
@@ -1013,6 +1023,13 @@ titleY='[um]'
 
 figure_PerColor=plotter.regular_plot_Each_Color(ContinuesPanelLngth,  plot_title, file_name, titleX, titleY,key,index_Print_C2C  ,0,1)
 
+
+plot_title='Paper Trail for all colors Estimation by Encoder Mesurments NO LABELS'
+file_name='Paper Trail all colors EstimationNO LABELS.html'
+titleX='Panel'
+titleY='[um]'
+
+figure_PerColor=plotter.regular_plot_Each_Color(ContinuesPanelLngth_noLabel,  plot_title, file_name, titleX, titleY,key,index_Print_C2C  ,0,1)
 
 
 

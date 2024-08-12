@@ -21,7 +21,7 @@ import copy
 from datetime import datetime
 
 ####################################################################
-global S_G_window,S_G_Degree,TimeBetweenPrints,PlotContinuesBalnkLength,PlotSTD,Joblength_limit
+global S_G_window,S_G_Degree,TimeBetweenPrints,PlotContinuesBalnkLength,PlotSTD,Joblength_limit,Panel2reset
 
 S_G_window =10
 S_G_Degree =1
@@ -35,6 +35,10 @@ PlotSTD =0
 plotJob_Sgolay_std =0
 plotJob_Sgolay_db =0
 Joblength_limit = int(100/11)
+
+
+##For NO LABELS calc
+Panel2reset=3 # The panel number for which errors reset 
 ####################################################################
 ####################################################################
 ####################################################################
@@ -533,7 +537,7 @@ class C2C_From_Panel_Length_Difference:
         self.ContinuesPanelLngth_noLabels=self.ContinuesPanelLngth.copy()
         for inx in range(len(self.ContinuesPanelLngth_noLabels)):
             for col  in self.ContinuesPanelLngth_noLabels:
-                if inx%11 == 0:
+                if inx%Panel2reset == 0:
                     continue;
                 else:
                     if inx>0:

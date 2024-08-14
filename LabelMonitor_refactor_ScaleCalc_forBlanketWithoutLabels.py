@@ -37,8 +37,12 @@ plotJob_Sgolay_db =0
 Joblength_limit = int(100/11)
 
 
+
 ##For NO LABELS calc
 Panel2reset=3 # The panel number for which errors reset 
+##Show Plot no label
+Plot_no_label=0 # 0- dont show, 1- show
+
 ####################################################################
 ####################################################################
 ####################################################################
@@ -431,23 +435,32 @@ class C2C_From_Panel_Length_Difference:
         i=0
         printLength=Sync_print_length[0]
         for i,printLength in enumerate(Sync_print_length):
-            Acamulate_PrintLength=Acamulate_PrintLength+printLength*10
-            index_Print_C2C[Acamulate_PrintLength]=self.label_data[Main_Clock_bar]['Date'][printSession_sync_dic[Main_Clock_bar][i][0]]
+            try:
+                Acamulate_PrintLength=int(Acamulate_PrintLength+printLength*10)
+                index_Print_C2C[Acamulate_PrintLength]=self.label_data[Main_Clock_bar]['Date'][printSession_sync_dic[Main_Clock_bar][i][0]]
+            except:
+                continue
     
         return Main_Clock_bar, index_Print_C2C
 
     def Find_Print_Sessions(self):
+
         
         Sync_print_length,printSession_sync_dic=self.filterSyncPrintsBetweenBars()
+        min_length = min(len(value) for value in printSession_sync_dic.values())
+
         col_range=list(self.label_data[list(self.label_data.keys())[0]].columns)[16:28]
         MaxPrintSession={}
+        
         for i,key in enumerate(self.label_data.keys()):
             tmp_continues=pd.DataFrame()
             for l,printLength in enumerate(Sync_print_length):
+                if l>= min_length:
+                    continue
                 tmp=pd.DataFrame()
                 for col in col_range[2:]:
                    inx1=printSession_sync_dic[key][l][0]
-                   inx2=inx1+printLength    
+                   inx2=int(inx1+printLength)   
                    tmp=pd.concat([tmp,self.label_data[key][col][inx1:inx2].reset_index(drop=True)],axis=1)
                 tmp_continues=pd.concat([tmp_continues,tmp],axis=0).reset_index(drop=True)
 
@@ -1010,15 +1023,6 @@ figure_C2C_panel_WithStamp=plotter.regular_plot_C2C(C2C_continues[0], plot_title
                                            titleX, titleY,key,index_Print_C2C,0,1)
 
 
-plot_title='Paper Trail C2C Estimation by Encoder Mesurments WITH NO LABELS'
-file_name='Paper Trail C2C Estimation_noLabels.html'
-titleX='Panel'
-titleY='[um]'
-key='C2C_noLabels'
-figure_C2C_panel_WithStamp=plotter.regular_plot_C2C(C2C_continues_no_labels[0], plot_title, file_name,
-                                           titleX, titleY,key,index_Print_C2C,0,1)
-
-
 
 plot_title='Paper Trail for all colors Estimation by Encoder Mesurments'
 file_name='Paper Trail all colors Estimation.html'
@@ -1028,81 +1032,104 @@ titleY='[um]'
 figure_PerColor=plotter.regular_plot_Each_Color(ContinuesPanelLngth,  plot_title, file_name, titleX, titleY,key,index_Print_C2C  ,0,1)
 
 
-plot_title='Paper Trail for all colors Estimation by Encoder Mesurments NO LABELS'
-file_name='Paper Trail all colors EstimationNO LABELS.html'
-titleX='Panel'
-titleY='[um]'
-
-figure_PerColor=plotter.regular_plot_Each_Color(ContinuesPanelLngth_noLabel,  plot_title, file_name, titleX, titleY,key,index_Print_C2C  ,0,1)
-
-
-
-
-# BarKeys=C2C_From_Panel_Length_Difference.printSessionStartIndexesPerBar()
-# printSession_sync_dic={}  
-
-# tmp=pd.DataFrame()  
-
-# arr=np.diff(BarKeys[list(BarKeys.keys())[0]])
- 
-# for C2C_From_Panel_Length_Difference.DynamicThreshold in range(5,100):
-#     indices = np.where(abs(arr-C2C_From_Panel_Length_Difference.DynamicThreshold) < 3)[0]
-#     if not len(indices):
-#         break;
-
-# for key in BarKeys.keys():
-#     arr=np.diff(BarKeys[key])
-
-#     # indexBorder = np.where((arr == 30 + 1) | (arr == 30 + 2) | (arr == 30))[0]
-#     # arrBoder=pd.concat([arrBoder,pd.DataFrame(list(arr[indexBorder]))],axis=1).rename(columns={0: key})  
-#     indices = np.where(arr>C2C_From_Panel_Length_Difference.DynamicThreshold)[0]
-#     printSession_sync_dic[key]=[]
-#     for inx in indices:
-#         printSession_sync_dic[key].append([BarKeys[key][inx],BarKeys[key][inx+1],arr[inx]])
+if Plot_no_label:
     
-#     tmp=pd.concat([tmp,pd.DataFrame(list(arr[indices]))],axis=1).rename(columns={0: key})   
 
-# Sync_print_length = tmp.min(axis=1)    
+    plot_title='Paper Trail C2C Estimation by Encoder Mesurments WITH NO LABELS'
+    file_name='Paper Trail C2C Estimation_noLabels.html'
+    titleX='Panel'
+    titleY='[um]'
+    key='C2C_noLabels'
+    figure_C2C_panel_WithStamp=plotter.regular_plot_C2C(C2C_continues_no_labels[0], plot_title, file_name,
+                                               titleX, titleY,key,index_Print_C2C,0,1)
+    
+    
+    plot_title='Paper Trail for all colors Estimation by Encoder Mesurments NO LABELS'
+    file_name='Paper Trail all colors EstimationNO LABELS.html'
+    titleX='Panel'
+    titleY='[um]'
+    
+    figure_PerColor=plotter.regular_plot_Each_Color(ContinuesPanelLngth_noLabel,  plot_title, file_name, titleX, titleY,key,index_Print_C2C  ,0,1)
+
+
+
+
+
+# MaxPrintSession=C2C_From_Panel_Length_Difference.Find_Print_Sessions()
+# key='DPSBar2'
+# C2C_From_Panel_Length_Difference.ContinuesPanelLngth,C2C_From_Panel_Length_Difference.unique_index_list_to_delete=C2C_From_Panel_Length_Difference.create_continues_panel_lngth_per_bar(MaxPrintSession,MaxPrintSession[key].columns)
+
+# # plt.figure()
+# # # for i in range(7):
+# # # plt.plot( ContinuesPanelLngth['DPSBar2']) 
+# # # plt.plot( ContinuesPanelLngth['DPSBar4']) 
+# # # plt.plot( ContinuesPanelLngth['DPSBar6']) 
+# # # plt.plot( ContinuesPanelLngth['DPSBar8']) 
+# # plt.plot( ContinuesPanelLngth['DPSBar3']) 
+# # # plt.plot( ContinuesPanelLngth['DPSBar5'])
+# C2C_From_Panel_Length_Difference.ContinuesPanelLngth_noLabels=C2C_From_Panel_Length_Difference.ContinuesPanelLngth.copy()
+# for inx in range(len(C2C_From_Panel_Length_Difference.ContinuesPanelLngth_noLabels)):
+#     for col  in C2C_From_Panel_Length_Difference.ContinuesPanelLngth_noLabels:
+#         if inx%Panel2reset == 0:
+#             continue;
+#         else:
+#             if inx>0:
+#                 C2C_From_Panel_Length_Difference.ContinuesPanelLngth_noLabels[col][inx]= C2C_From_Panel_Length_Difference.ContinuesPanelLngth_noLabels[col][inx]+C2C_From_Panel_Length_Difference.ContinuesPanelLngth_noLabels[col][inx-1]
+
+
+# C2C_diff=[]
+# C2C_diff_no_labels=[]
+
+
+# for inx in range(len(C2C_From_Panel_Length_Difference.ContinuesPanelLngth)):
+#     maxVal=-1e10
+#     minVal=1e10
+#     maxVal_noLabel=-1e10
+#     minVal_noLabel=1e10
+#     for col  in C2C_From_Panel_Length_Difference.ContinuesPanelLngth.columns:
+#         if maxVal<C2C_From_Panel_Length_Difference.ContinuesPanelLngth[col][inx]:
+#             maxVal=C2C_From_Panel_Length_Difference.ContinuesPanelLngth[col][inx]
+#         if minVal>C2C_From_Panel_Length_Difference.ContinuesPanelLngth[col][inx]:
+#             minVal=C2C_From_Panel_Length_Difference.ContinuesPanelLngth[col][inx]
+            
+#         if maxVal_noLabel<C2C_From_Panel_Length_Difference.ContinuesPanelLngth_noLabels[col][inx]:
+#             maxVal_noLabel=C2C_From_Panel_Length_Difference.ContinuesPanelLngth_noLabels[col][inx]
+#         if minVal_noLabel>C2C_From_Panel_Length_Difference.ContinuesPanelLngth_noLabels[col][inx]:
+#             minVal_noLabel=C2C_From_Panel_Length_Difference.ContinuesPanelLngth_noLabels[col][inx]
+#     C2C_diff.append(maxVal-minVal)
+#     C2C_diff_no_labels.append(maxVal_noLabel-minVal_noLabel)
+
+ 
+
+# # plt.figure()
+# # plt.plot(C2C_diff)
+
+                             
+# C2C_continues=pd.DataFrame(C2C_diff) 
+# C2C_continues_no_labels=pd.DataFrame(C2C_diff_no_labels) 
+
+
 
 
 
 # Sync_print_length,printSession_sync_dic=C2C_From_Panel_Length_Difference.filterSyncPrintsBetweenBars()
-# Middel_Clock_Value_bar={}
-# for key in printSession_sync_dic.keys():
-#     Middel_Clock_Value_bar[str(C2C_From_Panel_Length_Difference.label_data[key]['date_time'][printSession_sync_dic[key][0][0]])]=key
-    
-# timestamps=list(Middel_Clock_Value_bar.keys())
-    
-# timestamps = sorted([datetime.strptime(ts, '%Y-%m-%d %H:%M:%S') for ts in timestamps])
+# min_length = min(len(value) for value in printSession_sync_dic.values())
 
-# # Find the middle timestamp
-# middle_timestamp_index = len(timestamps) // 2
-# middle_timestamp = timestamps[middle_timestamp_index]
+# col_range=list(C2C_From_Panel_Length_Difference.label_data[list(C2C_From_Panel_Length_Difference.label_data.keys())[0]].columns)[16:28]
+# MaxPrintSession={}
+# for i,key in enumerate(C2C_From_Panel_Length_Difference.label_data.keys()):
+#     tmp_continues=pd.DataFrame()
+#     for l,printLength in enumerate(Sync_print_length):
+#         if l>=min_length:
+#             continue;
+#         tmp=pd.DataFrame()
+#         for col in col_range[2:]:
+#             inx1=printSession_sync_dic[key][l][0]
+#             inx2=int(inx1+printLength)    
+#             tmp=pd.concat([tmp,C2C_From_Panel_Length_Difference.label_data[key][col][inx1:inx2].reset_index(drop=True)],axis=1)
+#         tmp_continues=pd.concat([tmp_continues,tmp],axis=0).reset_index(drop=True)
 
-# Main_Clock_bar=Middel_Clock_Value_bar[str(middle_timestamp)]
-
-# index_Print_C2C={}
-# Acamulate_PrintLength=0
-# i=0
-# printLength=Sync_print_length[0]
-# for i,printLength in enumerate(Sync_print_length):
-#     Acamulate_PrintLength=Acamulate_PrintLength+printLength*10
-#     index_Print_C2C[Acamulate_PrintLength]=C2C_From_Panel_Length_Difference.label_data[Main_Clock_bar]['Date'][printSession_sync_dic[Main_Clock_bar][i][0]]
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+#     MaxPrintSession[key]=tmp_continues
 
 
 

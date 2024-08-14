@@ -38,7 +38,9 @@ Joblength_limit = int(100/11)
 
 
 ##For NO LABELS calc
-Panel2reset=3 # The panel number for which errors reset 
+Panel2reset=11 # The panel number for which errors reset 
+#plot no label
+Nolabel=0 #1- show, 0- dont show
 ####################################################################
 ####################################################################
 ####################################################################
@@ -1010,13 +1012,6 @@ figure_C2C_panel_WithStamp=plotter.regular_plot_C2C(C2C_continues[0], plot_title
                                            titleX, titleY,key,index_Print_C2C,0,1)
 
 
-plot_title='Paper Trail C2C Estimation by Encoder Mesurments WITH NO LABELS'
-file_name='Paper Trail C2C Estimation_noLabels.html'
-titleX='Panel'
-titleY='[um]'
-key='C2C_noLabels'
-figure_C2C_panel_WithStamp=plotter.regular_plot_C2C(C2C_continues_no_labels[0], plot_title, file_name,
-                                           titleX, titleY,key,index_Print_C2C,0,1)
 
 
 
@@ -1028,14 +1023,22 @@ titleY='[um]'
 figure_PerColor=plotter.regular_plot_Each_Color(ContinuesPanelLngth,  plot_title, file_name, titleX, titleY,key,index_Print_C2C  ,0,1)
 
 
-plot_title='Paper Trail for all colors Estimation by Encoder Mesurments NO LABELS'
-file_name='Paper Trail all colors EstimationNO LABELS.html'
-titleX='Panel'
-titleY='[um]'
-
-figure_PerColor=plotter.regular_plot_Each_Color(ContinuesPanelLngth_noLabel,  plot_title, file_name, titleX, titleY,key,index_Print_C2C  ,0,1)
-
-
+if Nolabel:
+    plot_title='Paper Trail for all colors Estimation by Encoder Mesurments NO LABELS'
+    file_name='Paper Trail all colors EstimationNO LABELS.html'
+    titleX='Panel'
+    titleY='[um]'
+    
+    figure_PerColor=plotter.regular_plot_Each_Color(ContinuesPanelLngth_noLabel,  plot_title, file_name, titleX, titleY,key,index_Print_C2C  ,0,1)
+    
+    
+    plot_title='Paper Trail C2C Estimation by Encoder Mesurments WITH NO LABELS'
+    file_name='Paper Trail C2C Estimation_noLabels.html'
+    titleX='Panel'
+    titleY='[um]'
+    key='C2C_noLabels'
+    figure_C2C_panel_WithStamp=plotter.regular_plot_C2C(C2C_continues_no_labels[0], plot_title, file_name,
+                                               titleX, titleY,key,index_Print_C2C,0,1)
 
 
 # BarKeys=C2C_From_Panel_Length_Difference.printSessionStartIndexesPerBar()

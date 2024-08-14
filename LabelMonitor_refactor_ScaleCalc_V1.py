@@ -28,7 +28,7 @@ S_G_Degree =1
 TimeBetweenPrints = 10
 
 plot_LabelLength_Per_bar=0
-Plot_Panel_Length_Per_Bar_and_g_s=1
+Plot_Panel_Length_Per_Bar_and_g_s=0
 Plot_Panel_Length_Per_Bar_and_After_g_s=0
 PlotContinuesBalnkLength =0
 PlotSTD =0
@@ -382,7 +382,9 @@ class C2C_From_Panel_Length_Difference:
     
         arr=np.diff(BarKeys[list(BarKeys.keys())[0]])
          
-        for self.DynamicThreshold in range(30,100):
+        # for self.DynamicThreshold in range(30,100):
+        for self.DynamicThreshold in range(5,100):
+
             indices = np.where(abs(arr-self.DynamicThreshold) < 3)[0]
             if not len(indices):
                 break;
@@ -994,6 +996,56 @@ figure_PerColor=plotter.regular_plot_Each_Color(ContinuesPanelLngth,  plot_title
 
 
 
+# BarKeys=C2C_From_Panel_Length_Difference.printSessionStartIndexesPerBar()
+# printSession_sync_dic={}  
+
+# tmp=pd.DataFrame()  
+
+# arr=np.diff(BarKeys[list(BarKeys.keys())[0]])
+ 
+# for C2C_From_Panel_Length_Difference.DynamicThreshold in range(5,100):
+#     indices = np.where(abs(arr-C2C_From_Panel_Length_Difference.DynamicThreshold) < 3)[0]
+#     if not len(indices):
+#         break;
+
+# for key in BarKeys.keys():
+#     arr=np.diff(BarKeys[key])
+
+#     # indexBorder = np.where((arr == 30 + 1) | (arr == 30 + 2) | (arr == 30))[0]
+#     # arrBoder=pd.concat([arrBoder,pd.DataFrame(list(arr[indexBorder]))],axis=1).rename(columns={0: key})  
+#     indices = np.where(arr>C2C_From_Panel_Length_Difference.DynamicThreshold)[0]
+#     printSession_sync_dic[key]=[]
+#     for inx in indices:
+#         printSession_sync_dic[key].append([BarKeys[key][inx],BarKeys[key][inx+1],arr[inx]])
+    
+#     tmp=pd.concat([tmp,pd.DataFrame(list(arr[indices]))],axis=1).rename(columns={0: key})   
+
+# Sync_print_length = tmp.min(axis=1)    
+
+
+
+# Sync_print_length,printSession_sync_dic=C2C_From_Panel_Length_Difference.filterSyncPrintsBetweenBars()
+# Middel_Clock_Value_bar={}
+# for key in printSession_sync_dic.keys():
+#     Middel_Clock_Value_bar[str(C2C_From_Panel_Length_Difference.label_data[key]['date_time'][printSession_sync_dic[key][0][0]])]=key
+    
+# timestamps=list(Middel_Clock_Value_bar.keys())
+    
+# timestamps = sorted([datetime.strptime(ts, '%Y-%m-%d %H:%M:%S') for ts in timestamps])
+
+# # Find the middle timestamp
+# middle_timestamp_index = len(timestamps) // 2
+# middle_timestamp = timestamps[middle_timestamp_index]
+
+# Main_Clock_bar=Middel_Clock_Value_bar[str(middle_timestamp)]
+
+# index_Print_C2C={}
+# Acamulate_PrintLength=0
+# i=0
+# printLength=Sync_print_length[0]
+# for i,printLength in enumerate(Sync_print_length):
+#     Acamulate_PrintLength=Acamulate_PrintLength+printLength*10
+#     index_Print_C2C[Acamulate_PrintLength]=C2C_From_Panel_Length_Difference.label_data[Main_Clock_bar]['Date'][printSession_sync_dic[Main_Clock_bar][i][0]]
 
 
 

@@ -80,7 +80,7 @@ CircleLvl=70
 x_Cut_coord=[710,8000]
 
 
-sectionNumber2Show=[1,5,6,7,10,14,17]
+sectionNumber2Show=[1,5,6,7,10,14]
 
 
 # colorInUseName=['Magenta','Yellow','Blue','Orange','Cyan','Green','Black']
@@ -93,7 +93,9 @@ clrToUseInJOB=['Magenta','Yellow','Cyan','Black']
 # clrToUseInJOB=['Black','Cyan']
 scaling_factor=70;
 offset_factor=10;
-PointsToIgnore=40  
+
+############ For SHARTER MEDIA#####################
+PointsToIgnore=80 #439-359 
 continuesPoints=0
 pointsForPanel=numberOfPoints- PointsToIgnore
 # 
@@ -201,7 +203,7 @@ class DataStructureUI(QWidget):
         operation_hndlr.CalculateCenterOfMass_and_C2C(self.folder_path,colorInUseName)
         operation_hndlr.caculate_continues(colorInUseName)
             
-        operation_hndlr.Save_pickle(self.folder_path)
+        # operation_hndlr.Save_pickle(self.folder_path)
     
         #Plot C2C
         db= operation_hndlr.C2Cmat_allPanels_continues;
@@ -2574,6 +2576,9 @@ class Operations:
                 
             except:
                 continue
+            
+            self.Save_pickle(sInput)
+
         
         
     def caculate_continues(self,colorInUseName):

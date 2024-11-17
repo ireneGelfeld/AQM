@@ -292,3 +292,22 @@ try:
 
 except:
     1
+
+
+
+#################################################################################
+
+
+# CorrectionCorrByColorAllWave=pd.DataFrame();
+# JobNmeSORTED= CalcWave(pthF,folderWaveCalibrationFront,side,Panel).SortJobsByTime(CalcWave(pthF,folderWaveCalibrationFront,side,Panel).folder)
+# for f in list(JobNmeSORTED.values()):
+#     try:
+#       ColorDic,BarDic,BeforCorrByColor,AfterCorrByColor,CorrectionCorrByColor = CalcWave(pthF,folderWaveCalibrationFront,side,Panel).OrgnazeDataByColorAndCorrectionState(f);
+#       colNmf={};
+#       for c in CorrectionCorrByColor.columns:
+#           colNmf[c]=f+' '+c;
+         
+#       CorrectionCorrByColor = CorrectionCorrByColor.rename(columns=colNmf);
+#       CorrectionCorrByColorAllWave=pd.concat([CorrectionCorrByColorAllWave,CorrectionCorrByColor],axis=1);
+#     except:
+#           continue;

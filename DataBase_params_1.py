@@ -19,6 +19,9 @@ import plotly.graph_objects as go
 paramID=['cfa371b8-a281-48ae-9321-528bdc552c6d']
 paramListMemory=['ChangeDirectionPageNum','SafeMarginSizeMM','MaxAllowedMovementSimplexMM','ScaleFineTune','LabelInitialShiftMM','LabelShiftStepUM','MaxAllowedMovementDuplexMM']
 
+#CIS
+paramCIS=['CISCurvaturePerPixel']
+
 #QCS
 paramListQCS=['SavitzkyGolay','PolynomialOrder','Radius']
 
@@ -37,7 +40,6 @@ class CsvPickerWindow(QMainWindow):
         self.pick_button = QPushButton('Pick CSV File', self)
         self.pick_button.setGeometry(150, 80, 100, 40)
         self.pick_button.clicked.connect(self.pick_csv_file_andCreateTable)
-        
 
 
     def pick_csv_file_andCreateTable(self):
@@ -46,7 +48,7 @@ class CsvPickerWindow(QMainWindow):
         if file_path:
             print(f'Selected file: {file_path}')
         # file_path=r'E:\DB_gdls\D16_GDLS_Params_05032024_151946.csv'
-        df = pd.read_csv(file_path)
+        self.df = pd.read_csv(file_path)
         os.chdir(os.path.dirname(file_path))
         backGroundCLR='rgb(200, 200, 200)'
         HeaderCLR='rgb(0, 255, 255)'
@@ -62,7 +64,7 @@ class CsvPickerWindow(QMainWindow):
         fillcolorList.append(HeaderCLR)
 
         ##Memory
-        for paramId,param, value,paramPath in zip(df['Parameter ID'],df['Parameter Name'], df['Parameter Actual Value'],df['Parameter Tree Path Name']):
+        for paramId,param, value,paramPath in zip(self.df['Parameter ID'],self.df['Parameter Name'], self.df['Parameter Actual Value'],self.df['Parameter Tree Path Name']):
            
             if paramId in paramID:
 
@@ -96,7 +98,7 @@ class CsvPickerWindow(QMainWindow):
         fillcolorList.append(HeaderCLR)
 
         ##QCS       
-        for paramId,param, value,paramPath in zip(df['Parameter ID'],df['Parameter Name'], df['Parameter Actual Value'],df['Parameter Tree Path Name']):
+        for paramId,param, value,paramPath in zip(self.df['Parameter ID'],self.df['Parameter Name'], self.df['Parameter Actual Value'],self.df['Parameter Tree Path Name']):
            
             if param in paramListQCS:
                paramList_tmp.append(param)
@@ -124,7 +126,7 @@ class CsvPickerWindow(QMainWindow):
         ##SyntheticEncoder header
         BackFront=''
         RightLeft=''
-        for paramId,param, value,paramPath in zip(df['Parameter ID'],df['Parameter Name'], df['Parameter Actual Value'],df['Parameter Tree Path Name']):
+        for paramId,param, value,paramPath in zip(self.df['Parameter ID'],self.df['Parameter Name'], self.df['Parameter Actual Value'],self.df['Parameter Tree Path Name']):
            
             # if param== 'Default PrintDirection':    
                 # break
@@ -160,7 +162,7 @@ class CsvPickerWindow(QMainWindow):
         paramList.append('SyntheticEncoder')
         valueList.append('')
         ##SyntheticEncoder header
-        for paramId,param, value,paramPath in zip(df['Parameter ID'],df['Parameter Name'], df['Parameter Actual Value'],df['Parameter Tree Path Name']):
+        for paramId,param, value,paramPath in zip(self.df['Parameter ID'],self.df['Parameter Name'], self.df['Parameter Actual Value'],self.df['Parameter Tree Path Name']):
            
             if param== 'SyntheticEncoder':    
                 # break
@@ -199,50 +201,90 @@ class CsvPickerWindow(QMainWindow):
 
         plot(table, auto_play=True, filename=file_path.split('/')[-1][:-4]+'.html')
         
-        url = 'file:///' + os.path.dirname(file_path)+'//' + file_path.split('/')[-1][:-4]+'.html'
-        subprocess.Popen(['start', 'chrome', url], shell=True)
+        # url = 'file:///' + os.path.dirname(file_path)+'//' + file_path.split('/')[-1][:-4]+'.html'
+        # subprocess.Popen(['start', 'chrome', url], shell=True)
 
-        # paramList.append('')
-        # valueList.append('')
-        # fillcolorList.append(backGroundCLR)
-     
-        # paramList_tmp=[]
-        # valueList_tmp=[] 
-     
+        # CIS
+        result = self.df.loc[ self.df['Parameter Name'] == paramCIS[0], 'Parameter Actual Value']
+        sideFRONT_BACK= self.df.loc[ self.df['Parameter Name'] == paramCIS[0], 'Parameter Tree Path Name']
+
+        if len(result.index)>1:
+            float_list1 = [float(num) for num in result.iloc[0].split(",")]
+            if  'Back' in sideFRONT_BACK.iloc[0]:
+                side1='Back'
+            else: 
+                side1='Front'
+            float_list2 = [float(num) for num in result.iloc[1].split(",")]
+            if 'Back' in sideFRONT_BACK.iloc[1]:
+                side2='Back'
+            else: 
+                side2='Front'
+            
 
 
-    # def pick_csv_file_andCreateTable(self):
-    #     file_path, _ = QFileDialog.getOpenFileName(self, 'Pick a CSV File', '', 'CSV files (*.csv)')
-    #     if file_path:
-    #         print(f'Selected file: {file_path}')
+        fig1 = go.Figure()
+
+                  
+        fig1.add_trace(go.Scatter(y=float_list1,line=dict(color='blue') , name='CIS curve'))
+            
+
+         
+
+         
+
+         
+        fig1.update_layout(title={
+             'text': side1,
+             'font': {'color': 'black'}
+         })
+          #fig_back.update_layout(title='ImagePlacement_Left-Back')
+          
+          
+        fig1.update_layout(
+              hoverlabel=dict(
+                  namelength=-1
+              )
+          )
+          
+          # datetime object containing current date and time
+
+        plot(fig1,auto_play=True,filename=file_path.split('/')[-1][:-4]+'_CIS_'+side1+'.html')  
+              # plot(fig)  
+
+        fig1.show()
         
-    #     df = pd.read_csv(file_path)
+        fig2 = go.Figure()
 
+                  
+        fig2.add_trace(go.Scatter(y=float_list2,line=dict(color='red') , name='CIS curve'))
+            
 
-    #     fig, ax = plt.subplots()
+         
 
-    #    # Create a table within the plot
-    #     table_data = []
-    #     for paramId,param, value,paramPath in zip(df['Parameter ID'],df['Parameter Name'], df['Parameter Actual Value'],df['Parameter Tree Path Name']):
-    #        if param in paramList:
-    #            table_data.append([param, value])
-    #        if paramId in paramID:
-    #            table_data.append([param, value])
+         
 
-    #     table = ax.table(cellText=table_data, colLabels=['Parameter', 'Value'], loc='center', cellLoc='left', fontsize=20)
-    #    # Set font size for the table
-    #     table.auto_set_font_size(False)
-    #     table.set_fontsize(8)
-    #     fig.suptitle(file_path.split('/')[-1])
+         
+        fig2.update_layout(title={
+             'text': side2,
+             'font': {'color': 'black'}
+         })
+          #fig_back.update_layout(title='ImagePlacement_Left-Back')
+          
+          
+        fig2.update_layout(
+              hoverlabel=dict(
+                  namelength=-1
+              )
+          )
+          
+          # datetime object containing current date and time
 
-    #     # table.set_title(file_path.split('\\')[-1])
+        plot(fig2,auto_play=True,filename=file_path.split('/')[-1][:-4]+'_CIS_'+side2+'.html')  
+              # plot(fig)  
 
-    #    # Hide axes
-    #     ax.axis('off')
-
-    #    # Display the plot
-    #     plt.show() 
-
+        fig2.show()        
+        
+        
     def closeEvent(self, event):
         QApplication.quit()
 
@@ -273,6 +315,11 @@ class CsvPickerWindow(QMainWindow):
 if __name__ == '__main__':
     app = QApplication(sys.argv)
     window = CsvPickerWindow()
-    window.show()
+    window.pick_csv_file_andCreateTable()
+    
+    window.show()    
+    # df=window.df
     sys.exit(app.exec_())
+
+
 

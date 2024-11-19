@@ -58,8 +58,8 @@ ColorDicNum={'Magenta':0,'Yellow':1,'Blue':2,'Orange':3,'Cyan':4,'Green':5,'Blac
 PointOfSpeedCange= 223;
 # numberOfPoints=288 #439
 numberOfPoints=439#288 #439
-NumOfSec=18
-# NumOfSec=15
+# NumOfSec=18
+NumOfSec=15
 
 # DistanceBetweenColumns={i:SatndardDistanceBetweenColumns*1 for i in range(2,17)}
 # DistanceBetweenColumns[0]=0
@@ -2158,7 +2158,10 @@ for Pnl in sInputListSORTED:
         
     except:
         continue
-
+    
+path_FnameClrDF=sInput+'\ClrDF_rawXY_allPanels.pkl'
+with open(path_FnameClrDF, 'wb') as f:
+    pickle.dump(ClrDF_rawXY_allPanels, f)
 ######################################################################################
 
 ######################################################################################    

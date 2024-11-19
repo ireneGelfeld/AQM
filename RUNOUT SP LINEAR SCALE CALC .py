@@ -54,6 +54,9 @@ numberOfPoints=439#288 #439
 NumOfSec=18
 # NumOfSec=15
 
+##########FOR SHORTER MEDIA#################
+# PointsToIgnore=80  #439-359
+
 # DistanceBetweenColumns={i:SatndardDistanceBetweenColumns*1 for i in range(2,17)}
 # DistanceBetweenColumns[0]=0
 
@@ -65,8 +68,8 @@ DistanceBetweenColumns[0]=0
 
 # DistanceBetweenColumns[1]=LargeDistanceBetweenColumns*1
 # DistanceBetweenColumns[17]=LargeDistanceBetweenColumns*1
-colorInUseName=['Magenta','Yellow','Blue','Orange','Cyan','Green','Black']
-# colorInUseName=['Magenta','Yellow','Cyan','Black']
+# colorInUseName=['Magenta','Yellow','Blue','Orange','Cyan','Green','Black']
+colorInUseName=['Magenta','Yellow','Cyan','Black']
 
 CircleLvl=70
 x_Cut_coord=[710,8380]
@@ -2076,6 +2079,18 @@ with open(path_FnameClrDF, 'rb') as f:
 # path_FnameClrDF=sInput+'\ClrDF_rawXY_allPanels.pkl'
 # with open(path_FnameClrDF, 'wb') as f:
 #     pickle.dump(ClrDF_rawXY_allPanels, f)
+    
+# # minLength= 380
+
+# # for Pnl in ClrDF_rawXY_allPanels.keys():
+# #     for i in ClrDF_rawXY_allPanels[Pnl].keys():
+# #         # for col in ClrDF_rawXY_allPanels[Pnl][i].columns:
+# #             try:
+# #             ClrDF_rawXY_allPanels[Pnl][i]=ClrDF_rawXY_allPanels[Pnl][i].drop(ClrDF_rawXY_allPanels[Pnl][i].index[380:])
+# #             except:
+# #                 continue
+            
+ 
 
 
 ClrDF_fromTargetS_goly_allPanels_continues={}
@@ -2100,8 +2115,7 @@ for i in range(NumOfSec):
     col5_col6_Sgoly_allPanels_continues[i]=pd.DataFrame();
 
 
-PointsToIgnore=40  
-continuesPoints=0
+continuesPoints=80
 pointsForPanel=numberOfPoints- PointsToIgnore
 indexPanelNameDic={}
 
@@ -2244,8 +2258,9 @@ x = np.arange(10, 430)
 
 # Multiply each value by 1500
 # x = x * 1500
+keys=list(ClrDF_rawXY_allPanels.keys())
 
-sec=17
+sec=len(ClrDF_rawXY_allPanels[keys[0]].keys())-1
 for k in ClrDF_fromTargetS_goly_allPanels.keys():
    panel=int(k.split('-')[-1])%11
    if not panel:
@@ -2287,7 +2302,7 @@ for PnlNum in range(1,12):
             if lineColor=='Yellow':
                 lineColor='gold';
             lineCoof=ClrDF_fromTarget_ByPanels_slope[PnlNum][c][j]  
-            values = [lineCoof[0] * x*1500 + lineCoof[1] for x in range(439)]
+            values = [lineCoof[0] * x*1500 + lineCoof[1] for x in range(439-PointsToIgnore)]
     
             fig.add_trace(go.Scatter(y=list(db[c]*pixSize), line=dict(color=lineColor, dash='solid')  ,name=c+' '+pnl))
             fig.data[-1].visible = 'legendonly';
@@ -2374,65 +2389,65 @@ if RefC07 in colorInUseName:
 
 
 
-Side2Side=ClrDF_fromTargetS_goly_allPanels_continues[0]-ClrDF_fromTargetS_goly_allPanels_continues[len(ClrDF_fromTargetS_goly_allPanels_continues)-1]
+# Side2Side=ClrDF_fromTargetS_goly_allPanels_continues[0]-ClrDF_fromTargetS_goly_allPanels_continues[len(ClrDF_fromTargetS_goly_allPanels_continues)-1]
 
 
-##################################################################
-##################################################################
+# ##################################################################
+# ##################################################################
 
-db= Side2Side;
-# RefCl='Cyan'
+# db= Side2Side;
+# # RefCl='Cyan'
 
-PlotTitle='Side_2_Side'
+# PlotTitle='Side_2_Side'
 
-fileName=PlotTitle+'.html'
+# fileName=PlotTitle+'.html'
 
-##################################################################
-ymax=100
+# ##################################################################
+# ymax=100
 
-fig = go.Figure()
+# fig = go.Figure()
 
-for c in db.columns:  
+# for c in db.columns:  
    
-    lineColor=c
+#     lineColor=c
         
-    if lineColor=='Yellow':
-        lineColor='gold';
+#     if lineColor=='Yellow':
+#         lineColor='gold';
         
-    fig.add_trace(go.Scatter(y=list(db[c]*pixSize), line=dict(color=lineColor, dash='solid')  ,name=c))
+#     fig.add_trace(go.Scatter(y=list(db[c]*pixSize), line=dict(color=lineColor, dash='solid')  ,name=c))
         
 
  
-fig= Plot_Panel_number(fig,ymax,indexPanelNameDic)
+# fig= Plot_Panel_number(fig,ymax,indexPanelNameDic)
  
 
-titleColor=c.split('-')[0]
-if titleColor == 'Cyan':
-     titleColor = '#008B8B';
+# titleColor=c.split('-')[0]
+# if titleColor == 'Cyan':
+#      titleColor = '#008B8B';
  
-if titleColor == 'Yellow':
-     titleColor = 'gold'; 
+# if titleColor == 'Yellow':
+#      titleColor = 'gold'; 
  
-fig.update_layout(title={
-      'text': PlotTitle,
-      'font': {'color': titleColor}
-  })
-  #fig_back.update_layout(title='ImagePlacement_Left-Back')
+# fig.update_layout(title={
+#       'text': PlotTitle,
+#       'font': {'color': titleColor}
+#   })
+#   #fig_back.update_layout(title='ImagePlacement_Left-Back')
   
   
-fig.update_layout(
-      hoverlabel=dict(
-          namelength=-1
-      )
-  )
+# fig.update_layout(
+#       hoverlabel=dict(
+#           namelength=-1
+#       )
+#   )
   
-  # datetime object containing current date and time
+#   # datetime object containing current date and time
  
-plot(fig,auto_play=True,filename=fileName)  
-  # plot(fig)  
+# plot(fig,auto_play=True,filename=fileName)  
+#   # plot(fig)  
  
-  #plot(fig_back,filename="AQM-Back.html")  
-fig.show()
+#   #plot(fig_back,filename="AQM-Back.html")  
+# fig.show()
 
 
 ##################################################################

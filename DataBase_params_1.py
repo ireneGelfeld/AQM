@@ -208,81 +208,87 @@ class CsvPickerWindow(QMainWindow):
         result = self.df.loc[ self.df['Parameter Name'] == paramCIS[0], 'Parameter Actual Value']
         sideFRONT_BACK= self.df.loc[ self.df['Parameter Name'] == paramCIS[0], 'Parameter Tree Path Name']
 
-        if len(result.index)>1:
-            float_list1 = [float(num) for num in result.iloc[0].split(",")]
-            if  'Back' in sideFRONT_BACK.iloc[0]:
-                side1='Back'
-            else: 
-                side1='Front'
-            float_list2 = [float(num) for num in result.iloc[1].split(",")]
-            if 'Back' in sideFRONT_BACK.iloc[1]:
-                side2='Back'
-            else: 
-                side2='Front'
-            
-
-
-        fig1 = go.Figure()
-
-                  
-        fig1.add_trace(go.Scatter(y=float_list1,line=dict(color='blue') , name='CIS curve'))
-            
-
-         
-
-         
-
-         
-        fig1.update_layout(title={
-             'text': side1,
-             'font': {'color': 'black'}
-         })
-          #fig_back.update_layout(title='ImagePlacement_Left-Back')
-          
-          
-        fig1.update_layout(
-              hoverlabel=dict(
-                  namelength=-1
-              )
-          )
-          
-          # datetime object containing current date and time
-
-        plot(fig1,auto_play=True,filename=file_path.split('/')[-1][:-4]+'_CIS_'+side1+'.html')  
-              # plot(fig)  
-
-        fig1.show()
+        try:
+                if len(result.index)>1:
+                    float_list1 = [float(num) for num in result.iloc[0].split(",")]
+                    if  'Back' in sideFRONT_BACK.iloc[0]:
+                        side1='Back'
+                    else: 
+                        side1='Front'
+                    float_list2 = [float(num) for num in result.iloc[1].split(",")]
+                    if 'Back' in sideFRONT_BACK.iloc[1]:
+                        side2='Back'
+                    else: 
+                        side2='Front'
+                else:
+                    float_list1 = [float(num) for num in result.iloc[0].split(",")]
+ 
+                    
         
-        fig2 = go.Figure()
-
+        
+                fig1 = go.Figure()
+        
+                          
+                fig1.add_trace(go.Scatter(y=float_list1,line=dict(color='blue') , name='CIS curve'))
+                    
+        
+                 
+        
+                 
+        
+                 
+                fig1.update_layout(title={
+                     'text': side1,
+                     'font': {'color': 'black'}
+                 })
+                  #fig_back.update_layout(title='ImagePlacement_Left-Back')
                   
-        fig2.add_trace(go.Scatter(y=float_list2,line=dict(color='red') , name='CIS curve'))
-            
-
-         
-
-         
-
-         
-        fig2.update_layout(title={
-             'text': side2,
-             'font': {'color': 'black'}
-         })
-          #fig_back.update_layout(title='ImagePlacement_Left-Back')
-          
-          
-        fig2.update_layout(
-              hoverlabel=dict(
-                  namelength=-1
-              )
-          )
-          
-          # datetime object containing current date and time
-
-        plot(fig2,auto_play=True,filename=file_path.split('/')[-1][:-4]+'_CIS_'+side2+'.html')  
-              # plot(fig)  
-
-        fig2.show()        
+                  
+                fig1.update_layout(
+                      hoverlabel=dict(
+                          namelength=-1
+                      )
+                  )
+                  
+                  # datetime object containing current date and time
+        
+                plot(fig1,auto_play=True,filename=file_path.split('/')[-1][:-4]+'_CIS_'+side1+'.html')  
+                      # plot(fig)  
+        
+                fig1.show()
+                
+                fig2 = go.Figure()
+        
+                          
+                fig2.add_trace(go.Scatter(y=float_list2,line=dict(color='red') , name='CIS curve'))
+                    
+        
+                 
+        
+                 
+        
+                 
+                fig2.update_layout(title={
+                     'text': side2,
+                     'font': {'color': 'black'}
+                 })
+                  #fig_back.update_layout(title='ImagePlacement_Left-Back')
+                  
+                  
+                fig2.update_layout(
+                      hoverlabel=dict(
+                          namelength=-1
+                      )
+                  )
+                  
+                  # datetime object containing current date and time
+        
+                plot(fig2,auto_play=True,filename=file_path.split('/')[-1][:-4]+'_CIS_'+side2+'.html')  
+                      # plot(fig)  
+        
+                fig2.show() 
+        except:
+                1
         
         
     def closeEvent(self, event):

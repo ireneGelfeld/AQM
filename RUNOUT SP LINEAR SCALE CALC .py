@@ -55,7 +55,7 @@ NumOfSec=18
 # NumOfSec=15
 
 ##########FOR SHORTER MEDIA#################
-# PointsToIgnore=80  #439-359
+PointsToIgnore=80  #439-359
 
 # DistanceBetweenColumns={i:SatndardDistanceBetweenColumns*1 for i in range(2,17)}
 # DistanceBetweenColumns[0]=0
@@ -2060,25 +2060,25 @@ with open(path_FnameClrDF, 'rb') as f:
 
 
 
-# ### IF SCRIPT EXCEPTS
-# for Pnl in ClrDF_rawXY_allPanels.keys():
-#     for i in ClrDF_rawXY_allPanels[Pnl].keys():
+### IF SCRIPT EXCEPTS
+for Pnl in ClrDF_rawXY_allPanels.keys():
+    for i in ClrDF_rawXY_allPanels[Pnl].keys():
   
-#         # ClrDF_rawSide=ClrDF_rawXY_allPanels[Pnl][i]
-#         nan_coordinates = find_nan_coordinates_with_column_names(ClrDF_rawXY_allPanels[Pnl][i])
+        # ClrDF_rawSide=ClrDF_rawXY_allPanels[Pnl][i]
+        nan_coordinates = find_nan_coordinates_with_column_names(ClrDF_rawXY_allPanels[Pnl][i])
         
-#         for tple in nan_coordinates:
-#             if '_x' in tple[1]:
-#                 ClrDF_rawXY_allPanels[Pnl][i][tple[1]][tple[0]]= ClrDF_rawXY_allPanels[Pnl][i][tple[1]][tple[0]-1]
+        for tple in nan_coordinates:
+            if '_x' in tple[1]:
+                ClrDF_rawXY_allPanels[Pnl][i][tple[1]][tple[0]]= ClrDF_rawXY_allPanels[Pnl][i][tple[1]][tple[0]-1]
         
-#             else:
-#                 ClrDF_rawXY_allPanels[Pnl][i][tple[1]][tple[0]]= ClrDF_rawXY_allPanels[Pnl][i][tple[1]][tple[0]-1]+np.mean( np.diff(ClrDF_rawXY_allPanels[Pnl][i][tple[1]][:tple[0]-1]))
+            else:
+                ClrDF_rawXY_allPanels[Pnl][i][tple[1]][tple[0]]= ClrDF_rawXY_allPanels[Pnl][i][tple[1]][tple[0]-1]+np.mean( np.diff(ClrDF_rawXY_allPanels[Pnl][i][tple[1]][:tple[0]-1]))
 
 
 
-# path_FnameClrDF=sInput+'\ClrDF_rawXY_allPanels.pkl'
-# with open(path_FnameClrDF, 'wb') as f:
-#     pickle.dump(ClrDF_rawXY_allPanels, f)
+path_FnameClrDF=sInput+'\ClrDF_rawXY_allPanels.pkl'
+with open(path_FnameClrDF, 'wb') as f:
+    pickle.dump(ClrDF_rawXY_allPanels, f)
     
 # # minLength= 380
 
@@ -2115,7 +2115,7 @@ for i in range(NumOfSec):
     col5_col6_Sgoly_allPanels_continues[i]=pd.DataFrame();
 
 
-continuesPoints=80
+continuesPoints=0
 pointsForPanel=numberOfPoints- PointsToIgnore
 indexPanelNameDic={}
 

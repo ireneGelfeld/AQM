@@ -509,8 +509,11 @@ class RepareDistortions:
                 for clr in self.ColorList:
                     if clr == clrD:
                         continue;
+                    if i >= len(WaveFilter_RawData[clr]):
+                        WaveFilter_RawData[clr].append(WaveFilter_RawData[clr][i-1])
                     difList[abs(WaveFilter_RawData[clrD][i]-WaveFilter_RawData[clr][i])]=clr;
                     count=count+1;
+         
                 tmpList=list((np.array(list(difList.keys()))));
                 tmpList.sort()
                 DistanceVal=0;
@@ -538,6 +541,9 @@ class RepareDistortions:
             CorrectionArr.append(np.mean(ColssetCols))
         
         return CorrectionArr
+ 
+    
+ 
     
      def correctWaveRawData(self):
       
@@ -545,7 +551,21 @@ class RepareDistortions:
          WaveRawDataDicAfterCorr={};
          WaveDataWithMaxFilterDicAfterCorr={};
          for clr in self.ColorList:
-             WaveRawDataDicAfterCorr[clr]=self.WaveRawDataDic[clr]['Mean']-CorrectionArr;
+             
+             if len(CorrectionArr)>len(self.WaveRawDataDic[clr]['Mean']):
+                 
+                 diff=len(CorrectionArr)-len(self.WaveRawDataDic[clr]['Mean'])
+                 ll=len(self.WaveRawDataDic[clr]['Mean'])
+                 new_value=[]
+                 new_index=[]
+                 for i in range(diff):
+                    new_value.append(self.WaveRawDataDic[clr]['Mean'][ll-1])
+                    new_index.append(ll+i)
+                 a = self.WaveRawDataDic[clr]['Mean']
+                 a = pd.concat([a, pd.Series(new_value, index=new_index)])
+                 WaveRawDataDicAfterCorr[clr]=a-CorrectionArr;
+             else:
+                 WaveRawDataDicAfterCorr[clr]=self.WaveRawDataDic[clr]['Mean']-CorrectionArr;
              WaveDataWithMaxFilterDicAfterCorr[clr]=pd.Series(savgol_filter(WaveRawDataDicAfterCorr[clr], MaxWaveWindow, S_g_Degree))
              
          return  WaveRawDataDicAfterCorr,WaveDataWithMaxFilterDicAfterCorr,CorrectionArr 
@@ -1331,8 +1351,7 @@ except:
     1
 
 
-
-
+ # WaveFilter_RawData=RepareDistortions(WaveRawDataDicFRONT,WaveDataWithMaxFilterDicFRONT,ColorList).CalcWaveAfterFilterSubstraction();
 
 
 
@@ -1672,15 +1691,4 @@ if PlotTables:
 
 #########################################################################################
 
-# jobData=CIScurveFromRawData(pthF).LoadRawData()
-# sub='CisCurvatureDataBasedOnWaveFormat=';
-# indices = []
 
-# for line_num, line in enumerate(jobData):
-#     if len(line)>1:
-#         if sub in line[0]:
-#             indices.append(line_num) 
-   
-# cisFRONT = list(map(float, jobData[indices[0]][1:]))
-# if len(indices)>1:
-#     cisBACK = list(map(float, jobData[indices[1]][1:]))
